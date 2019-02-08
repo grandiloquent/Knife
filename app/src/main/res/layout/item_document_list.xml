@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<euphoria.psycho.knife.DocumentView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/icon_view"
+            style="@style/ListItemStartIcon"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="right" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="0dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/BlackTitle1"
+            app:layout_constraintBottom_toTopOf="@+id/description"
+            app:layout_constraintEnd_toStartOf="@+id/more"
+            app:layout_constraintStart_toEndOf="@+id/icon_view"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="12dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/BlackBody"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/more"
+            app:layout_constraintStart_toEndOf="@+id/icon_view"
+            app:layout_constraintTop_toBottomOf="@+id/title" />
+
+        <euphoria.psycho.common.widget.ListMenuButton
+            android:id="@+id/more"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+
+            android:background="@null"
+            android:paddingLeft="@dimen/selectable_list_layout_row_padding"
+            android:paddingRight="@dimen/selectable_list_layout_row_padding"
+            android:src="@drawable/ic_more_vert_black_24dp"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/dark_mode_tint" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</euphoria.psycho.knife.DocumentView>

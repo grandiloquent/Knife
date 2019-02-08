@@ -1,0 +1,5 @@
+<resources>
+  <integer name="list_item_level_default">0</integer>
+  <integer name="list_item_level_incognito">2</integer>
+  <integer name="list_item_level_selected">1</integer>
+</resources>

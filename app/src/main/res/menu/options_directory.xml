@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group
+        android:id="@+id/selection_mode_menu_group"
+        android:visible="false">
+        <item
+            android:id="@+id/selection_mode_delete_menu_id"
+            android:icon="@drawable/ic_delete_white_24dp"
+            android:title="@string/remove"
+            app:showAsAction="ifRoom" />
+
+
+
+    </group>
+    <group android:id="@+id/normal_menu_group">
+        <item
+            android:id="@+id/search_menu_id"
+            android:icon="@drawable/ic_search"
+            android:title="@string/search"
+            android:visible="false"
+            app:iconTint="@color/dark_mode_tint"
+            app:showAsAction="ifRoom" />
+        <item
+            android:id="@+id/sort_menu_id"
+            android:icon="@drawable/ic_menu_sortby"
+            android:title="@string/menu_sort"
+            android:visible="false"
+            app:iconTint="@color/dark_mode_tint"
+            app:showAsAction="ifRoom">
+            <menu>
+                <item
+                    android:id="@+id/action_sort_by_date"
+                    android:title="@string/sort_date" />
+                <item
+                    android:id="@+id/action_sort_by_name"
+                    android:title="@string/sort_name" />
+                <item
+                    android:id="@+id/action_sort_by_size"
+                    android:title="@string/sort_size" />
+            </menu>
+        </item>
+        <item
+            android:id="@+id/close_menu_id"
+            android:icon="@drawable/btn_close"
+            android:title="@string/bookmark_action_bar_close"
+            app:iconTint="@color/dark_mode_tint"
+            app:showAsAction="ifRoom" />
+    </group>
+
+</menu>

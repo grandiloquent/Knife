@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:maxLevel="@integer/list_item_level_default">
+        <shape android:shape="oval">
+            <solid android:color="@color/modern_grey_100" />
+        </shape>
+    </item>
+    <item android:maxLevel="@integer/list_item_level_selected">
+        <shape android:shape="oval">
+            <solid android:color="@color/light_active_color" />
+        </shape>
+    </item>
+    <item android:maxLevel="@integer/list_item_level_incognito">
+        <shape android:shape="oval">
+            <solid android:color="@color/white_alpha_70" />
+        </shape>
+    </item>
+</level-list>
