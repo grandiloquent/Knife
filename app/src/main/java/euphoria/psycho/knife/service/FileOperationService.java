@@ -18,19 +18,24 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.ManagerUtils;
-import euphoria.psycho.common.pool.ThreadPool;
 import euphoria.psycho.knife.R;
 
 import static euphoria.psycho.common.C.DEBUG;
 
 public class FileOperationService extends Service implements Job.Listener {
     public static final String EXTRA_CANCEL = "cancel";
+    public static final String EXTRA_DIALOG_TYPE = "dialog_type";
+    public static final String EXTRA_FAILED_DOCS = "failed_docs";
+    public static final String EXTRA_FAILED_URIS = "failed_uris";
     public static final String EXTRA_JOB_ID = "job_id";
     public static final String EXTRA_OPERATION = "operation";
+    public static final String EXTRA_OPERATION_TYPE = "operation_type";
+    public static final String EXTRA_SRC_LIST = "src_list";
     public static final int OPERATION_COMPRESS = 3;
     public static final int OPERATION_COPY = 1;
     public static final int OPERATION_DELETE = 5;
@@ -38,7 +43,9 @@ public class FileOperationService extends Service implements Job.Listener {
     public static final int OPERATION_MOVE = 4;
     public static final int OPERATION_UNKNOWN = -1;
     static final String NOTIFICATION_CHANNEL_ID = "channel_id";
+    private static final int NOTIFICATION_ID_FAILURE = 1;
     private static final int NOTIFICATION_ID_PROGRESS = 0;
+    private static final int NOTIFICATION_ID_WARNING = 2;
     private static final int POOL_SIZE = 2;
     private static final String TAG = "TAG/" + FileOperationService.class.getSimpleName();
     private final AtomicReference<Job> mForegroundJob = new AtomicReference<>();
@@ -51,6 +58,48 @@ public class FileOperationService extends Service implements Job.Listener {
     private PowerManager mPowerManager;
     private PowerManager.WakeLock mWakeLock;
     NotificationManager notificationManager;
+
+    private void cleanUpNotification(Job job) {
+
+        if (DEBUG) Log.d(TAG, "Canceling notification for " + job.getId());
+        // Dismiss the ongoing copy notification when the copy is done.
+        notificationManager.cancel(job.getId(), NOTIFICATION_ID_PROGRESS);
+
+        if (job.hasFailures()) {
+            if (!job.getFailedDocs().isEmpty()) {
+                Log.e(TAG, "Job failed to resolve uris: " + job.getFailedDocs() + ".");
+            }
+            if (!job.getFailedDocs().isEmpty()) {
+                Log.e(TAG, "Job failed to process docs: " + job.getFailedDocs() + ".");
+            }
+            notificationManager.notify(
+                    job.getId(), NOTIFICATION_ID_FAILURE, job.getFailureNotification());
+        }
+
+        if (job.hasWarnings()) {
+            if (DEBUG) Log.d(TAG, "Job finished with warnings.");
+            notificationManager.notify(
+                    job.getId(), NOTIFICATION_ID_WARNING, job.getWarningNotification());
+        }
+    }
+
+    @GuardedBy("mJobs")
+    private void deleteJob(Job job) {
+        if (DEBUG) Log.d(TAG, "deleteJob: " + job.getId());
+
+        // Release wake lock before clearing jobs just in case we fail to clean them up.
+        mWakeLock.release();
+        if (!mWakeLock.isHeld()) {
+            mWakeLock = null;
+        }
+
+        JobRecord record = mJobs.remove(job.getId());
+        assert (record != null);
+        record.job.cleanup();
+
+        // Delay the shutdown until we've cleaned up all notifications. shutdown() is now posted in
+        // onFinished(Job job) to main thread.
+    }
 
     private ExecutorService getExecutorService(@OpType int operationType) {
         switch (operationType) {
@@ -94,7 +143,9 @@ public class FileOperationService extends Service implements Job.Listener {
     }
 
     private void handleOperation(String jobId, FileOperation operation) {
-
+        if (DEBUG) {
+            Log.e(TAG, "handleOperation: " + jobId);
+        }
         synchronized (mJobs) {
             if (mWakeLock == null) {
                 mWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
@@ -134,6 +185,49 @@ public class FileOperationService extends Service implements Job.Listener {
                     NotificationManager.IMPORTANCE_LOW);
             notificationManager.createNotificationChannel(channel);
 
+        }
+    }
+
+    /**
+     * Most likely shuts down. Won't shut down if service has a pending
+     * message. Thread pool is deal with in onDestroy.
+     */
+    private void shutdown() {
+        if (DEBUG) Log.d(TAG, "Shutting down. Last serviceId was " + mLastServiceId);
+        assert (mWakeLock == null);
+
+        // Turns out, for us, stopSelfResult always returns false in tests,
+        // so we can't guard executor shutdown. For this reason we move
+        // executor shutdown to #onDestroy.
+        boolean gonnaStop = stopSelfResult(mLastServiceId);
+        if (DEBUG) Log.d(TAG, "Stopping service: " + gonnaStop);
+        if (!gonnaStop) {
+            Log.w(TAG, "Service should be stopping, but reports otherwise.");
+        }
+    }
+
+    @GuardedBy("mJobs")
+    private void updateForegroundState(Job job) {
+        Job candidate = mJobs.isEmpty() ? null : mJobs.values().iterator().next().job;
+
+        // If foreground job is retiring and there is still work to do, we need to set it to a new
+        // job.
+        if (mForegroundJob.compareAndSet(job, candidate)) {
+            if (candidate == null) {
+                if (DEBUG) Log.d(TAG, "Stop foreground");
+                // Remove the notification here just in case we're torn down before we have the
+                // chance to clean up notifications.
+                mForegroundManager.stopForeground(true);
+            } else {
+                if (DEBUG) Log.d(TAG, "Switch foreground job to " + candidate.getId());
+
+                Notification notification = (candidate.getState() == Job.STATE_STARTED)
+                        ? candidate.getSetupNotification()
+                        : candidate.getProgressNotification();
+                mForegroundManager.startForeground(NOTIFICATION_ID_PROGRESS, notification);
+                notificationManager.notify(candidate.getId(), NOTIFICATION_ID_PROGRESS,
+                        notification);
+            }
         }
     }
 
@@ -198,6 +292,34 @@ public class FileOperationService extends Service implements Job.Listener {
 
     @Override
     public void onFinished(Job job) {
+        assert (job.isFinished());
+        if (DEBUG) Log.d(TAG, "onFinished: " + job.getId());
+
+        synchronized (mJobs) {
+            // Delete the job from mJobs first to avoid this job being selected as the foreground
+            // task again if we need to swap the foreground job.
+            deleteJob(job);
+
+            // Update foreground state before cleaning up notification. If the finishing job is the
+            // foreground job, we would need to switch to another one or go to background before
+            // we can clean up notifications.
+            updateForegroundState(job);
+
+            // Use the same thread of monitors to tackle notifications to avoid race conditions.
+            // Otherwise we may fail to dismiss progress notification.
+            mHandler.post(() -> cleanUpNotification(job));
+
+            // Post the shutdown message to main thread after cleanUpNotification() to give it a
+            // chance to run. Otherwise this process may be torn down by Android before we've
+            // cleaned up the notifications of the last job.
+            if (mJobs.isEmpty()) {
+                mHandler.post(this::shutdown);
+            }
+        }
+    }
+
+    @Override
+    public void onStart(Job job) {
         if (DEBUG) Log.d(TAG, "onStart: " + job.getId());
 
         Notification notification = job.getSetupNotification();
@@ -215,11 +337,6 @@ public class FileOperationService extends Service implements Job.Listener {
         // Set up related monitor
         JobMonitor monitor = new JobMonitor(job, notificationManager, mHandler, mJobs);
         monitor.start();
-    }
-
-    @Override
-    public void onStart(Job job) {
-
     }
 
     @Override

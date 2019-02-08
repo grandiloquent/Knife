@@ -13,7 +13,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 public abstract class BaseActivity extends AppCompatActivity {
-
     private static final int REQUEST_CODE_PERMISSION = 1;
 
     protected abstract void initialize();
@@ -52,5 +51,30 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
         }
         initialize();
+    }
+
+    private OnBackPressedListener mOnBackPressedListener;
+
+    @Override
+    public void onBackPressed() {
+        if (mOnBackPressedListener != null && mOnBackPressedListener.onBackPressed()) {
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    public void setOnBackPressedListener(OnBackPressedListener onBackPressedListener) {
+        mOnBackPressedListener = onBackPressedListener;
+    }
+
+    public interface OnBackPressedListener {
+
+        /**
+         * Callback, which is called if the Back Button is pressed.
+         * Fragments that extend MainFragment can/should override this Method.
+         *
+         * @return true if the App can be closed, false otherwise
+         */
+        boolean onBackPressed();
     }
 }

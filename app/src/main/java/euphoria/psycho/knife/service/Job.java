@@ -12,17 +12,24 @@ import android.os.CancellationSignal;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.IntDef;
+import androidx.annotation.PluralsRes;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.knife.MainActivity;
+import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.service.FileOperationService.OpType;
 
 import static euphoria.psycho.knife.service.FileOperationService.EXTRA_CANCEL;
+import static euphoria.psycho.knife.service.FileOperationService.EXTRA_FAILED_DOCS;
 import static euphoria.psycho.knife.service.FileOperationService.EXTRA_JOB_ID;
+import static euphoria.psycho.knife.service.FileOperationService.EXTRA_OPERATION_TYPE;
 
 public abstract class Job implements Runnable {
     static final String INTENT_TAG_CANCEL = "cancel";
+    static final String INTENT_TAG_FAILURE = "failure";
     static final String INTENT_TAG_PROGRESS = "progress";
     static final int STATE_CANCELED = 4;
     static final int STATE_COMPLETED = 3;
@@ -33,17 +40,21 @@ public abstract class Job implements Runnable {
     final Listener listener;
     final Context mAppContext;
     final Context mContext;
+    final ArrayList<String> mFailedDocs = new ArrayList<>();
     final String mId;
+    private final @OpType
+    int mOpType;
     final Notification.Builder mProgressBuilder;
     final CancellationSignal mSignal = new CancellationSignal();
+    private int mFailureCount;
     private volatile @State
     int mState = STATE_CREATED;
 
-    public Job(Context context, String id, Listener listener) {
+    public Job(Context context, String id, Listener listener, @OpType int opType) {
         mContext = context;
         mAppContext = context.getApplicationContext();
         mId = id;
-
+        mOpType = opType;
         this.listener = listener;
         mProgressBuilder = createProgressBuilder();
     }
@@ -60,6 +71,10 @@ public abstract class Job implements Runnable {
         mSignal.cancel();
     }
 
+    final void cleanup() {
+
+    }
+
     Intent createCancelIntent() {
         final Intent cancelIntent = new Intent(mContext, FileOperationService.class);
         cancelIntent.setData(getDataUriForIntent(INTENT_TAG_CANCEL));
@@ -68,7 +83,6 @@ public abstract class Job implements Runnable {
         return cancelIntent;
     }
 
-    abstract Notification getProgressNotification();
     Builder createNotificationBuilder() {
         if (VERSION.SDK_INT >= VERSION_CODES.O) {
             return new Builder(mContext, FileOperationService.NOTIFICATION_CHANNEL_ID);
@@ -76,9 +90,6 @@ public abstract class Job implements Runnable {
 
             return new Notification.Builder(mContext);
         }
-    }
-    final @State int getState() {
-        return mState;
     }
 
     final Builder createProgressBuilder(
@@ -118,22 +129,68 @@ public abstract class Job implements Runnable {
         return Uri.parse(String.format("data,%s-%s", tag, mId));
     }
 
+    public ArrayList<String> getFailedDocs() {
+        return mFailedDocs;
+    }
+
+    Notification getFailureNotification(@PluralsRes int titleId, @DrawableRes int icon) {
+        final Intent navigateIntent = buildNavigateIntent(INTENT_TAG_FAILURE);
+        //navigateIntent.putExtra(EXTRA_DIALOG_TYPE, OperationDialogFragment.DIALOG_TYPE_FAILURE);
+        navigateIntent.putExtra(EXTRA_OPERATION_TYPE, mOpType);
+        navigateIntent.putExtra(EXTRA_FAILED_DOCS, mFailedDocs);
+
+        final Builder errorBuilder = createNotificationBuilder()
+                .setContentTitle(mContext.getResources().getQuantityString(titleId,
+                        mFailureCount, mFailureCount))
+                .setContentText(mContext.getString(R.string.notification_touch_for_details))
+                .setContentIntent(PendingIntent.getActivity(mAppContext, 0, navigateIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_ONE_SHOT))
+
+                .setSmallIcon(icon)
+                .setAutoCancel(true);
+        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+            errorBuilder.setCategory(Notification.CATEGORY_ERROR);
+        }
+        return errorBuilder.build();
+    }
+
+    abstract Notification getFailureNotification();
+
     public String getId() {
         return mId;
     }
 
+    abstract Notification getProgressNotification();
+
     abstract Notification getSetupNotification();
+
     Notification getSetupNotification(String content) {
         mProgressBuilder.setProgress(0, 0, true)
                 .setContentText(content);
         return mProgressBuilder.build();
     }
-    final boolean isFinished() {
-        return mState == STATE_CANCELED || mState == STATE_COMPLETED;
+
+    final @State
+    int getState() {
+        return mState;
+    }
+
+    abstract Notification getWarningNotification();
+
+    final boolean hasFailures() {
+        return mFailureCount > 0;
+    }
+
+    boolean hasWarnings() {
+        return false;
     }
 
     final boolean isCanceled() {
         return mState == STATE_CANCELED;
+    }
+
+    final boolean isFinished() {
+        return mState == STATE_CANCELED || mState == STATE_COMPLETED;
     }
 
     boolean setUp() {

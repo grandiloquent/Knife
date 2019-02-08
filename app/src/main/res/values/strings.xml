@@ -1,15 +1,20 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="delete_preparing">Preparing...</string>
     <string name="accessibility_cancel_selection">Cancel selection</string>
     <string name="accessibility_drawer_toggle_btn_close">Close navigation drawer</string>
     <string name="accessibility_drawer_toggle_btn_open">Open navigation drawer</string>
     <string name="accessibility_list_menu_button">%1$s Options</string>
     <string name="accessibility_toolbar_btn_back">Go back</string>
+    <string name="notification_touch_for_details">Tap to view details</string>
     <string name="accessibility_toolbar_btn_delete_url">Clear input</string>
+    <plurals name="delete_error_notification_title">
+        <item quantity="one">Couldn\u2019t delete <xliff:g example="1" id="count">%1$d</xliff:g> item</item>
+        <item quantity="other">Couldn\u2019t delete <xliff:g example="2" id="count">%1$d</xliff:g> items</item>
+    </plurals>
     <string name="accessibility_toolbar_multi_select">%1$s selected</string>
     <string name="directory_description">%1$d items</string>
     <string name="dialog_delete_title">Ask</string>
-
+    <string name="delete_progress"><xliff:g example="3" id="count">%1$d</xliff:g> / <xliff:g example="5" id="totalCount">%2$d</xliff:g></string>
     <string name="dialog_delete_message">Are you sure delete %1$s ?</string>
     <string name="delete_notification_title">Deleting files</string>
     <string name="channel_name_directory">Files</string>

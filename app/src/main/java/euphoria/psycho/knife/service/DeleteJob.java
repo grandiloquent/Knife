@@ -17,12 +17,36 @@ public class DeleteJob extends Job {
     final List<String> mSource;
     final String mTreeUri;
     private long mDeletedContentLength = 0L;
+    private volatile int mDocsProcessed = 0;
 
     public DeleteJob(Context context, String id, Listener listener, List<String> source) {
-        super(context, id, listener);
-        assert context != null;
+        super(context, id, listener, FileOperationService.OPERATION_DELETE);
         mSource = source;
         mTreeUri = StorageUtils.getTreeUri().toString();
+
+    }
+
+    void delete(File path) {
+
+        if (path.isDirectory()) {
+            File[] files = path.listFiles();
+            if (files != null && files.length > 0) {
+                for (File f : files) {
+                    delete(f);
+                }
+            }
+        }
+        if (path.isFile()) {
+
+            mDeletedContentLength += path.length();
+            SystemClock.sleep(1000);
+        } else {
+
+        }
+        mDocsProcessed++;
+        if (isCanceled()) {
+            return;
+        }
     }
 
     public static boolean deleteFile(Context context, File file, String treeUri) {
@@ -49,10 +73,23 @@ public class DeleteJob extends Job {
 
     }
 
+    @Override
+    Notification getFailureNotification() {
+        return getFailureNotification(
+                R.plurals.delete_error_notification_title, R.drawable.ic_menu_delete);
+
+    }
 
     @Override
     Notification getProgressNotification() {
-        return null;
+        mProgressBuilder.setProgress(mSource.size(), mDocsProcessed, false);
+        String format = mContext.getString(R.string.delete_progress);
+        mProgressBuilder.setSubText(
+                String.format(format, mDocsProcessed, mSource.size()));
+
+        mProgressBuilder.setContentText(null);
+
+        return mProgressBuilder.build();
     }
 
     @Override
@@ -60,25 +97,9 @@ public class DeleteJob extends Job {
         return getSetupNotification(mContext.getString(R.string.delete_preparing));
     }
 
-    void delete(File path) {
-        if (isCanceled()) {
-            return;
-        }
-        if (path.isDirectory()) {
-            File[] files = path.listFiles();
-            if (files != null && files.length > 0) {
-                for (File f : files) {
-                    delete(f);
-                }
-            }
-        }
-        if (path.isFile()) {
-
-            mDeletedContentLength += path.length();
-            SystemClock.sleep(1000);
-        } else {
-
-        }
+    @Override
+    Notification getWarningNotification() {
+        return null;
     }
 
     @Override

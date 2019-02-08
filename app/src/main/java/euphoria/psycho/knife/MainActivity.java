@@ -1,7 +1,6 @@
 package euphoria.psycho.knife;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Environment;
 import android.view.MenuItem;
 
@@ -9,15 +8,11 @@ import java.io.File;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.knife.video.VideoFragment;
-
-import static euphoria.psycho.common.C.DEBUG;
 
 public class MainActivity extends BaseActivity {
 

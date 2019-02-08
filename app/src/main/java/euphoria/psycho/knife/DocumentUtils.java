@@ -160,10 +160,12 @@ public class DocumentUtils {
                 return C.TYPE_OTHER;
         }
     }
+
     public static ColorStateList getIconForegroundColorList(Context context) {
         return AppCompatResources.getColorStateList(context, R.color.white_mode_tint);
     }
 
     public static native int deleteDirectories(String[] directories);
+
     public static native long calculateDirectory(String dir);
 }

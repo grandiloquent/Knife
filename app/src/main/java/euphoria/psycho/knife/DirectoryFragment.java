@@ -1,21 +1,21 @@
 package euphoria.psycho.knife;
 
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,15 +28,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
-import euphoria.psycho.common.FileUtils;
+import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.ThreadUtils;
-import euphoria.psycho.common.Utils;
+import euphoria.psycho.common.base.BaseActivity;
+import euphoria.psycho.common.base.Job;
+import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
-import euphoria.psycho.knife.service.FileOperation;
-import euphoria.psycho.knife.service.FileOperationService;
+import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
 import euphoria.psycho.knife.video.VideoFragment;
 
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
@@ -45,14 +46,54 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         DocumentActionDelegate,
         Toolbar.OnMenuItemClickListener,
         SelectableListToolbar.SearchDelegate {
-    DocumentsAdapter mAdapter;
-    SelectableListLayout mContainer;
+    private DocumentsAdapter mAdapter;
+    private SelectableListLayout mContainer;
     private File mDirectory;
-    DrawerLayout mDrawerLayout;
-    RecyclerView mRecyclerView;
-    SelectionDelegate mSelectionDelegate;
+    private RecyclerView mRecyclerView;
+    private SelectionDelegate mSelectionDelegate;
     private int mSortBy = C.SORT_BY_UNSPECIFIED;
-    DirectoryToolbar mToolbar;
+    private DirectoryToolbar mToolbar;
+
+    private boolean clearSelections() {
+        if (mSelectionDelegate.getSelectedItems().size() > 0) {
+            mSelectionDelegate.clearSelection();
+            return true;
+        }
+        return false;
+    }
+
+    private void deleteFiles(DocumentInfo... documentInfos) {
+        List<String> source = new ArrayList<>();
+        for (DocumentInfo documentInfo : documentInfos) {
+            source.add(documentInfo.getPath());
+        }
+
+        new Thread(new DeleteFileJob(getContext(), new Listener() {
+            @Override
+            public void onFinished(Job job) {
+                ThreadUtils.postOnUiThread(() -> {
+                    clearSelections();
+                    updateRecyclerView();
+                });
+            }
+
+            @Override
+            public void onStart(Job job) {
+
+            }
+        }, source, new Handler(Looper.getMainLooper()))).start();
+
+//        Intent intent = new Intent(getContext(), FileOperationService.class);
+//
+//        intent.putExtra(FileOperationService.EXTRA_JOB_ID, Long.toString(Utils.crc64Long(documentInfos[0].getPath())));
+//        intent.putExtra(FileOperationService.EXTRA_OPERATION,
+//                new FileOperation.Builder()
+//                        .withDestination(FileUtils.getDirectoryName(documentInfos[0].getPath()))
+//                        .withOpType(FileOperationService.OPERATION_DELETE)
+//                        .withSource(source)
+//                        .build());
+//        getActivity().startService(intent);
+    }
 
     private void loadPreferences() {
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
@@ -78,7 +119,25 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
-    void showBottomSheet() {
+    private boolean onBackPressed() {
+
+        if (mSelectionDelegate.getSelectedItems().size() > 0) {
+            mSelectionDelegate.clearSelection();
+            return true;
+        }
+
+        File parent = mDirectory.getParentFile();
+        if (parent != null) {
+            mDirectory = parent;
+            updateRecyclerView();
+            return true;
+        }
+
+        return false;
+
+    }
+
+    private void showBottomSheet() {
         BottomSheet.instance(getActivity()).showDialog();
     }
 
@@ -100,6 +159,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         FragmentTransaction transaction = manager.beginTransaction();
 
         DirectoryFragment fragment = new DirectoryFragment();
+
+
         if (startDirectory != null) {
             Bundle bundle = new Bundle();
             bundle.putString(C.EXTRA_DIRECTORY, startDirectory);
@@ -127,20 +188,27 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 //                .show();
     }
 
-
     @Override
     public void getProperties(DocumentInfo documentInfo) {
 
     }
 
     @Override
-    public void onClicked(DocumentInfo documentInfo)
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        ((BaseActivity) Objects.requireNonNull(getActivity())).setOnBackPressedListener(this::onBackPressed);
 
+    }
 
-    {
+    @Override
+    public void onClicked(DocumentInfo documentInfo) {
         switch (documentInfo.getType()) {
             case C.TYPE_VIDEO:
-                VideoFragment.show(getActivity().getSupportFragmentManager(), documentInfo.getPath());
+                VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath());
+                break;
+            case C.TYPE_DIRECTORY:
+                mDirectory = new File(documentInfo.getPath());
+                updateRecyclerView();
                 break;
         }
     }
@@ -149,23 +217,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-    }
-
-    void deleteFiles(DocumentInfo... documentInfos) {
-        List<String> source = new ArrayList<>();
-        for (DocumentInfo documentInfo : documentInfos) {
-            source.add(documentInfo.getPath());
-        }
-        Intent intent = new Intent(getContext(), FileOperationService.class);
-
-        intent.putExtra(FileOperationService.EXTRA_JOB_ID, Long.toString(Utils.crc64Long(documentInfos[0].getPath())));
-        intent.putExtra(FileOperationService.EXTRA_OPERATION,
-                new FileOperation.Builder()
-                        .withDestination(FileUtils.getDirectoryName(documentInfos[0].getPath()))
-                        .withOpType(FileOperationService.OPERATION_DELETE)
-                        .withSource(source)
-                        .build());
-        getActivity().startService(intent);
     }
 
     @Nullable
@@ -193,6 +244,12 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 mToolbar.showSearchView();
                 mContainer.onStartSearch();
                 return true;
+            case R.id.selection_mode_delete_menu_id:
+
+                List<DocumentInfo> documentInfos = mSelectionDelegate.getSelectedItemsAsList();
+                deleteFiles(documentInfos.toArray(new DocumentInfo[0]));
+
+                break;
         }
         return false;
     }
@@ -214,7 +271,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
         mContainer = view.findViewById(R.id.container);
 
-        mDrawerLayout = view.findViewById(R.id.drawer_layout);
+
         mContainer = view.findViewById(R.id.container);
         mContainer.initializeEmptyView(
                 VectorDrawableCompat.create(
@@ -228,7 +285,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mRecyclerView.getItemAnimator().setChangeDuration(0);
         mToolbar = (DirectoryToolbar) mContainer.initializeToolbar(
                 R.layout.directory_toolbar, mSelectionDelegate,
-                R.string.app_name, mDrawerLayout,
+                R.string.app_name, null,
                 R.id.normal_menu_group, R.id.selection_mode_menu_group,
                 this,
                 true,
@@ -236,6 +293,23 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.getMenu().setGroupVisible(R.id.normal_menu_group, true);
         mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
 
+        BottomSheet.instance(getContext()).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClicked(Pair<Integer, String> item) {
+                switch (item.first) {
+                    case R.drawable.ic_root_internal:
+                        mDirectory = Environment.getExternalStorageDirectory();
+                        break;
+                    case R.drawable.ic_root_sdcard:
+                        mDirectory = new File(StorageUtils.getSDCardPath());
+                        break;
+                    case R.drawable.ic_action_file_download:
+                        mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
+                        break;
+                }
+                updateRecyclerView();
+            }
+        });
         loadPreferences();
         updateRecyclerView();
     }

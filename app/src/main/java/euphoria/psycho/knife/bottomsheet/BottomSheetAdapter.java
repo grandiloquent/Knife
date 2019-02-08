@@ -3,6 +3,7 @@ package euphoria.psycho.knife.bottomsheet;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -13,9 +14,9 @@ import euphoria.psycho.knife.R;
 
 public class BottomSheetAdapter extends RecyclerView.Adapter<BottomSheetAdapter.ViewHolder> {
     private Pair<Integer, String>[] mInfos;
-    private View.OnClickListener mOnClickListener;
+    private BottomSheet.OnClickListener mOnClickListener;
 
-    public BottomSheetAdapter(View.OnClickListener listener, Pair<Integer, String>[] inofs) {
+    public BottomSheetAdapter(BottomSheet.OnClickListener listener, Pair<Integer, String>[] inofs) {
         mOnClickListener = listener;
         mInfos = inofs;
     }
@@ -30,6 +31,9 @@ public class BottomSheetAdapter extends RecyclerView.Adapter<BottomSheetAdapter.
         Pair<Integer, String> pair = mInfos[position];
         holder.iconView.setImageResource(pair.first);
         holder.title.setText(pair.second);
+        holder.itemView.setOnClickListener(v -> {
+            if (mOnClickListener != null) mOnClickListener.onClicked(pair);
+        });
     }
 
     @NonNull
