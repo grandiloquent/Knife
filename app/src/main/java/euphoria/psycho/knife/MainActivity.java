@@ -16,17 +16,17 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
 import euphoria.psycho.common.StorageUtils;
+import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
+import euphoria.psycho.knife.video.VideoFragment;
 
 import static android.os.Environment.DIRECTORY_MUSIC;
 
 public class MainActivity extends BaseActivity {
 
     private static final int REQUEST_CODE_PERMISSION = 1;
-    private DrawerLayout mDrawerLayout;
 
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        mDrawerLayout.closeDrawer(GravityCompat.START);
         switch (item.getItemId()) {
             case R.id.action_internal_storage:
 
@@ -48,12 +48,20 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void initialize() {
         setContentView(R.layout.activity_main);
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-        DirectoryFragment.show(getSupportFragmentManager());
+
+
         String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
 
         if (treeUri == null)
             StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
+
+        Intent intent = getIntent();
+        if (intent.getData() != null) {
+
+            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath());
+        } else {
+            DirectoryFragment.show(getSupportFragmentManager());
+        }
     }
 
     @Override
