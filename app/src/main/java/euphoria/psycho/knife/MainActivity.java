@@ -1,6 +1,7 @@
 package euphoria.psycho.knife;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Environment;
 import android.view.MenuItem;
 
@@ -8,11 +9,15 @@ import java.io.File;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
+import euphoria.psycho.common.Log;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.knife.video.VideoFragment;
+
+import static euphoria.psycho.common.C.DEBUG;
 
 public class MainActivity extends BaseActivity {
 
@@ -37,11 +42,17 @@ public class MainActivity extends BaseActivity {
         return true;
     }
 
+    private static final String TAG = "TAG/" + MainActivity.class.getSimpleName();
+
     @Override
     protected void initialize() {
         setContentView(R.layout.activity_main);
 
-
+//        if (DEBUG) {
+//            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(this, StorageUtils.getTreeUri().toString(), new File(StorageUtils.getSDCardPath(), "经典/其他"));
+//            Log.e(TAG, "initialize: " + documentFile.isDirectory()
+//                    + "\n" + documentFile.getUri().toString());
+//        }
         String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
 
         if (treeUri == null)

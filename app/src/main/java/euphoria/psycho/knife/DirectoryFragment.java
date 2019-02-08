@@ -1,5 +1,7 @@
 package euphoria.psycho.knife;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,7 +11,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -23,11 +28,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.common.Utils;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
+import euphoria.psycho.knife.service.FileOperation;
+import euphoria.psycho.knife.service.FileOperationService;
 import euphoria.psycho.knife.video.VideoFragment;
 
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
@@ -107,8 +116,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void delete(DocumentInfo documentInfo) {
+        deleteFiles(documentInfo);
 
+//        new MaterialAlertDialogBuilder(getContext())
+//                .setTitle(R.string.dialog_delete_title)
+//                .setMessage(getString(R.string.dialog_delete_message, documentInfo.getFileName()))
+//                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
+//                    deleteFiles(documentInfo);
+//                }))
+//                .show();
     }
+
 
     @Override
     public void getProperties(DocumentInfo documentInfo) {
@@ -131,6 +149,23 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+    }
+
+    void deleteFiles(DocumentInfo... documentInfos) {
+        List<String> source = new ArrayList<>();
+        for (DocumentInfo documentInfo : documentInfos) {
+            source.add(documentInfo.getPath());
+        }
+        Intent intent = new Intent(getContext(), FileOperationService.class);
+
+        intent.putExtra(FileOperationService.EXTRA_JOB_ID, Long.toString(Utils.crc64Long(documentInfos[0].getPath())));
+        intent.putExtra(FileOperationService.EXTRA_OPERATION,
+                new FileOperation.Builder()
+                        .withDestination(FileUtils.getDirectoryName(documentInfos[0].getPath()))
+                        .withOpType(FileOperationService.OPERATION_DELETE)
+                        .withSource(source)
+                        .build());
+        getActivity().startService(intent);
     }
 
     @Nullable

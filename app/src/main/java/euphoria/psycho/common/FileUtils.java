@@ -96,6 +96,7 @@ public class FileUtils {
 
         }
     }
+
     public static String formatFileSize(long number) {
         float result = number;
         String suffix = "";
@@ -131,6 +132,7 @@ public class FileUtils {
         }
         return value + suffix;
     }
+
     /**
      * Atomically copies the data from an input stream into an output file.
      *
@@ -178,6 +180,12 @@ public class FileUtils {
         if (uri == null) uri = Uri.fromFile(file);
 
         return uri;
+    }
+
+    public static String getDirectoryName(String file) {
+        int index = file.lastIndexOf('/');
+        if (index == -1) return "";
+        return file.substring(0, index);
     }
 
     /**

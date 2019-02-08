@@ -1,5 +1,5 @@
 <resources>
-
+    <string name="delete_preparing">Preparing...</string>
     <string name="accessibility_cancel_selection">Cancel selection</string>
     <string name="accessibility_drawer_toggle_btn_close">Close navigation drawer</string>
     <string name="accessibility_drawer_toggle_btn_open">Open navigation drawer</string>
@@ -8,7 +8,9 @@
     <string name="accessibility_toolbar_btn_delete_url">Clear input</string>
     <string name="accessibility_toolbar_multi_select">%1$s selected</string>
     <string name="directory_description">%1$d items</string>
+    <string name="dialog_delete_title">Ask</string>
 
+    <string name="dialog_delete_message">Are you sure delete %1$s ?</string>
     <string name="delete_notification_title">Deleting files</string>
     <string name="channel_name_directory">Files</string>
     <string name="remove">Remove</string>

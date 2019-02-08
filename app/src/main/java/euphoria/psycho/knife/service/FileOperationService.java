@@ -52,6 +52,20 @@ public class FileOperationService extends Service implements Job.Listener {
     private PowerManager.WakeLock mWakeLock;
     NotificationManager notificationManager;
 
+    private ExecutorService getExecutorService(@OpType int operationType) {
+        switch (operationType) {
+            case OPERATION_COPY:
+            case OPERATION_COMPRESS:
+            case OPERATION_EXTRACT:
+            case OPERATION_MOVE:
+                return mExecutor;
+            case OPERATION_DELETE:
+                return mDeletionExecutor;
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
     private void handleCancel(Intent intent) {
         assert (intent.hasExtra(EXTRA_CANCEL));
         assert (intent.getStringExtra(EXTRA_JOB_ID) != null);
@@ -80,13 +94,14 @@ public class FileOperationService extends Service implements Job.Listener {
     }
 
     private void handleOperation(String jobId, FileOperation operation) {
+
         synchronized (mJobs) {
             if (mWakeLock == null) {
                 mWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
             }
 
             if (mJobs.containsKey(jobId)) {
-                Log.w(TAG, "Duplicate job id: " + jobId
+                Log.e(TAG, "Duplicate job id: " + jobId
                         + ". Ignoring job request for operation: " + operation + ".");
                 return;
             }
@@ -107,46 +122,6 @@ public class FileOperationService extends Service implements Job.Listener {
             // in case where job creation fails.
             mWakeLock.acquire();
         }
-    }
-
-    private ExecutorService getExecutorService(@OpType int operationType) {
-        switch (operationType) {
-            case OPERATION_COPY:
-            case OPERATION_COMPRESS:
-            case OPERATION_EXTRACT:
-            case OPERATION_MOVE:
-                return mExecutor;
-            case OPERATION_DELETE:
-                return mDeletionExecutor;
-            default:
-                throw new UnsupportedOperationException();
-        }
-    }
-
-    @Override
-    public void onFinished(Job job) {
-        if (DEBUG) Log.d(TAG, "onStart: " + job.getId());
-
-        Notification notification = job.getSetupNotification();
-        // If there is no foreground job yet, set this job to foreground job.
-        if (mForegroundJob.compareAndSet(null, job)) {
-            if (DEBUG) Log.d(TAG, "Set foreground job to " + job.getId());
-            mForegroundManager.startForeground(NOTIFICATION_ID_PROGRESS, notification);
-        }
-
-        // Show start up notification
-        if (DEBUG) Log.d(TAG, "Posting notification for " + job.getId());
-        notificationManager.notify(
-                job.getId(), NOTIFICATION_ID_PROGRESS, notification);
-
-        // Set up related monitor
-        JobMonitor monitor = new JobMonitor(job, notificationManager, mHandler, mJobs);
-        monitor.start();
-    }
-
-    @Override
-    public void onStart(Job job) {
-
     }
 
     private void setUpNotificationChannel() {
@@ -222,7 +197,34 @@ public class FileOperationService extends Service implements Job.Listener {
     }
 
     @Override
+    public void onFinished(Job job) {
+        if (DEBUG) Log.d(TAG, "onStart: " + job.getId());
+
+        Notification notification = job.getSetupNotification();
+        // If there is no foreground job yet, set this job to foreground job.
+        if (mForegroundJob.compareAndSet(null, job)) {
+            if (DEBUG) Log.d(TAG, "Set foreground job to " + job.getId());
+            mForegroundManager.startForeground(NOTIFICATION_ID_PROGRESS, notification);
+        }
+
+        // Show start up notification
+        if (DEBUG) Log.d(TAG, "Posting notification for " + job.getId());
+        notificationManager.notify(
+                job.getId(), NOTIFICATION_ID_PROGRESS, notification);
+
+        // Set up related monitor
+        JobMonitor monitor = new JobMonitor(job, notificationManager, mHandler, mJobs);
+        monitor.start();
+    }
+
+    @Override
+    public void onStart(Job job) {
+
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int serviceId) {
+
         // TODO: Ensure we're not being called with retry or redeliver.
         // checkArgument(flags == 0);  // retry and redeliver are not supported.
 
@@ -273,11 +275,10 @@ public class FileOperationService extends Service implements Job.Listener {
 
     private static final class JobMonitor implements Runnable {
         private static final long PROGRESS_INTERVAL_MILLIS = 500L;
-
-        private final Job mJob;
-        private final NotificationManager mNotificationManager;
         private final Handler mHandler;
+        private final Job mJob;
         private final Object mJobsLock;
+        private final NotificationManager mNotificationManager;
 
         private JobMonitor(Job job, NotificationManager notificationManager, Handler handler,
                            Object jobsLock) {

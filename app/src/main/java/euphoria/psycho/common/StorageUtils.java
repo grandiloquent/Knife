@@ -39,6 +39,14 @@ public class StorageUtils {
         }
     }
 
+    public static DocumentFile getDocumentFileFromTreeUri(Context context, String treeUri,File file) {
+        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
+        String baseURI = treeUri + "/document/" + lastPath;
+        String splited = StringUtils.substringBeforeLast(lastPath, "%");
+
+        return DocumentFile.fromSingleUri(context, Uri.parse(baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"))));
+    }
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static DocumentFile getDocument(Context context, Uri treeUri,
                                            String mimeType,
@@ -154,6 +162,14 @@ public class StorageUtils {
         context.getContentResolver().takePersistableUriPermission(intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         context.grantUriPermission(context.getPackageName(), intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
     }
+
+    public static Uri getTreeUri() {
+        if (sTreeUri == null) {
+            sTreeUri = Uri.parse(ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null));
+        }
+        return sTreeUri;
+    }
+
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static void requestTreeUri(Activity activity, int requestCode) {
