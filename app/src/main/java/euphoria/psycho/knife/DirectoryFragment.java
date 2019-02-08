@@ -1,6 +1,12 @@
 package euphoria.psycho.knife;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -11,7 +17,10 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.widget.LinearLayout;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,15 +33,22 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView.LayoutManager;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
+import euphoria.psycho.common.BitmapUtils;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
+import euphoria.psycho.common.IconUtils;
+import euphoria.psycho.common.Log;
+import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
+import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
@@ -137,6 +153,28 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
+    private void savePreferences() {
+        SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
+        preferences.edit().putInt(C.KEY_SCROLL_Y, ((LinearLayoutManager) mRecyclerView.getLayoutManager()).findFirstVisibleItemPosition())
+                .putString(C.KEY_DIRECTORY, mDirectory.getAbsolutePath())
+                .putInt(C.KEY_SORT_BY, mSortBy).apply();
+    }
+
+    private void scrollToPosition(int position) {
+        LayoutManager layoutManager = mRecyclerView.getLayoutManager();
+        if (layoutManager != null) {
+            int count = layoutManager.getChildCount();
+            Log.e("TAG/", "scrollToPosition: " + position + " " + count);
+            //  && position < count
+
+            if (position != RecyclerView.NO_POSITION) {
+
+
+                layoutManager.scrollToPosition(position);
+            }
+        }
+    }
+
     private void showBottomSheet() {
         BottomSheet.instance(getActivity()).showDialog();
     }
@@ -198,6 +236,23 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         super.onActivityCreated(savedInstanceState);
         ((BaseActivity) Objects.requireNonNull(getActivity())).setOnBackPressedListener(this::onBackPressed);
 
+        BottomSheet.instance(getActivity()).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClicked(Pair<Integer, String> item) {
+                switch (item.first) {
+                    case R.drawable.ic_root_internal:
+                        mDirectory = Environment.getExternalStorageDirectory();
+                        break;
+                    case R.drawable.ic_root_sdcard:
+                        mDirectory = new File(StorageUtils.getSDCardPath());
+                        break;
+                    case R.drawable.ic_action_file_download:
+                        mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
+                        break;
+                }
+                updateRecyclerView();
+            }
+        });
     }
 
     @Override
@@ -209,6 +264,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             case C.TYPE_DIRECTORY:
                 mDirectory = new File(documentInfo.getPath());
                 updateRecyclerView();
+                break;
+            default:
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
+                        NetUtils.getMimeType(documentInfo.getFileName()));
+
+
+                Log.e("TAG/", "onClicked: " + NetUtils.getMimeType(documentInfo.getFileName()));
+
+                startActivity(Intent.createChooser(intent, "打开"));
                 break;
         }
     }
@@ -255,6 +321,12 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        savePreferences();
+    }
+
+    @Override
     public void onSearchTextChanged(String query) {
 
     }
@@ -283,6 +355,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mAdapter = new DocumentsAdapter(this, mSelectionDelegate);
         mRecyclerView = mContainer.initializeRecyclerView(mAdapter);
         mRecyclerView.getItemAnimator().setChangeDuration(0);
+        mRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
         mToolbar = (DirectoryToolbar) mContainer.initializeToolbar(
                 R.layout.directory_toolbar, mSelectionDelegate,
                 R.string.app_name, null,
@@ -293,26 +366,22 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.getMenu().setGroupVisible(R.id.normal_menu_group, true);
         mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
 
-        BottomSheet.instance(getContext()).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClicked(Pair<Integer, String> item) {
-                switch (item.first) {
-                    case R.drawable.ic_root_internal:
-                        mDirectory = Environment.getExternalStorageDirectory();
-                        break;
-                    case R.drawable.ic_root_sdcard:
-                        mDirectory = new File(StorageUtils.getSDCardPath());
-                        break;
-                    case R.drawable.ic_action_file_download:
-                        mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
-                        break;
-                }
-                updateRecyclerView();
-            }
-        });
         loadPreferences();
         updateRecyclerView();
+
     }
+
+    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+            int scrollY = ContextUtils.getAppSharedPreferences().getInt(C.KEY_SCROLL_Y, RecyclerView.NO_POSITION);
+
+            Log.e("TAG/", "onGlobalLayout: ");
+
+            scrollToPosition(scrollY);
+            mRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
+        }
+    };
 
     @Override
     public void share(DocumentInfo documentInfo) {

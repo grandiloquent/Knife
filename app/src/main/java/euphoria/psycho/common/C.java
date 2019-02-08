@@ -27,5 +27,7 @@ public class C {
     public static final int TYPE_WORD = 8;
     public static final int TYPE_ZIP = 9;
 
+    public static final String KEY_SCROLL_Y = "scroll_y";
+
 
 }

@@ -36,7 +36,10 @@ import euphoria.psycho.common.C;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
+import euphoria.psycho.common.base.BaseActivity;
+import euphoria.psycho.common.base.BaseActivity.OnBackPressedListener;
 import euphoria.psycho.common.widget.ChromeImageButton;
+import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
 
 public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeListener {
@@ -242,6 +245,7 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         transaction.replace(R.id.container, fragment);
         transaction.commitNowAllowingStateLoss();
 
+
     }
 
     @Override
@@ -255,6 +259,15 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.options_video, menu);
 
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        ((BaseActivity) getActivity()).setOnBackPressedListener(() -> {
+            DirectoryFragment.show(getFragmentManager());
+            return true;
+        });
     }
 
     @Nullable

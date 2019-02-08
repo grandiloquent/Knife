@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 import euphoria.psycho.common.ApiCompatibilityUtils;
+import euphoria.psycho.common.Log;
 import euphoria.psycho.common.annotations.VisibleForTesting;
 import euphoria.psycho.common.widget.TintedDrawable;
 import euphoria.psycho.knife.R;
@@ -80,6 +81,8 @@ public abstract class SelectableItemView<E> extends SelectableItemViewBase<E> {
      */
     @Override
     protected void updateView() {
+
+
         // TODO(huayinz): Refactor this method so that mIconView is not exposed to subclass.
         if (mIconView == null) return;
 
