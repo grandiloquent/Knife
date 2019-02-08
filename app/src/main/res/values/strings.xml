@@ -9,6 +9,8 @@
     <string name="accessibility_toolbar_multi_select">%1$s selected</string>
     <string name="directory_description">%1$d items</string>
 
+    <string name="delete_notification_title">Deleting files</string>
+    <string name="channel_name_directory">Files</string>
     <string name="remove">Remove</string>
     <string name="accessibility_toolbar_screen_position">"%1$s selected.  Options available near top of the screen"</string>
     <string name="app_name">Knife</string>

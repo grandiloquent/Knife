@@ -7,20 +7,22 @@
     android:gravity="center"
     android:orientation="vertical"
     android:paddingTop="16dp"
-
     android:paddingBottom="16dp">
 
     <euphoria.psycho.common.widget.ChromeImageView
         android:id="@+id/icon_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_width="31.0dip"
+        android:layout_height="31.0dip"
+        android:layout_marginBottom="8.0dip" />
 
     <TextView
         android:id="@+id/title"
-        style="@style/BlackTitle1"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:ellipsize="end"
         android:maxLines="1"
-        android:paddingTop="8dp" />
+        android:textAppearance="?android:textAppearanceMedium"
+        android:textColor="#ff8b8b8b"
+        android:textSize="12.0sp"
+        android:typeface="serif" />
 </LinearLayout>

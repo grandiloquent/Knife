@@ -64,5 +64,6 @@
 
 
         </activity>
+        <service android:name=".service.FileOperationService" />
     </application>
 </manifest>

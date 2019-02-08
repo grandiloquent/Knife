@@ -93,6 +93,7 @@ public class ApiCompatibilityUtils {
 
     /**
      * Creates an ActivityOptions Bundle with basic options and the LaunchDisplayId set.
+     *
      * @param displayId The id of the display to launch into.
      * @return The created bundle, or null if unsupported.
      */
@@ -108,6 +109,7 @@ public class ApiCompatibilityUtils {
      * Creates regular LayerDrawable on Android L+. On older versions creates a helper class that
      * fixes issues around {@link LayerDrawable#mutate()}. See https://crbug.com/890317 for details.
      * See also {@link #createTransitionDrawable}.
+     *
      * @param layers A list of drawables to use as layers in this new drawable.
      */
     public static LayerDrawable createLayerDrawable(@NonNull Drawable[] layers) {
@@ -121,6 +123,7 @@ public class ApiCompatibilityUtils {
      * Creates regular TransitionDrawable on Android L+. On older versions creates a helper class
      * that fixes issues around {@link TransitionDrawable#mutate()}. See https://crbug.com/892061
      * for details. See also {@link #createLayerDrawable}.
+     *
      * @param layers A list of drawables to use as layers in this new drawable.
      */
     public static TransitionDrawable createTransitionDrawable(@NonNull Drawable[] layers) {
@@ -132,6 +135,7 @@ public class ApiCompatibilityUtils {
 
     /**
      * Disables the Smart Select {@link TextClassifier} for the given {@link TextView} instance.
+     *
      * @param textView The {@link TextView} that should have its classifier disabled.
      */
     @TargetApi(Build.VERSION_CODES.O)
@@ -299,8 +303,6 @@ public class ApiCompatibilityUtils {
         }
     }
 
-    // These methods have a new name, and the old name is deprecated.
-
     /**
      * @see Resources#getDrawableForDensity(int id, int density).
      */
@@ -312,6 +314,8 @@ public class ApiCompatibilityUtils {
             return res.getDrawableForDensity(id, density);
         }
     }
+
+    // These methods have a new name, and the old name is deprecated.
 
     /**
      * Helper for {@link LayerDrawableCompat#mutate} and {@link TransitionDrawableCompat#mutate}.
@@ -350,9 +354,9 @@ public class ApiCompatibilityUtils {
     }
 
     /**
-     *  Gets an intent to start the Android system notification settings activity for an app.
+     * Gets an intent to start the Android system notification settings activity for an app.
      *
-     *  @param context Context of the app whose settings intent should be returned.
+     * @param context Context of the app whose settings intent should be returned.
      */
     public static Intent getNotificationSettingsIntent(Context context) {
         Intent intent = new Intent();
@@ -506,9 +510,12 @@ public class ApiCompatibilityUtils {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     }
 
+
+
     /**
      * Checks that the object reference is not null and throws NullPointerException if it is.
      * See {@link Objects#requireNonNull} which is available since API level 19.
+     *
      * @param obj The object to check
      */
     @NonNull
@@ -520,7 +527,8 @@ public class ApiCompatibilityUtils {
     /**
      * Checks that the object reference is not null and throws NullPointerException if it is.
      * See {@link Objects#requireNonNull} which is available since API level 19.
-     * @param obj The object to check
+     *
+     * @param obj     The object to check
      * @param message The message to put into NullPointerException
      */
     @NonNull
@@ -551,10 +559,10 @@ public class ApiCompatibilityUtils {
 
     /**
      * @see TextView#setCompoundDrawablesRelative(Drawable, Drawable, Drawable,
-     *      Drawable)
+     * Drawable)
      */
     public static void setCompoundDrawablesRelative(TextView textView, Drawable start, Drawable top,
-            Drawable end, Drawable bottom) {
+                                                    Drawable end, Drawable bottom) {
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1) {
             // On JB MR1, due to a platform bug, setCompoundDrawablesRelative() is a no-op if the
             // view has ever been measured. As a workaround, use setCompoundDrawables() directly.
@@ -570,10 +578,10 @@ public class ApiCompatibilityUtils {
 
     /**
      * @see TextView#setCompoundDrawablesRelativeWithIntrinsicBounds(Drawable,
-     *      Drawable, Drawable, Drawable)
+     * Drawable, Drawable, Drawable)
      */
     public static void setCompoundDrawablesRelativeWithIntrinsicBounds(TextView textView,
-            Drawable start, Drawable top, Drawable end, Drawable bottom) {
+                                                                       Drawable start, Drawable top, Drawable end, Drawable bottom) {
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1) {
             // Work around the platform bug described in setCompoundDrawablesRelative() above.
             boolean isRtl = isLayoutRtl(textView);
@@ -588,10 +596,10 @@ public class ApiCompatibilityUtils {
 
     /**
      * @see TextView#setCompoundDrawablesRelativeWithIntrinsicBounds(int, int, int,
-     *      int)
+     * int)
      */
     public static void setCompoundDrawablesRelativeWithIntrinsicBounds(TextView textView,
-            int start, int top, int end, int bottom) {
+                                                                       int start, int top, int end, int bottom) {
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN_MR1) {
             // Work around the platform bug described in setCompoundDrawablesRelative() above.
             boolean isRtl = isLayoutRtl(textView);
@@ -697,7 +705,7 @@ public class ApiCompatibilityUtils {
      * Sets the status bar icons to dark or light. Note that this is only valid for
      * Android M+.
      *
-     * @param rootView The root view used to request updates to the system UI theming.
+     * @param rootView     The root view used to request updates to the system UI theming.
      * @param useDarkIcons Whether the status bar icons should be dark.
      */
     public static void setStatusBarIconColor(View rootView, boolean useDarkIcons) {
@@ -714,9 +722,9 @@ public class ApiCompatibilityUtils {
 
     /**
      * @param activity Activity that should get the task description update.
-     * @param title Title of the activity.
-     * @param icon Icon of the activity.
-     * @param color Color of the activity. It must be a fully opaque color.
+     * @param title    Title of the activity.
+     * @param icon     Icon of the activity.
+     * @param color    Color of the activity. It must be a fully opaque color.
      */
     public static void setTaskDescription(Activity activity, String title, Bitmap icon, int color) {
         // TaskDescription requires an opaque color.
@@ -795,7 +803,7 @@ public class ApiCompatibilityUtils {
      * {@link Context#startService(Intent)} otherwise.
      *
      * @param context The context to call.
-     * @param intent The intent to pass to the called method.
+     * @param intent  The intent to pass to the called method.
      * @return The result of the called method.
      */
     public static ComponentName startForegroundService(Context context, Intent intent) {
@@ -807,8 +815,8 @@ public class ApiCompatibilityUtils {
     }
 
     /**
-     * @see Html#toHtml(Spanned, int)
      * @param option is ignored on below N
+     * @see Html#toHtml(Spanned, int)
      */
     @SuppressWarnings("deprecation")
     public static String toHtml(Spanned spanned, int option) {

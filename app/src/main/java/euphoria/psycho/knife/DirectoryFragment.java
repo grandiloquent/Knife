@@ -32,7 +32,8 @@ import euphoria.psycho.knife.video.VideoFragment;
 
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
 
-public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>, DocumentActionDelegate,
+public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,
+        DocumentActionDelegate,
         Toolbar.OnMenuItemClickListener,
         SelectableListToolbar.SearchDelegate {
     DocumentsAdapter mAdapter;
