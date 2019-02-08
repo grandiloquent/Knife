@@ -1,26 +1,18 @@
 package euphoria.psycho.knife;
 
-import android.Manifest;
 import android.content.Intent;
 import android.os.Environment;
 import android.view.MenuItem;
-
-import com.google.android.material.navigation.NavigationView;
 
 import java.io.File;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
 import euphoria.psycho.common.StorageUtils;
-import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.knife.video.VideoFragment;
-
-import static android.os.Environment.DIRECTORY_MUSIC;
 
 public class MainActivity extends BaseActivity {
 

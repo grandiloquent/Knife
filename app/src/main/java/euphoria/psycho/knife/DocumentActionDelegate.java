@@ -1,6 +1,5 @@
 package euphoria.psycho.knife;
 
-import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.base.BaseActionDelegate;
 
 public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo> {

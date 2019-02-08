@@ -8,7 +8,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import euphoria.psycho.common.widget.ChromeImageButton;
 import euphoria.psycho.common.widget.ChromeImageView;
 import euphoria.psycho.knife.R;
 

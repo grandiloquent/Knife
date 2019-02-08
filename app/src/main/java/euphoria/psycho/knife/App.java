@@ -1,7 +1,6 @@
 package euphoria.psycho.knife;
 
 import euphoria.psycho.common.ContextUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.base.BaseApp;
 import euphoria.psycho.common.pool.BytesBufferPool;
 

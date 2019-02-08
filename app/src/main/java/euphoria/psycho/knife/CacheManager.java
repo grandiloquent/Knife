@@ -20,7 +20,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

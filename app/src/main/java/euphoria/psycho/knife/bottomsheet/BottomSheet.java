@@ -4,14 +4,11 @@ import android.content.Context;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import euphoria.psycho.common.ContextUtils;
 import euphoria.psycho.knife.R;
 
 public class BottomSheet implements View.OnClickListener {

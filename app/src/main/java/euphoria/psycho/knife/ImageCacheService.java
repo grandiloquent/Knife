@@ -18,16 +18,14 @@ package euphoria.psycho.knife;
 
 import android.content.Context;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.Utils;
 import euphoria.psycho.common.cache.BlobCache;
 import euphoria.psycho.common.cache.BlobCache.LookupRequest;
-
-
 import euphoria.psycho.common.pool.BytesBufferPool.BytesBuffer;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
 
 public class ImageCacheService {
     private static final String IMAGE_CACHE_FILE = "imgcache";
