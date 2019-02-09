@@ -11,18 +11,21 @@
 
     <euphoria.psycho.common.widget.ChromeImageView
         android:id="@+id/icon_view"
-        android:layout_width="31.0dip"
-        android:layout_height="31.0dip"
-        android:layout_marginBottom="8.0dip" />
+        android:layout_width="31dp"
+        android:layout_height="31dp"
+        android:scaleType="fitCenter"
+        android:layout_marginBottom="3dp" />
 
     <TextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textAppearance="?android:textAppearanceMedium"
-        android:textColor="#ff8b8b8b"
-        android:textSize="12.0sp"
-        android:typeface="serif" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="marquee"
+        android:fontFamily="sans-serif-condensed"
+        android:maxLines="2"
+        android:minLines="2"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="12sp" />
 </LinearLayout>

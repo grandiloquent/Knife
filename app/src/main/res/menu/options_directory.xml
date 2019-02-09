@@ -43,7 +43,7 @@
         </item>
         <item
             android:id="@+id/close_menu_id"
-            android:icon="@drawable/btn_close"
+            android:icon="@drawable/ic_action_menu"
             android:title="@string/bookmark_action_bar_close"
             app:iconTint="@color/dark_mode_tint"
             app:showAsAction="ifRoom" />

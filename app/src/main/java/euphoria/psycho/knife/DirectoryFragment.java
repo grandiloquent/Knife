@@ -56,6 +56,7 @@ import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
 import euphoria.psycho.knife.video.VideoFragment;
 
+import static euphoria.psycho.knife.DocumentUtils.calculateDirectory;
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
 
 public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,
@@ -66,6 +67,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private SelectableListLayout mContainer;
     private File mDirectory;
     private RecyclerView mRecyclerView;
+    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+            int scrollY = ContextUtils.getAppSharedPreferences().getInt(C.KEY_SCROLL_Y, RecyclerView.NO_POSITION);
+
+            Log.e("TAG/", "onGlobalLayout: ");
+
+            scrollToPosition(scrollY);
+            mRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
+        }
+    };
     private SelectionDelegate mSelectionDelegate;
     private int mSortBy = C.SORT_BY_UNSPECIFIED;
     private DirectoryToolbar mToolbar;
@@ -109,6 +121,30 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 //                        .withSource(source)
 //                        .build());
 //        getActivity().startService(intent);
+    }
+
+    private void initializeBottomSheet() {
+
+        BottomSheet.instance(getActivity()).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClicked(Pair<Integer, String> item) {
+                switch (item.first) {
+                    case R.drawable.ic_action_storage:
+                        mDirectory = Environment.getExternalStorageDirectory();
+                        break;
+                    case R.drawable.ic_action_sd_card:
+                        mDirectory = new File(StorageUtils.getSDCardPath());
+                        break;
+                    case R.drawable.ic_action_file_download:
+                        mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
+                        break;
+                    case R.drawable.ic_action_photo:
+                        mDirectory = new File(Environment.getExternalStorageDirectory(), "DCIM");
+                        break;
+                }
+                updateRecyclerView();
+            }
+        });
     }
 
     private void loadPreferences() {
@@ -235,24 +271,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ((BaseActivity) Objects.requireNonNull(getActivity())).setOnBackPressedListener(this::onBackPressed);
-
-        BottomSheet.instance(getActivity()).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClicked(Pair<Integer, String> item) {
-                switch (item.first) {
-                    case R.drawable.ic_root_internal:
-                        mDirectory = Environment.getExternalStorageDirectory();
-                        break;
-                    case R.drawable.ic_root_sdcard:
-                        mDirectory = new File(StorageUtils.getSDCardPath());
-                        break;
-                    case R.drawable.ic_action_file_download:
-                        mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
-                        break;
-                }
-                updateRecyclerView();
-            }
-        });
+        initializeBottomSheet();
     }
 
     @Override
@@ -270,7 +289,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
                         NetUtils.getMimeType(documentInfo.getFileName()));
-
 
 
                 startActivity(Intent.createChooser(intent, "打开"));
@@ -315,8 +333,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 deleteFiles(documentInfos.toArray(new DocumentInfo[0]));
 
                 break;
+            case R.id.action_sort_by_date:
+                sortBy(C.SORT_BY_DATE_MODIFIED);
+                break;
+            case R.id.action_sort_by_name:
+                sortBy(C.SORT_BY_NAME);
+                break;
+            case R.id.action_sort_by_size:
+                sortBy(C.SORT_BY_SIZE);
+                break;
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -328,6 +355,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void onSearchTextChanged(String query) {
 
+    }
+
+    private void sortBy(int sortBy) {
+        mSortBy = sortBy;
+        updateRecyclerView();
     }
 
     @Override
@@ -369,18 +401,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         updateRecyclerView();
 
     }
-
-    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-            int scrollY = ContextUtils.getAppSharedPreferences().getInt(C.KEY_SCROLL_Y, RecyclerView.NO_POSITION);
-
-            Log.e("TAG/", "onGlobalLayout: ");
-
-            scrollToPosition(scrollY);
-            mRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
-        }
-    };
 
     @Override
     public void share(DocumentInfo documentInfo) {

@@ -2,9 +2,11 @@ package euphoria.psycho.knife;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -100,7 +102,14 @@ public class DeleteFileJob extends Job {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                mLine1.setText("删除文件操作已完成");
+                mAlertDialog.setTitle("删除文件操作已完成");
+                mAlertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setVisibility(View.GONE);
+                Button positiveButton = mAlertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+
+                positiveButton.setText(android.R.string.ok);
+                positiveButton.setVisibility(View.VISIBLE);
+                mAlertDialog.setCancelable(true);
+                mLine1.setVisibility(View.GONE);
                 mProgressBar.setVisibility(View.INVISIBLE);
             }
         });

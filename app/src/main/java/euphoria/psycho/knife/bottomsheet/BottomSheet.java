@@ -43,11 +43,12 @@ public class BottomSheet {
             mContainer = LayoutInflater.from(mContext).inflate(R.layout.bottomsheet_menu, null);
             mRecyclerView = mContainer.findViewById(R.id.recycler_view);
             mRecyclerView.setHasFixedSize(true);
-            mRecyclerView.setLayoutManager(new GridLayoutManager(mContext, 3));
+            mRecyclerView.setLayoutManager(new GridLayoutManager(mContext, 4));
             mBottomSheetAdapter = new BottomSheetAdapter(mListener, new Pair[]{
-                    Pair.create(R.drawable.ic_root_internal, "Internal Storage"),
-                    Pair.create(R.drawable.ic_root_sdcard, "SD Card"),
-                    Pair.create(R.drawable.ic_action_file_download, "Download")
+                    Pair.create(R.drawable.ic_action_storage, "Internal Storage"),
+                    Pair.create(R.drawable.ic_action_sd_card, "SD Card"),
+                    Pair.create(R.drawable.ic_action_file_download, "Download"),
+                    Pair.create(R.drawable.ic_action_photo, "Picture")
             });
             mRecyclerView.setAdapter(mBottomSheetAdapter);
 

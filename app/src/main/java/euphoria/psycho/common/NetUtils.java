@@ -12,7 +12,7 @@ public class NetUtils {
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         }
 
-        if (type == null) {
+        if (type == null && extension != null) {
 
             switch (extension) {
                 case "epub":
