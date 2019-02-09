@@ -272,7 +272,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                         NetUtils.getMimeType(documentInfo.getFileName()));
 
 
-                Log.e("TAG/", "onClicked: " + NetUtils.getMimeType(documentInfo.getFileName()));
 
                 startActivity(Intent.createChooser(intent, "打开"));
                 break;

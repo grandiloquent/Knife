@@ -1,6 +1,8 @@
 package euphoria.psycho.knife.video;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.media.MediaFormat;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -9,6 +11,7 @@ import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SeekBar;
@@ -26,6 +29,7 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -249,6 +253,15 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        ((BaseActivity) getActivity()).setOnBackPressedListener(() -> {
+            DirectoryFragment.show(getFragmentManager());
+            return true;
+        });
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
@@ -259,15 +272,6 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.options_video, menu);
 
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        ((BaseActivity) getActivity()).setOnBackPressedListener(() -> {
-            DirectoryFragment.show(getFragmentManager());
-            return true;
-        });
     }
 
     @Nullable
@@ -282,6 +286,29 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
             seekTo(progress);
 
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_remove:
+                actionDeleteVideo();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void actionDeleteVideo() {
+
+        new AlertDialog.Builder(getContext())
+                .setTitle("询问")
+                .setMessage("确定删除 " + mPlayList.get(mCurrentPlaying) + " 吗?")
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+
+                    dialog.dismiss();
+                    StorageUtils.deleteFile(getContext(), new File(mPlayList.get(mCurrentPlaying)));
+                    onNext(null);
+                }).setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).show();
     }
 
     @Override

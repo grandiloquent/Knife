@@ -16,6 +16,8 @@ import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.base.Job;
 
+import static euphoria.psycho.common.StorageUtils.deleteFile;
+
 public class DeleteFileJob extends Job {
     private final Context mContext;
     private final Handler mHandler;
@@ -91,16 +93,6 @@ public class DeleteFileJob extends Job {
             mLine1.setText(path);
             mLine2.setText("删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + FileUtils.formatFileSize(mDeletedContentLength));
         });
-    }
-
-    public static boolean deleteFile(Context context, File file, String treeUri) {
-
-        boolean result = file.delete();
-        if (!result) {
-            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, treeUri, file);
-            result = documentFile.delete();
-        }
-        return result;
     }
 
     @Override

@@ -39,7 +39,27 @@ public class StorageUtils {
         }
     }
 
-    public static DocumentFile getDocumentFileFromTreeUri(Context context, String treeUri,File file) {
+    public static boolean deleteFile(Context context, File file, String treeUri) {
+
+        boolean result = file.delete();
+        if (!result) {
+            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, treeUri, file);
+            result = documentFile.delete();
+        }
+        return result;
+    }
+
+    public static boolean deleteFile(Context context, File file) {
+
+        boolean result = file.delete();
+        if (!result) {
+            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, sTreeUri.toString(), file);
+            result = documentFile.delete();
+        }
+        return result;
+    }
+
+    public static DocumentFile getDocumentFileFromTreeUri(Context context, String treeUri, File file) {
         String lastPath = StringUtils.substringAfterLast(treeUri, "/");
         String baseURI = treeUri + "/document/" + lastPath;
         String splited = StringUtils.substringBeforeLast(lastPath, "%");
