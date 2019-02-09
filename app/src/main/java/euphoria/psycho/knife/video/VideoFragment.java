@@ -67,6 +67,7 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
     private Toolbar mToolbar;
     private VideoView mVideoView;
     private Runnable mProgressUpdater = this::updateProgress;
+    private File mDirectory;
 
     private void bindViews(View view) {
         mToolbar = view.findViewById(R.id.toolbar);
@@ -158,7 +159,8 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
             })[0].getAbsolutePath();
         } else
             filePath = bundle.getString(C.EXTRA_FILE_PATH);
-        mPlayList = getPlayList(new File(filePath).getParentFile());
+        mDirectory = new File(filePath).getParentFile();
+        mPlayList = getPlayList(mDirectory);
         mCurrentPlaying = lookup(filePath, mPlayList);
         mVideoView.setVideoPath(filePath);
 
@@ -307,6 +309,8 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
 
                     dialog.dismiss();
                     StorageUtils.deleteFile(getContext(), new File(mPlayList.get(mCurrentPlaying)));
+                    mPlayList = getPlayList(mDirectory);
+                    mCurrentPlaying--;
                     onNext(null);
                 }).setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).show();
     }
