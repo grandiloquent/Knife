@@ -18,24 +18,7 @@ public class MainActivity extends BaseActivity {
 
     private static final int REQUEST_CODE_PERMISSION = 1;
 
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_internal_storage:
 
-                DirectoryFragment.show(getSupportFragmentManager(), Environment.getExternalStorageDirectory().getAbsolutePath());
-                break;
-            case R.id.action_sdcard:
-
-                DirectoryFragment.show(getSupportFragmentManager(), StorageUtils.getSDCardPath());
-                break;
-            case R.id.action_download:
-                DirectoryFragment.show(getSupportFragmentManager(), new File(Environment.getExternalStorageDirectory(), "Download").getAbsolutePath());
-                break;
-        }
-
-
-        return true;
-    }
 
     private static final String TAG = "TAG/" + MainActivity.class.getSimpleName();
 
@@ -52,15 +35,15 @@ public class MainActivity extends BaseActivity {
 
         if (treeUri == null)
             StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
-//        VideoFragment.show(getSupportFragmentManager(),null);
-//        return;
-        Intent intent = getIntent();
-        if (intent.getData() != null) {
-
-            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath());
-        } else {
-            DirectoryFragment.show(getSupportFragmentManager());
-        }
+        VideoFragment.show(getSupportFragmentManager(),null);
+        return;
+//        Intent intent = getIntent();
+//        if (intent.getData() != null) {
+//
+//            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath());
+//        } else {
+//            DirectoryFragment.show(getSupportFragmentManager());
+//        }
     }
 
     @Override

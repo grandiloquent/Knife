@@ -60,7 +60,6 @@
             android:id="@+id/play"
 
             style="@style/VideoButton"
-            android:layout_marginBottom="16dp"
             app:layout_constraintBottom_toTopOf="@+id/seekbar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -103,9 +102,10 @@
             android:textColor="#fefefe"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/seekbar"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/seekbar" />
 
-        <SeekBar
+        <euphoria.psycho.common.widget.TimeBar
             android:id="@+id/seekbar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -120,11 +120,12 @@
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:text="00:00:00"
-            android:textColor="#fefefe"
 
+            android:textColor="#fefefe"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/seekbar" />
+            app:layout_constraintStart_toEndOf="@+id/seekbar"
+            app:layout_constraintTop_toTopOf="@+id/seekbar" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

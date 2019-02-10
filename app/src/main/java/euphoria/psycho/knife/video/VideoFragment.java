@@ -43,14 +43,16 @@ import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.ChromeImageButton;
+import euphoria.psycho.common.widget.TimeBar;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
 
-public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeListener {
+public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
     private static final String DEFAULT_DIRECTORY_NAME = "Videos";
     private static final int DELAY_IN_MILLIS_UPDATE_PROGRESS = 1000;
     private static final String TAG = "TAG/" + VideoFragment.class.getSimpleName();
+    private AudioManager mAudioManager;
     private ConstraintLayout mController;
     private int mCurrentPlaying;
     private View mDecorView;
@@ -59,20 +61,19 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
     private DecimalFormat mFormat = (DecimalFormat) NumberFormat.getInstance(Locale.US);
     ChromeImageButton mForward;
     private Handler mHandler = new Handler();
+    private int mLastVolume;
     private ChromeImageButton mNext;
     private ChromeImageButton mPlay;
     private List<String> mPlayList;
     private TextView mPosition;
     private ChromeImageButton mPrevious;
     ChromeImageButton mRewind;
-    private SeekBar mSeekbar;
+    private TimeBar mSeekbar;
     private StringBuilder mStringBuilder = new StringBuilder();
     private Toolbar mToolbar;
     private VideoView mVideoView;
     private Runnable mProgressUpdater = this::updateProgress;
     ChromeImageButton mVolumeDown;
-    private AudioManager mAudioManager;
-    private int mLastVolume;
 
     private void actionDeleteVideo() {
 
@@ -147,7 +148,7 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         mPrevious.setOnClickListener(this::onPrevious);
         mPlay.setOnClickListener(this::onPlay);
         mVideoView.setOnPreparedListener(this::onPrepared);
-        mSeekbar.setOnSeekBarChangeListener(this);
+        mSeekbar.addListener(this);
 
         mRewind.setOnClickListener(v -> {
             if (mVideoView.isPlaying()) {
@@ -264,7 +265,7 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
     private void onPrepared(MediaPlayer mp) {
         mVideoView.start();
         loadSubtitle();
-        mSeekbar.setMax(mVideoView.getDuration());
+        mSeekbar.setDuration(mVideoView.getDuration());
         mDuration.setText(getSimpleTimestampAsString(mVideoView.getDuration()));
         mToolbar.setTitle(StringUtils.substringAfterLast(mPlayList.get(mCurrentPlaying), "/"));
         updateProgress();
@@ -292,7 +293,7 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         if (mVideoView.isPlaying()) {
 
             mPosition.setText(getSimpleTimestampAsString(mVideoView.getCurrentPosition()));
-            mSeekbar.setProgress(mVideoView.getCurrentPosition());
+            mSeekbar.setPosition(mVideoView.getCurrentPosition());
             mHandler.postDelayed(mProgressUpdater, DELAY_IN_MILLIS_UPDATE_PROGRESS);
         }
     }
@@ -360,21 +361,22 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
     }
 
     @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser)
-            seekTo(progress);
-
-
+    public void onScrubMove(TimeBar timeBar, long position) {
     }
 
     @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
+    public void onScrubStart(TimeBar timeBar,long position) {
         mHandler.removeCallbacks(mProgressUpdater);
+
     }
 
     @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
+    public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
         mHandler.post(mProgressUpdater);
+        seekTo((int) position);
+
+        Log.e("TAG/", "onScrubStop: " + position);
+
     }
 
     @Override
