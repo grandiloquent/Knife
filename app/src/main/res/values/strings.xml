@@ -27,19 +27,15 @@
     <string name="directory_no_results">No files found</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
     <string name="bookmark_action_bar_close">Close dialog</string>
-    <string name="bookmark_action_bar_edit_folder">Edit folder</string>
     <string name="delete">Delete</string>
     <string name="download_manager_ui_empty">No downloads here</string>
     <string name="hide_info">Hide Info</string>
-    <string name="kilobyte">KB</string>
-    <string name="megabyte">MB</string>
     <string name="directory_search">Search your files</string>
     <string name="properties">Properties</string>
     <string name="menu_sort">Sort by</string>
     <string name="search">Search</string>
     <string name="select_items">Select items</string>
     <string name="share">Share</string>
-    <string name="short_seconds">sec</string>
     <string name="show_info">Show Info</string>
     <string name="sort_date">By date modified</string>
     <string name="sort_name">By name</string>

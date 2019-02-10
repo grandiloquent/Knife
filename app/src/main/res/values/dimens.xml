@@ -1,38 +1,21 @@
 <resources>
     <dimen name="action_bar_shadow_height">10.0dip</dimen>
     <dimen name="clear_text_button_end_padding">10.0dip</dimen>
-    <dimen name="default_stroke_width">4dp</dimen>
-    <dimen name="dir_elevation">8dp</dimen>
-    <dimen name="document_list_padding">80dp</dimen>
-    <dimen name="frames_video_height">40dip</dimen>
-    <dimen name="grid_item_padding">4dp</dimen>
-    <dimen name="grid_item_width">160dp</dimen>
     <dimen name="headline_size">22.0sp</dimen>
-    <dimen name="list_item_default_margin">16.0dip</dimen>
-    <dimen name="list_item_min_height">64.0dip</dimen>
     <dimen name="list_item_start_icon_right_margin">20.0dip</dimen>
     <dimen name="list_item_start_icon_width">36.0dip</dimen>
     <dimen name="list_menu_width">180.0dip</dimen>
     <dimen name="menu_negative_software_vertical_offset">0.0dip</dimen>
     <dimen name="modern_toolbar_background_corner_radius">24.0dip</dimen>
     <dimen name="modern_toolbar_background_size">40.0dip</dimen>
-    <dimen name="progress_bar_size">70dp</dimen>
-    <dimen name="progress_video_line_height">2dp</dimen>
     <dimen name="search_toolbar_modern_bg_lateral_inset">8.0dip</dimen>
     <dimen name="search_toolbar_modern_bg_top_bottom_inset">8.0dip</dimen>
-    <dimen name="second_keyline_default">72dp</dimen>
     <dimen name="selectable_list_action_bar_end_padding">6.0dip</dimen>
     <dimen name="selectable_list_layout_row_padding">16.0dip</dimen>
     <dimen name="selectable_list_search_icon_end_padding">4.0dip</dimen>
     <dimen name="selectable_list_toolbar_nav_button_start_offset">4.0dip</dimen>
-    <dimen name="tab_strip_height">0.0dip</dimen>
     <dimen name="text_size_large">16.0sp</dimen>
     <dimen name="text_size_medium">14.0sp</dimen>
-    <dimen name="toolbar_h_padding">4dp</dimen>
     <dimen name="toolbar_height_no_shadow">56.0dip</dimen>
-    <integer name="default_max_sweep_angle">300</integer>
-    <integer name="default_min_sweep_angle">20</integer>
-    <string name="default_rotation_speed" format="float" translatable="false">1</string>
-    <string name="default_sweep_speed" format="float" translatable="false">1</string>
 
 </resources>

@@ -1,7 +1,5 @@
 <resources>
     <color name="accentColor">#EF3A0F</color>
-    <color name="background_progress_color">#6C6D6D</color>
-    <color name="background_video_color">#2f3031</color>
     <color name="black_alpha_24">#3d000000</color>
     <color name="black_alpha_38">#61000000</color>
     <color name="colorAccent">#D81B60</color>
@@ -12,8 +10,6 @@
     <color name="default_text_color_secondary">@color/modern_grey_700</color>
     <color name="disabled_text_color">@color/black_alpha_38</color>
     <color name="light_active_color">@color/modern_blue_600</color>
-    <color name="line_button">#565758</color>
-    <color name="line_color">#FF15FF00</color>
     <color name="modern_blue_600">#ff1a73e8</color>
     <color name="modern_grey_100">#fff1f3f4</color>
     <color name="modern_grey_700">#ff5f6368</color>
@@ -21,9 +17,7 @@
     <color name="modern_grey_900">#ff202124</color>
     <color name="black_alpha_11">#1d000000</color>
     <color name="modern_primary_color">@android:color/white</color>
-    <color name="progress_color">@color/colorPrimary</color>
     <color name="search_box_hint">@color/default_text_color_secondary</color>
-    <color name="shadow_color">#FF000000</color>
 
     <color name="white_alpha_70">#b3ffffff</color>
     <color name="toolbar_shadow_color">@color/black_alpha_11</color>
