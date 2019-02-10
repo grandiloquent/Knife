@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -16,14 +17,14 @@ import java.util.List;
 import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.StorageUtils;
+import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.Job;
 
 import static euphoria.psycho.common.StorageUtils.deleteFile;
 
 public class DeleteFileJob extends Job {
     private final Context mContext;
-    private final Handler mHandler;
-    private final List<String> mSource;
+    private final DocumentInfo[] mSource;
     final String mTreeUri;
     private AlertDialog mAlertDialog;
     private long mDeletedContentLength = 0L;
@@ -33,10 +34,9 @@ public class DeleteFileJob extends Job {
     private ProgressBar mProgressBar;
     private static final String TAG = "TAG/" + DeleteFileJob.class.getSimpleName();
 
-    DeleteFileJob(Context context, Listener listener, List<String> source, Handler handler) {
+    DeleteFileJob(Context context, Listener listener, DocumentInfo[] source) {
         super(listener);
         mSource = source;
-        mHandler = handler;
         mContext = context;
         mTreeUri = StorageUtils.getTreeUri().toString();
 
@@ -45,6 +45,8 @@ public class DeleteFileJob extends Job {
     }
 
     void delete(File path) {
+
+
         if (isCanceled()) {
             return;
         }
@@ -60,17 +62,18 @@ public class DeleteFileJob extends Job {
         if (path.isFile()) {
 
             long length = path.length();
-            if (deleteFile(mContext, path, mTreeUri)) {
+            if (StorageUtils.deleteFile(path)) {
                 mDocsProcessed++;
                 mDeletedContentLength += length;
-
+                updateDialog(path.getAbsolutePath());
             }
         } else {
-            if (path.delete()) mDocsProcessed++;
+            if (path.delete()) {
+                mDocsProcessed++;
+                updateDialog(path.getAbsolutePath());
+            }
         }
 
-
-        updateDialog(path.getAbsolutePath());
 
     }
 
@@ -90,7 +93,7 @@ public class DeleteFileJob extends Job {
     }
 
     private void updateDialog(String path) {
-        mHandler.post(() -> {
+        ThreadUtils.postOnUiThread(() -> {
 
             mLine1.setText(path);
             mLine2.setText("删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + FileUtils.formatFileSize(mDeletedContentLength));
@@ -99,7 +102,7 @@ public class DeleteFileJob extends Job {
 
     @Override
     protected void finish() {
-        mHandler.post(new Runnable() {
+        ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
                 mAlertDialog.setTitle("删除文件操作已完成");
@@ -118,8 +121,8 @@ public class DeleteFileJob extends Job {
     @Override
     protected void start() {
 
-        for (String path : mSource) {
-            delete(new File(path));
+        for (DocumentInfo path : mSource) {
+            delete(new File(path.getPath()));
         }
     }
 }

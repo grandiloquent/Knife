@@ -11,6 +11,9 @@
             android:title="@string/remove"
             app:showAsAction="ifRoom" />
 
+        <item
+            android:id="@+id/action_select_same_type"
+            android:title="Select Same Type" />
 
 
     </group>

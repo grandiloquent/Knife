@@ -74,7 +74,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private int mLastVisiblePosition;
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
-//    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
+    //    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
 //        @Override
 //        public void onGlobalLayout() {
 //            int scrollY = ContextUtils.getAppSharedPreferences().getInt(C.KEY_SCROLL_Y, RecyclerView.NO_POSITION);
@@ -97,38 +97,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         return false;
     }
 
-    private void deleteFiles(DocumentInfo... documentInfos) {
-        List<String> source = new ArrayList<>();
-        for (DocumentInfo documentInfo : documentInfos) {
-            source.add(documentInfo.getPath());
-        }
-
-        new Thread(new DeleteFileJob(getContext(), new Listener() {
-            @Override
-            public void onFinished(Job job) {
-                ThreadUtils.postOnUiThread(() -> {
-                    clearSelections();
-                    updateRecyclerView(false);
-                });
-            }
-
-            @Override
-            public void onStart(Job job) {
-
-            }
-        }, source, new Handler(Looper.getMainLooper()))).start();
-
-//        Intent intent = new Intent(getContext(), FileOperationService.class);
-//
-//        intent.putExtra(FileOperationService.EXTRA_JOB_ID, Long.toString(Utils.crc64Long(documentInfos[0].getPath())));
-//        intent.putExtra(FileOperationService.EXTRA_OPERATION,
-//                new FileOperation.Builder()
-//                        .withDestination(FileUtils.getDirectoryName(documentInfos[0].getPath()))
-//                        .withOpType(FileOperationService.OPERATION_DELETE)
-//                        .withSource(source)
-//                        .build());
-//        getActivity().startService(intent);
-    }
 
     private void initializeBottomSheet() {
 
@@ -224,6 +192,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     private void sortBy(int sortBy) {
+        mToolbar.hideOverflowMenu();
         mSortBy = sortBy;
         updateRecyclerView(false);
     }
@@ -273,9 +242,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void delete(DocumentInfo documentInfo) {
 
-        DocumentUtils.buildDeleteDialog(getContext(), documentInfo, aBoolean -> {
+        DocumentUtils.buildDeleteDialog(getContext(), aBoolean -> {
             if (aBoolean) mAdapter.removeItem(documentInfo);
-        });
+        }, documentInfo);
 
     }
 
@@ -339,30 +308,46 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public boolean onMenuItemClick(MenuItem item)
 
     {
-        mToolbar.hideOverflowMenu();
         switch (item.getItemId()) {
             case R.id.close_menu_id:
-                //getActivity().finish();
+                mToolbar.hideOverflowMenu();
+
                 showBottomSheet();
                 return true;
             case R.id.search_menu_id:
+                mToolbar.hideOverflowMenu();
+
                 mToolbar.showSearchView();
                 mContainer.onStartSearch();
                 return true;
             case R.id.selection_mode_delete_menu_id:
+                mToolbar.hideOverflowMenu();
 
                 List<DocumentInfo> documentInfos = mSelectionDelegate.getSelectedItemsAsList();
-                deleteFiles(documentInfos.toArray(new DocumentInfo[0]));
+                DocumentUtils.buildDeleteDialog(getActivity(), new DocumentUtils.Consumer<Boolean>() {
+
+                    @Override
+                    public void accept(Boolean aBoolean) {
+                        clearSelections();
+                        updateRecyclerView(false);
+                    }
+                }, documentInfos.toArray(new DocumentInfo[0]));
 
                 break;
             case R.id.action_sort_by_date:
+
                 sortBy(C.SORT_BY_DATE_MODIFIED);
                 break;
             case R.id.action_sort_by_name:
+                mToolbar.hideOverflowMenu();
+
                 sortBy(C.SORT_BY_NAME);
                 break;
             case R.id.action_sort_by_size:
                 sortBy(C.SORT_BY_SIZE);
+                break;
+            case R.id.action_select_same_type:
+                DocumentUtils.selectSameTypes(mSelectionDelegate, mAdapter);
                 break;
         }
         return true;

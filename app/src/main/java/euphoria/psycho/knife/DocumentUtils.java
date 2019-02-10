@@ -6,7 +6,10 @@ import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.DocumentsContract;
+import android.text.Selection;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
@@ -18,8 +21,10 @@ import java.io.File;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -31,7 +36,11 @@ import euphoria.psycho.common.C;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
+import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.common.base.Job;
+import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.common.widget.KeyboardVisibilityDelegate;
+import euphoria.psycho.common.widget.selection.SelectionDelegate;
 
 
 public class DocumentUtils {
@@ -39,6 +48,40 @@ public class DocumentUtils {
 
     static {
         System.loadLibrary("native-lib");
+    }
+
+    public static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
+
+
+        String description = documentInfos[0].getFileName();
+
+        if (documentInfos.length > 1) {
+            description += " 等 " + documentInfos.length + " 个文件";
+        }
+
+        AlertDialog dlg = new AlertDialog.Builder(context)
+                .setTitle(R.string.dialog_delete_title)
+                .setMessage(context.getString(R.string.dialog_delete_message, description))
+                .setTitle(R.string.dialog_rename_title)
+                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
+                    dialog.dismiss();
+                    ThreadUtils.postOnBackgroundThread(new DeleteFileJob(context, new Listener() {
+                        @Override
+                        public void onFinished(Job job) {
+                            ThreadUtils.postOnUiThread(() -> callback.accept(true));
+
+                        }
+
+                        @Override
+                        public void onStart(Job job) {
+
+                        }
+                    }, documentInfos));
+
+                }))
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
+
+        dlg.show();
     }
 
     public static void buildRenameDialog(Context context, String originalFileName, Consumer<CharSequence> callback) {
@@ -61,22 +104,6 @@ public class DocumentUtils {
                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
         editText.requestFocus();
         dlg.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        dlg.show();
-    }
-
-    public static void buildDeleteDialog(Context context, DocumentInfo documentInfo, Consumer<Boolean> callback) {
-
-
-        AlertDialog dlg = new AlertDialog.Builder(context)
-                .setTitle(R.string.dialog_delete_title)
-                .setMessage(context.getString(R.string.dialog_delete_message, documentInfo.getFileName()))
-                .setTitle(R.string.dialog_rename_title)
-                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
-                    dialog.dismiss();
-                    callback.accept(StorageUtils.deleteFile(new File(documentInfo.getPath())));
-                }))
-                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
-
         dlg.show();
     }
 
@@ -227,6 +254,26 @@ public class DocumentUtils {
             default:
                 return C.TYPE_OTHER;
         }
+    }
+
+    static void selectSameTypes(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
+        
+
+        List<DocumentInfo> infos = delegate.getSelectedItemsAsList();
+        if (infos.size() < 1) return;
+        String extension = StringUtils.substringAfterLast(infos.get(0).getFileName(), ".");
+        if (extension == null) return;
+        List<DocumentInfo> infoList = adapter.getInfos();
+
+        Set<DocumentInfo> documentInfoSet = new HashSet<>();
+        for (DocumentInfo info : infoList) {
+            if (info.getFileName().endsWith(extension)) {
+                documentInfoSet.add(info);
+
+
+            }
+        }
+        delegate.setSelectedItems(documentInfoSet);
     }
 
     interface Consumer<T> {

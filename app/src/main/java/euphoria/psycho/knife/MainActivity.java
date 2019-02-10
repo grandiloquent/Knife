@@ -35,15 +35,15 @@ public class MainActivity extends BaseActivity {
 
         if (treeUri == null)
             StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
-        VideoFragment.show(getSupportFragmentManager(),null);
-        return;
-//        Intent intent = getIntent();
-//        if (intent.getData() != null) {
-//
-//            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath());
-//        } else {
-//            DirectoryFragment.show(getSupportFragmentManager());
-//        }
+//        VideoFragment.show(getSupportFragmentManager(),null);
+//        return;
+        Intent intent = getIntent();
+        if (intent.getData() != null) {
+
+            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath());
+        } else {
+            DirectoryFragment.show(getSupportFragmentManager());
+        }
     }
 
     @Override

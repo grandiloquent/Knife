@@ -2,6 +2,7 @@ package euphoria.psycho.common.base;
 
 
 import android.os.CancellationSignal;
+import android.util.Log;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -67,6 +68,9 @@ public abstract class Job implements Runnable {
                 start();
             }
         } catch (RuntimeException e) {
+            e.printStackTrace();
+            Log.e("TAG/", "run: " + e.getMessage());
+
             // No exceptions should be thrown here, as all calls to the provider must be
             // handled within Job implementations. However, just in case catch them here.
         } finally {

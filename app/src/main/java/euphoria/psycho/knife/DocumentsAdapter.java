@@ -32,6 +32,10 @@ public class DocumentsAdapter extends RecyclerView.Adapter<BaseViewHolder> {
 //        return sb.toString();
 //    }
 
+    public List<DocumentInfo> getInfos() {
+        return mInfos;
+    }
+
     public void onSelectionStateChange(boolean selectionEnabled) {
 
     }
@@ -47,8 +51,7 @@ public class DocumentsAdapter extends RecyclerView.Adapter<BaseViewHolder> {
             }
         }
     }
-
-//    public void updateItem(DocumentInfo documentInfo) {
+    //    public void updateItem(DocumentInfo documentInfo) {
 //        for (DocumentView view : mViews) {
 //            if (view.getItem().getFileName().equals(documentInfo.getFileName())) {
 //                view.setItem(documentInfo);
