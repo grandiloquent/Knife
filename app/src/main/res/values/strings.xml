@@ -11,6 +11,9 @@
         <item quantity="one">Couldn\u2019t delete <xliff:g example="1" id="count">%1$d</xliff:g> item</item>
         <item quantity="other">Couldn\u2019t delete <xliff:g example="2" id="count">%1$d</xliff:g> items</item>
     </plurals>
+    <string name="share_link_title">Share</string>
+    <string name="dialog_rename_title">Rename File</string>
+    <string name="rename">Rename</string>
     <string name="accessibility_toolbar_multi_select">%1$s selected</string>
     <string name="directory_description">%1$d items</string>
     <string name="dialog_delete_title">Ask</string>

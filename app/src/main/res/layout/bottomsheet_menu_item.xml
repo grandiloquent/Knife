@@ -6,8 +6,7 @@
     android:clickable="true"
     android:gravity="center"
     android:orientation="vertical"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp">
+    android:paddingTop="16dp">
 
     <euphoria.psycho.common.widget.ChromeImageView
         android:id="@+id/icon_view"

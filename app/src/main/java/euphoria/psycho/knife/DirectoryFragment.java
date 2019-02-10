@@ -1,7 +1,10 @@
 package euphoria.psycho.knife;
 
+import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -28,6 +31,7 @@ import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -52,6 +56,7 @@ import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
+import euphoria.psycho.knife.DocumentUtils.Consumer;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
 import euphoria.psycho.knife.video.VideoFragment;
@@ -66,18 +71,20 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private DocumentsAdapter mAdapter;
     private SelectableListLayout mContainer;
     private File mDirectory;
+    private int mLastVisiblePosition;
+    private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
-    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-            int scrollY = ContextUtils.getAppSharedPreferences().getInt(C.KEY_SCROLL_Y, RecyclerView.NO_POSITION);
-
-            Log.e("TAG/", "onGlobalLayout: ");
-
-            scrollToPosition(scrollY);
-            mRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
-        }
-    };
+//    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
+//        @Override
+//        public void onGlobalLayout() {
+//            int scrollY = ContextUtils.getAppSharedPreferences().getInt(C.KEY_SCROLL_Y, RecyclerView.NO_POSITION);
+//
+//            Log.e("TAG/", "onGlobalLayout: ");
+//
+//            scrollToPosition(scrollY);
+//            mRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalLayoutListener);
+//        }
+//    };
     private SelectionDelegate mSelectionDelegate;
     private int mSortBy = C.SORT_BY_UNSPECIFIED;
     private DirectoryToolbar mToolbar;
@@ -101,7 +108,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             public void onFinished(Job job) {
                 ThreadUtils.postOnUiThread(() -> {
                     clearSelections();
-                    updateRecyclerView();
+                    updateRecyclerView(false);
                 });
             }
 
@@ -142,7 +149,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                         mDirectory = new File(Environment.getExternalStorageDirectory(), "DCIM");
                         break;
                 }
-                updateRecyclerView();
+                updateRecyclerView(false);
             }
         });
     }
@@ -181,7 +188,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         File parent = mDirectory.getParentFile();
         if (parent != null) {
             mDirectory = parent;
-            updateRecyclerView();
+            updateRecyclerView(true);
             return true;
         }
 
@@ -191,7 +198,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     private void savePreferences() {
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
-        preferences.edit().putInt(C.KEY_SCROLL_Y, ((LinearLayoutManager) mRecyclerView.getLayoutManager()).findFirstVisibleItemPosition())
+        updateLastVisiblePosition();
+        preferences.edit().putInt(C.KEY_SCROLL_Y, mLastVisiblePosition)
                 .putString(C.KEY_DIRECTORY, mDirectory.getAbsolutePath())
                 .putInt(C.KEY_SORT_BY, mSortBy).apply();
     }
@@ -215,12 +223,25 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         BottomSheet.instance(getActivity()).showDialog();
     }
 
-    private void updateRecyclerView() {
+    private void sortBy(int sortBy) {
+        mSortBy = sortBy;
+        updateRecyclerView(false);
+    }
+
+
+    private void updateLastVisiblePosition() {
+
+        mLastVisiblePosition = mLayoutManager.findLastVisibleItemPosition();
+    }
+
+    private void updateRecyclerView(boolean isScrollTo) {
         ThreadUtils.postOnBackgroundThread(() -> {
             List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy);
             ThreadUtils.postOnUiThread(() -> {
                 mAdapter.switchDataSet(infos);
                 mToolbar.setTitle(mDirectory.getName());
+                if (isScrollTo)
+                    mLayoutManager.scrollToPosition(mLastVisiblePosition);
             });
         });
     }
@@ -251,15 +272,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void delete(DocumentInfo documentInfo) {
-        deleteFiles(documentInfo);
 
-//        new MaterialAlertDialogBuilder(getContext())
-//                .setTitle(R.string.dialog_delete_title)
-//                .setMessage(getString(R.string.dialog_delete_message, documentInfo.getFileName()))
-//                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
-//                    deleteFiles(documentInfo);
-//                }))
-//                .show();
+        DocumentUtils.buildDeleteDialog(getContext(), documentInfo, aBoolean -> {
+            if (aBoolean) mAdapter.removeItem(documentInfo);
+        });
+
     }
 
     @Override
@@ -281,8 +298,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath());
                 break;
             case C.TYPE_DIRECTORY:
+                updateLastVisiblePosition();
                 mDirectory = new File(documentInfo.getPath());
-                updateRecyclerView();
+                updateRecyclerView(false);
                 break;
             default:
                 Intent intent = new Intent();
@@ -290,8 +308,12 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
                         NetUtils.getMimeType(documentInfo.getFileName()));
 
-
-                startActivity(Intent.createChooser(intent, "打开"));
+                ComponentName foundActivity = intent.resolveActivity(getContext().getPackageManager());
+                if (foundActivity != null) {
+                    startActivity(intent);
+                } else {
+                    startActivity(Intent.createChooser(intent, "打开"));
+                }
                 break;
         }
     }
@@ -357,15 +379,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
-    private void sortBy(int sortBy) {
-        mSortBy = sortBy;
-        updateRecyclerView();
-    }
-
     @Override
     public void onSelectionStateChange(List<DocumentInfo> selectedItems) {
 
     }
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -386,7 +404,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mAdapter = new DocumentsAdapter(this, mSelectionDelegate);
         mRecyclerView = mContainer.initializeRecyclerView(mAdapter);
         mRecyclerView.getItemAnimator().setChangeDuration(0);
-        mRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
+        mLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
         mToolbar = (DirectoryToolbar) mContainer.initializeToolbar(
                 R.layout.directory_toolbar, mSelectionDelegate,
                 R.string.app_name, null,
@@ -398,13 +416,31 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
 
         loadPreferences();
-        updateRecyclerView();
+        updateRecyclerView(true);
 
     }
 
     @Override
-    public void share(DocumentInfo documentInfo) {
+    public void rename(DocumentInfo documentInfo) {
+        DocumentUtils.buildRenameDialog(getContext(),
+                documentInfo.getFileName(),
+                charSequence -> {
+                    if (charSequence == null) return;
+                    String newFileName = charSequence.toString();
+                    File src = new File(documentInfo.getPath());
+                    boolean renameResult = StorageUtils.renameFile(getContext(),
+                            src,
+                            new File(src.getParentFile(), newFileName));
+                    if (renameResult) updateRecyclerView(false);
+                });
+    }
 
+    @Override
+    public void share(DocumentInfo documentInfo) {
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), NetUtils.getMimeType(documentInfo.getFileName()));
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_link_title)));
     }
 
     @Override

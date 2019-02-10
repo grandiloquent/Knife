@@ -15,4 +15,6 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
     void trimVideo(DocumentInfo documentInfo);
 
     void getProperties(DocumentInfo documentInfo);
+
+    void rename(DocumentInfo documentInfo);
 }

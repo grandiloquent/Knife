@@ -6,15 +6,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Environment;
 import android.provider.DocumentsContract;
+import android.text.TextUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
 
+/*
+android.os.FileUtils
+ */
 public class StorageUtils {
 
 
@@ -24,6 +31,30 @@ public class StorageUtils {
     private static final String TAG = "TAG/" + StorageUtils.class.getSimpleName();
     private static String sSDCardPath;
     private static Uri sTreeUri;
+
+    private static File buildFile(File parent, String name, String ext) {
+        if (TextUtils.isEmpty(ext)) {
+            return new File(parent, name);
+        } else {
+            return new File(parent, name + "." + ext);
+        }
+    }
+
+    private static File buildUniqueFileWithExtension(File parent, String name, String ext)
+            throws FileNotFoundException {
+        File file = buildFile(parent, name, ext);
+
+        // If conflicting file, try adding counter suffix
+        int n = 0;
+        while (file.exists()) {
+            if (n++ >= 32) {
+                throw new FileNotFoundException("Failed to create unique file");
+            }
+            file = buildFile(parent, name + " (" + n + ")", ext);
+        }
+
+        return file;
+    }
 
     public static boolean deleteFile(File file) {
         if (file.getPath().startsWith(getSDCardPath())) {
@@ -53,29 +84,10 @@ public class StorageUtils {
 
         boolean result = file.delete();
         if (!result) {
-            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, sTreeUri.toString(), file);
+            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, getTreeUri().toString(), file);
             result = documentFile.delete();
         }
         return result;
-    }
-
-    public static DocumentFile getDocumentFileFromTreeUri(Context context, String treeUri, File file) {
-        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
-        String baseURI = treeUri + "/document/" + lastPath;
-        String splited = StringUtils.substringBeforeLast(lastPath, "%");
-
-        return DocumentFile.fromSingleUri(context, Uri.parse(baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"))));
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public static DocumentFile getDocument(Context context, Uri treeUri,
-                                           String mimeType,
-                                           String displayName) {
-        DocumentFile documentFile = DocumentFile.fromTreeUri(context, treeUri);
-        DocumentFile[] files = documentFile.listFiles();
-
-
-        return null;
     }
 
     public static DocumentFile getDocumentFile(final File file, final boolean isDirectory, Context context, Uri treeUri) {
@@ -118,6 +130,27 @@ public class StorageUtils {
         }
 
         return document;
+    }
+
+    public static DocumentFile getDocumentFileFromTreeUri(Context context, String treeUri, File file) {
+        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
+        String baseURI = treeUri + "/document/" + lastPath;
+        String splited = StringUtils.substringBeforeLast(lastPath, "%");
+
+        return DocumentFile.fromSingleUri(context, Uri.parse(baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"))));
+    }
+
+    public static String getDocumentUriFromTreeUri(Context context, String treeUri, File file) {
+        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
+        String baseURI = treeUri + "/document/" + lastPath;
+        String splited = StringUtils.substringBeforeLast(lastPath, "%");
+
+        return baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"));
+    }
+
+    public static DocumentFile getDocumentFileFromTreeUri(File file) {
+
+        return getDocumentFileFromTreeUri(ContextUtils.getApplicationContext(), getTreeUri().toString(), file);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -176,13 +209,6 @@ public class StorageUtils {
 //        return Environment.getExternalStorageDirectory().getPath();
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    public static void keepPermission(Context context, Intent intent) {
-
-        context.getContentResolver().takePersistableUriPermission(intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        context.grantUriPermission(context.getPackageName(), intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-    }
-
     public static Uri getTreeUri() {
         if (sTreeUri == null) {
             sTreeUri = Uri.parse(ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null));
@@ -190,6 +216,66 @@ public class StorageUtils {
         return sTreeUri;
     }
 
+    private static boolean isValidFatFilenameChar(char c) {
+        if ((0x00 <= c && c <= 0x1f)) {
+            return false;
+        }
+        switch (c) {
+            case '"':
+            case '*':
+            case '/':
+            case ':':
+            case '<':
+            case '>':
+            case '?':
+            case '\\':
+            case '|':
+            case 0x7F:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    public static void keepPermission(Context context, Intent intent) {
+
+        context.getContentResolver().takePersistableUriPermission(intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        context.grantUriPermission(context.getPackageName(), intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+    }
+
+    public static boolean renameFile(Context context, File src, File dst) {
+
+
+        boolean result = src.renameTo(dst);
+
+        if (!result && VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+
+
+            Uri srcDocumentUri = Uri.parse(getDocumentUriFromTreeUri(context, getTreeUri().toString(), src));
+
+            Log.e("TAG/", "renameFile: " +
+                    "\n" + srcDocumentUri +
+                    "\n" + dst);
+            if (src.getParent().equals(dst.getParent())) {
+                try {
+
+
+                    result = DocumentsContract.renameDocument(
+                            context.getContentResolver(),
+                            srcDocumentUri,
+                            dst.getName()) != null;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+            } else if (VERSION.SDK_INT >= VERSION_CODES.N) {
+
+            }
+
+        }
+        return result;
+    }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static void requestTreeUri(Activity activity, int requestCode) {

@@ -20,6 +20,7 @@ import euphoria.psycho.common.Log;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.widget.ListMenuButton;
+import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 
@@ -85,10 +86,11 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
                 if (bitmap != null) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream(65536);
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                    if (path.equals(mDocumentInfo.getPath())) {
+                        App.getImageCacheService().putImageData(documentInfo.getPath(),
 
-                    App.getImageCacheService().putImageData(documentInfo.getPath(),
-
-                            C.THUMBNAIL_SMALL, baos.toByteArray());
+                                C.THUMBNAIL_SMALL, baos.toByteArray());
+                    }
                 }
             }
 
@@ -110,15 +112,18 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
         Context context = getContext();
         if (mDocumentInfo.getType() == C.TYPE_VIDEO) {
             return new ListMenuButton.Item[]{
-                    new ListMenuButton.Item(getContext(), R.string.share, true),
-                    new ListMenuButton.Item(getContext(), R.string.delete, true),
-                    new ListMenuButton.Item(getContext(), R.string.trim_video, true),
-                    new ListMenuButton.Item(context, R.string.properties, true)
+                    new Item(context, R.string.rename, true),
+                    new ListMenuButton.Item(context, R.string.delete, true),
+                    new ListMenuButton.Item(context, R.string.share, true),
+                    new ListMenuButton.Item(context, R.string.properties, true),
+                    new ListMenuButton.Item(context, R.string.trim_video, true)
             };
         }
+
         return new ListMenuButton.Item[]{
-                new ListMenuButton.Item(getContext(), R.string.share, true),
-                new ListMenuButton.Item(getContext(), R.string.delete, true),
+                new Item(context, R.string.rename, true),
+                new ListMenuButton.Item(context, R.string.delete, true),
+                new ListMenuButton.Item(context, R.string.share, true),
                 new ListMenuButton.Item(context, R.string.properties, true)
 
         };
@@ -152,6 +157,9 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
                 break;
             case R.string.properties:
                 mDelegate.getProperties(mDocumentInfo);
+                break;
+            case R.string.rename:
+                mDelegate.rename(mDocumentInfo);
                 break;
         }
     }
