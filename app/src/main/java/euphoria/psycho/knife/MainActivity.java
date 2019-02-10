@@ -52,7 +52,8 @@ public class MainActivity extends BaseActivity {
 
         if (treeUri == null)
             StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
-
+//        VideoFragment.show(getSupportFragmentManager(),null);
+//        return;
         Intent intent = getIntent();
         if (intent.getData() != null) {
 

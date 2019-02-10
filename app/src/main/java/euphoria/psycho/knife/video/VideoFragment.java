@@ -1,8 +1,7 @@
 package euphoria.psycho.knife.video;
 
 import android.annotation.SuppressLint;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
+import android.media.AudioManager;
 import android.media.MediaFormat;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -13,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -38,10 +38,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.Log;
+import euphoria.psycho.common.ManagerUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
-import euphoria.psycho.common.base.BaseActivity.OnBackPressedListener;
 import euphoria.psycho.common.widget.ChromeImageButton;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
@@ -54,20 +54,40 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
     private ConstraintLayout mController;
     private int mCurrentPlaying;
     private View mDecorView;
+    private File mDirectory;
     private TextView mDuration;
     private DecimalFormat mFormat = (DecimalFormat) NumberFormat.getInstance(Locale.US);
+    ChromeImageButton mForward;
     private Handler mHandler = new Handler();
     private ChromeImageButton mNext;
     private ChromeImageButton mPlay;
     private List<String> mPlayList;
     private TextView mPosition;
     private ChromeImageButton mPrevious;
+    ChromeImageButton mRewind;
     private SeekBar mSeekbar;
     private StringBuilder mStringBuilder = new StringBuilder();
     private Toolbar mToolbar;
     private VideoView mVideoView;
     private Runnable mProgressUpdater = this::updateProgress;
-    private File mDirectory;
+    ChromeImageButton mVolumeDown;
+    private AudioManager mAudioManager;
+    private int mLastVolume;
+
+    private void actionDeleteVideo() {
+
+        new AlertDialog.Builder(getContext())
+                .setTitle("询问")
+                .setMessage("确定删除 " + mPlayList.get(mCurrentPlaying) + " 吗?")
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+
+                    dialog.dismiss();
+                    StorageUtils.deleteFile(getContext(), new File(mPlayList.get(mCurrentPlaying)));
+                    mPlayList = getPlayList(mDirectory);
+                    mCurrentPlaying--;
+                    onNext(null);
+                }).setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).show();
+    }
 
     private void bindViews(View view) {
         mToolbar = view.findViewById(R.id.toolbar);
@@ -79,6 +99,12 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         mPosition = view.findViewById(R.id.position);
         mSeekbar = view.findViewById(R.id.seekbar);
         mDuration = view.findViewById(R.id.duration);
+
+
+        mRewind = view.findViewById(R.id.rewind);
+        mForward = view.findViewById(R.id.forward);
+        mVolumeDown = view.findViewById(R.id.volume_down);
+
     }
 
     private List<String> getPlayList(File dir) {
@@ -122,6 +148,47 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         mPlay.setOnClickListener(this::onPlay);
         mVideoView.setOnPreparedListener(this::onPrepared);
         mSeekbar.setOnSeekBarChangeListener(this);
+
+        mRewind.setOnClickListener(v -> {
+            if (mVideoView.isPlaying()) {
+                int seekTo = mVideoView.getCurrentPosition() - 1000 * 10;
+                if (seekTo > 0) {
+                    mVideoView.seekTo(seekTo);
+                }
+            }
+        });
+        mForward.setOnClickListener(v -> {
+            if (mVideoView.isPlaying()) {
+                int seekTo = mVideoView.getCurrentPosition() + 1000 * 10;
+                if (seekTo < mVideoView.getDuration()) {
+                    mVideoView.seekTo(seekTo);
+                }
+            }
+        });
+        mAudioManager = ManagerUtils.provideAudioManager(getContext());
+        mLastVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+        if (mLastVolume == 0) {
+            mVolumeDown.setImageResource(R.drawable.ic_volume_up_white_48px);
+        }
+
+        mVolumeDown.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) {
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_ALLOW_RINGER_MODES);
+                    mVolumeDown.setImageResource(R.drawable.ic_volume_up_white_48px);
+
+                } else {
+                    if (mLastVolume == 0)
+                        mLastVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mLastVolume, AudioManager.FLAG_PLAY_SOUND);
+                    mVolumeDown.setImageResource(R.drawable.ic_volume_off_white_48px);
+                }
+
+            }
+        });
     }
 
     @SuppressLint("NewApi")
@@ -184,12 +251,12 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         if (mVideoView.isPlaying()) {
             mHandler.removeCallbacksAndMessages(null);
             mVideoView.pause();
-            mPlay.setImageResource(R.drawable.ic_play_arrow_white_36dp);
+            mPlay.setImageResource(R.drawable.ic_play_arrow_white_48px);
 
         } else {
             mVideoView.start();
             mHandler.post(mProgressUpdater);
-            mPlay.setImageResource(R.drawable.ic_pause_white_36dp);
+            mPlay.setImageResource(R.drawable.ic_pause_white_48px);
 
         }
     }
@@ -283,14 +350,6 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
     }
 
     @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser)
-            seekTo(progress);
-
-
-    }
-
-    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_remove:
@@ -300,19 +359,12 @@ public class VideoFragment extends Fragment implements SeekBar.OnSeekBarChangeLi
         return super.onOptionsItemSelected(item);
     }
 
-    private void actionDeleteVideo() {
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (fromUser)
+            seekTo(progress);
 
-        new AlertDialog.Builder(getContext())
-                .setTitle("询问")
-                .setMessage("确定删除 " + mPlayList.get(mCurrentPlaying) + " 吗?")
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
 
-                    dialog.dismiss();
-                    StorageUtils.deleteFile(getContext(), new File(mPlayList.get(mCurrentPlaying)));
-                    mPlayList = getPlayList(mDirectory);
-                    mCurrentPlaying--;
-                    onNext(null);
-                }).setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).show();
     }
 
     @Override

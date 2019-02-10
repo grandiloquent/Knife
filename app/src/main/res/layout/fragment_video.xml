@@ -42,38 +42,57 @@
 
         <euphoria.psycho.common.widget.ChromeImageButton
             android:id="@+id/previous"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/btn"
-            android:src="@drawable/ic_skip_previous_white_36dp"
+            style="@style/VideoButton"
+            app:layout_constraintBottom_toBottomOf="@+id/play"
+            app:layout_constraintEnd_toStartOf="@+id/rewind"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_skip_previous_white_48px" />
+
+        <euphoria.psycho.common.widget.ChromeImageButton
+            android:id="@+id/rewind"
+            style="@style/VideoButton"
             app:layout_constraintBottom_toBottomOf="@+id/play"
             app:layout_constraintEnd_toStartOf="@+id/play"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_fast_rewind_white_48px" />
 
         <euphoria.psycho.common.widget.ChromeImageButton
             android:id="@+id/play"
-            android:layout_width="wrap_content"
 
-            android:layout_height="wrap_content"
+            style="@style/VideoButton"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/btn"
-            android:src="@drawable/ic_pause_white_36dp"
             app:layout_constraintBottom_toTopOf="@+id/seekbar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_pause_white_48px" />
+
+        <euphoria.psycho.common.widget.ChromeImageButton
+            android:id="@+id/forward"
+            style="@style/VideoButton"
+            app:layout_constraintBottom_toBottomOf="@+id/play"
+
+            app:layout_constraintStart_toEndOf="@+id/play"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_fast_forward_white_48px" />
 
         <euphoria.psycho.common.widget.ChromeImageButton
             android:id="@+id/next"
-            android:layout_width="wrap_content"
-
-            android:layout_height="wrap_content"
-            android:background="@drawable/btn"
-            android:src="@drawable/ic_skip_next_white_36dp"
-
+            style="@style/VideoButton"
             app:layout_constraintBottom_toBottomOf="@+id/play"
-            app:layout_constraintStart_toEndOf="@+id/play"
-            app:layout_constraintTop_toTopOf="parent" />
+
+            app:layout_constraintStart_toEndOf="@+id/forward"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_skip_next_white_48px" />
+
+        <euphoria.psycho.common.widget.ChromeImageButton
+            android:id="@+id/volume_down"
+            style="@style/VideoButton"
+            app:layout_constraintBottom_toBottomOf="@+id/play"
+
+            app:layout_constraintStart_toEndOf="@+id/next"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_volume_off_white_48px" />
 
         <TextView
             android:id="@+id/position"
