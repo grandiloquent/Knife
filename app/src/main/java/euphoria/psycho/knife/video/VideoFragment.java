@@ -14,23 +14,16 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.VideoView;
-
-import com.mp4parser.iso14496.part15.HevcDecoderConfigurationRecord.Array;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.text.Collator;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
@@ -61,7 +54,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
     private static final String DEFAULT_DIRECTORY_NAME = "Videos";
     private static final int DELAY_IN_MILLIS_UPDATE_PROGRESS = 1000;
-    private static final long HIDE_CONTROLLER_DELAY_IN_MILLIS = 3000;
+    private static final long HIDE_CONTROLLER_DELAY_IN_MILLIS = 5000;
     private static final String TAG = "TAG/" + VideoFragment.class.getSimpleName();
     private static final int TOUCH_IGNORE = 1;
     private static final int TOUCH_NONE = 3;
@@ -100,7 +93,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private View mRootLayout;
 
     private void actionDeleteVideo() {
-
+        mHandler.removeCallbacks(null);
         new AlertDialog.Builder(getContext())
                 .setTitle("询问")
                 .setMessage("确定删除 " + mPlayList.get(mCurrentPlaying) + " 吗?")
@@ -111,7 +104,11 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
                     mPlayList = getPlayList(mDirectory);
                     mCurrentPlaying--;
                     onNext(null);
-                }).setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).show();
+                    updateVisual();
+                }).setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+            dialog.dismiss();
+            updateVisual();
+        }).show();
     }
 
     private void bindViews(View view) {
@@ -201,9 +198,9 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private void hide() {
 
         if (mController.getVisibility() == View.VISIBLE) {
-            mController.setVisibility(View.GONE);
+            mController.setVisibility(View.INVISIBLE);
             SystemUtils.hideSystemUI(mDecorView);
-            mToolbar.setVisibility(View.GONE);
+            mToolbar.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -347,15 +344,14 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         }
     }
 
-    public boolean onTouch(View v, MotionEvent event) {
+    private boolean onTouch(View v, MotionEvent event) {
 
-        Log.e("TAG/", "onTouch: ");
 
         float xChanged = (mTouchX != -1f && mTouchY != -1f) ? event.getRawX() - mTouchX : 0f;
         float yChanged = (xChanged != 0f) ? event.getRawY() - mTouchY : 0f;
 
         // coef is the gradient's move to determine a neutral zone
-        float coef = Math.abs(yChanged / xChanged);
+        // float coef = Math.abs(yChanged / xChanged);
         float xgesturesize = xChanged / mDisplayMetrics.xdpi * 2.54f;
         float deltaY = Math.max(1f, (Math.abs(mInitTouchY - event.getRawY()) / mDisplayMetrics.xdpi + 0.5f) * 2f);
 
@@ -375,6 +371,8 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
             }
             case MotionEvent.ACTION_UP: {
                 if (mTouchAction == TOUCH_IGNORE) mTouchAction = TOUCH_NONE;
+
+
                 if (xgesturesize == 0.0f) {
                     show();
                 } else if (mTouchAction == TOUCH_SEEK)
@@ -393,17 +391,14 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         }
     }
 
-    private boolean show() {
+    private void show() {
 
         if (mController.getVisibility() == View.INVISIBLE) {
             mHandler.post(mProgressUpdater);
+            SystemUtils.showSystemUI(mDecorView);
             mController.setVisibility(View.VISIBLE);
             mToolbar.setVisibility(View.VISIBLE);
-            SystemUtils.showSystemUI(mDecorView);
             mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
-            return true;
-        } else {
-            return false;
         }
 
 
@@ -416,6 +411,11 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
             mSeekbar.setPosition(mVideoView.getCurrentPosition());
             mHandler.postDelayed(mProgressUpdater, DELAY_IN_MILLIS_UPDATE_PROGRESS);
         }
+    }
+
+    private void updateVisual() {
+        mHandler.post(mProgressUpdater);
+        mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
     }
 
     public static void show(FragmentManager manager, String filePath, int sortBy) {
@@ -478,7 +478,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
     @Override
     public void onScrubStart(TimeBar timeBar, long position) {
-        mHandler.removeCallbacks(mProgressUpdater);
+        mHandler.removeCallbacks(null);
 
     }
 
@@ -486,6 +486,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
         mHandler.post(mProgressUpdater);
         seekTo((int) position);
+        mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
 
         Log.e("TAG/", "onScrubStop: " + position);
 

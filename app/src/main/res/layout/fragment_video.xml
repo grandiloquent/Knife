@@ -5,8 +5,8 @@
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000"
-    tools:layout_editor_absoluteY="81dp">
+    android:fitsSystemWindows="true"
+    android:background="#000">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
