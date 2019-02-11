@@ -17,10 +17,21 @@ import euphoria.psycho.knife.video.VideoFragment;
 public class MainActivity extends BaseActivity {
 
     private static final int REQUEST_CODE_PERMISSION = 1;
-
-
-
     private static final String TAG = "TAG/" + MainActivity.class.getSimpleName();
+
+    private void handleIntent() {
+        Intent intent = getIntent();
+        if (intent.getData() != null) {
+
+            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath(), C.SORT_BY_NAME);
+        } else {
+            DirectoryFragment.show(getSupportFragmentManager());
+        }
+    }
+
+    private void showVideoFragment() {
+        VideoFragment.show(getSupportFragmentManager(), null, C.SORT_BY_NAME);
+    }
 
     @Override
     protected void initialize() {
@@ -35,15 +46,8 @@ public class MainActivity extends BaseActivity {
 
         if (treeUri == null)
             StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
-//        VideoFragment.show(getSupportFragmentManager(),null);
-//        return;
-        Intent intent = getIntent();
-        if (intent.getData() != null) {
+        showVideoFragment();
 
-            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath(),C.SORT_BY_NAME);
-        } else {
-            DirectoryFragment.show(getSupportFragmentManager());
-        }
     }
 
     @Override

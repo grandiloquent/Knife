@@ -282,19 +282,6 @@ public class TimeBar extends View {
         return 0x33000000 | (playedColor & 0x00FFFFFF);
     }
 
-    public static String getStringForTime(StringBuilder builder, Formatter formatter, long timeMs) {
-        if (timeMs == TIME_UNSET) {
-            timeMs = 0;
-        }
-        long totalSeconds = (timeMs + 500) / 1000;
-        long seconds = totalSeconds % 60;
-        long minutes = (totalSeconds / 60) % 60;
-        long hours = totalSeconds / 3600;
-        builder.setLength(0);
-        return hours > 0 ? formatter.format("%d:%02d:%02d", hours, minutes, seconds).toString()
-                : formatter.format("%02d:%02d", minutes, seconds).toString();
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.save();

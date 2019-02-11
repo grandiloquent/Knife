@@ -7,10 +7,12 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -29,6 +31,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
 
@@ -42,12 +45,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.DateUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.ManagerUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.ChromeImageButton;
+import euphoria.psycho.common.widget.SystemUtils;
 import euphoria.psycho.common.widget.TimeBar;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
@@ -56,30 +61,43 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
     private static final String DEFAULT_DIRECTORY_NAME = "Videos";
     private static final int DELAY_IN_MILLIS_UPDATE_PROGRESS = 1000;
+    private static final long HIDE_CONTROLLER_DELAY_IN_MILLIS = 3000;
     private static final String TAG = "TAG/" + VideoFragment.class.getSimpleName();
+    private static final int TOUCH_IGNORE = 1;
+    private static final int TOUCH_NONE = 3;
+    private static final int TOUCH_SEEK = 2;
+    private StringBuilder mStringBuilder = new StringBuilder();
+
     private AudioManager mAudioManager;
-    private ConstraintLayout mController;
-    private int mCurrentPlaying;
-    private View mDecorView;
-    private File mDirectory;
-    private TextView mDuration;
-    private DecimalFormat mFormat = (DecimalFormat) NumberFormat.getInstance(Locale.US);
-    ChromeImageButton mForward;
-    private Handler mHandler = new Handler();
-    private int mLastVolume;
+    private ChromeImageButton mForward;
     private ChromeImageButton mNext;
     private ChromeImageButton mPlay;
-    private List<String> mPlayList;
-    private TextView mPosition;
     private ChromeImageButton mPrevious;
-    ChromeImageButton mRewind;
-    private TimeBar mSeekbar;
+    private ChromeImageButton mRewind;
+    private ChromeImageButton mVolumeDown;
+    private ConstraintLayout mController;
+    private DisplayMetrics mDisplayMetrics;
+    private File mDirectory;
+    private float mInitTouchX = 0f;
+    private float mInitTouchY = 0f;
+    private float mTouchX = -1f;
+    private float mTouchY = -1f;
+    private Formatter mFormatter = new Formatter(mStringBuilder);
+    private Handler mHandler = new Handler();
+    private int mCurrentPlaying;
+    private int mLastVolume;
     private int mSortBy = C.SORT_BY_NAME;
-    private StringBuilder mStringBuilder = new StringBuilder();
+    private int mTouchAction = TOUCH_NONE;
+    private List<String> mPlayList;
+    private TextView mDuration;
+    private TextView mPosition;
+    private TimeBar mSeekbar;
     private Toolbar mToolbar;
     private VideoView mVideoView;
     private Runnable mProgressUpdater = this::updateProgress;
-    ChromeImageButton mVolumeDown;
+    private View mDecorView;
+    private Runnable mVisibilityChecker = this::hide;
+    private View mRootLayout;
 
     private void actionDeleteVideo() {
 
@@ -97,6 +115,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     }
 
     private void bindViews(View view) {
+        mRootLayout = view.findViewById(R.id.root_layout);
         mToolbar = view.findViewById(R.id.toolbar);
         mVideoView = view.findViewById(R.id.video_view);
         mController = view.findViewById(R.id.controller);
@@ -112,6 +131,31 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         mForward = view.findViewById(R.id.forward);
         mVolumeDown = view.findViewById(R.id.volume_down);
 
+    }
+
+    private void doSeekTouch(int coef, float gesturesize, boolean seek) {
+        if (coef == 0) coef = 1;
+
+        if (Math.abs(gesturesize) < 1 || !mVideoView.isPlaying()) return;
+        if (mTouchAction != TOUCH_NONE && mTouchAction != TOUCH_SEEK) return;
+        mTouchAction = TOUCH_SEEK;
+
+        int length = mVideoView.getDuration();
+        int time = mVideoView.getCurrentPosition();
+        int jump = (int) (Math.signum(gesturesize) * (600000 * Math.pow((gesturesize / 8), 4.0) + 3000) / coef);
+
+        if (jump > 0 && time + jump > length) jump = (length - time);
+        if (jump < 0 && time + jump < 0) jump = -time;
+
+        if (seek && length > 0) mVideoView.seekTo(time + jump);
+
+//        if (length > 0) showInfo(String.format("%s%s (%s)%s",
+//                jump >= 0 ? "+" : "",
+//                mVideoManager.millisToString(jump),
+//                mVideoManager.millisToString(time + jump),
+//                (coef > 1) ? String.format(" x%.1g", 1.0 / coef)
+//                        : ""), 50);
+//        else showInfo("", 1000);
     }
 
     private List<String> getPlayList(File dir) {
@@ -131,7 +175,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
                 int diff = 0;
                 switch (mSortBy) {
                     case C.SORT_BY_NAME:
-                        return collator.compare(o1.getName(), o2.getName())*-1;
+                        return collator.compare(o1.getName(), o2.getName()) * -1;
                     case C.SORT_BY_SIZE:
                         diff = (int) (o1.length() - o2.length());
                         if (diff > 0) return -1;
@@ -154,15 +198,13 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         return null;
     }
 
-    public void hideSystemUI() {
+    private void hide() {
 
-        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LOW_PROFILE
-                | View.SYSTEM_UI_FLAG_IMMERSIVE);
+        if (mController.getVisibility() == View.VISIBLE) {
+            mController.setVisibility(View.GONE);
+            SystemUtils.hideSystemUI(mDecorView);
+            mToolbar.setVisibility(View.GONE);
+        }
     }
 
     private void initViews() {
@@ -197,28 +239,28 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         if (mLastVolume == 0) {
             mVolumeDown.setImageResource(R.drawable.ic_volume_up_white_48px);
         }
+        mDisplayMetrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(mDisplayMetrics);
+        mRootLayout.setOnTouchListener(this::onTouch);
 
-        mVolumeDown.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        mVolumeDown.setOnClickListener(v -> {
 
-                if (mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) {
-                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_ALLOW_RINGER_MODES);
-                    mVolumeDown.setImageResource(R.drawable.ic_volume_up_white_48px);
+            if (mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) {
+                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_ALLOW_RINGER_MODES);
+                mVolumeDown.setImageResource(R.drawable.ic_volume_up_white_48px);
 
-                } else {
-                    if (mLastVolume == 0)
-                        mLastVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mLastVolume, AudioManager.FLAG_PLAY_SOUND);
-                    mVolumeDown.setImageResource(R.drawable.ic_volume_off_white_48px);
-                }
-
+            } else {
+                if (mLastVolume == 0)
+                    mLastVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mLastVolume, AudioManager.FLAG_PLAY_SOUND);
+                mVolumeDown.setImageResource(R.drawable.ic_volume_off_white_48px);
             }
+
         });
     }
 
     @SuppressLint("NewApi")
-    void loadSubtitle() {
+    private void loadSubtitle() {
 
         String path = StringUtils.substringBeforeLast(mPlayList.get(mCurrentPlaying), ".");
         if (path == null) return;
@@ -293,9 +335,10 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         mVideoView.start();
         loadSubtitle();
         mSeekbar.setDuration(mVideoView.getDuration());
-        mDuration.setText(getSimpleTimestampAsString(mVideoView.getDuration()));
+        mDuration.setText(DateUtils.getStringForTime(mStringBuilder, mFormatter, mVideoView.getDuration()));
         mToolbar.setTitle(StringUtils.substringAfterLast(mPlayList.get(mCurrentPlaying), "/"));
         updateProgress();
+        mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
     }
 
     private void onPrevious(View view) {
@@ -304,44 +347,85 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         }
     }
 
+    public boolean onTouch(View v, MotionEvent event) {
+
+        Log.e("TAG/", "onTouch: ");
+
+        float xChanged = (mTouchX != -1f && mTouchY != -1f) ? event.getRawX() - mTouchX : 0f;
+        float yChanged = (xChanged != 0f) ? event.getRawY() - mTouchY : 0f;
+
+        // coef is the gradient's move to determine a neutral zone
+        float coef = Math.abs(yChanged / xChanged);
+        float xgesturesize = xChanged / mDisplayMetrics.xdpi * 2.54f;
+        float deltaY = Math.max(1f, (Math.abs(mInitTouchY - event.getRawY()) / mDisplayMetrics.xdpi + 0.5f) * 2f);
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
+                mInitTouchY = event.getRawY();
+                mInitTouchX = event.getRawX();
+                mTouchY = mInitTouchY;
+                mTouchAction = TOUCH_NONE;
+                mTouchX = event.getRawX();
+                break;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                if (mTouchAction == TOUCH_IGNORE) return false;
+                doSeekTouch(Math.round(deltaY), xgesturesize, false);
+                break;
+            }
+            case MotionEvent.ACTION_UP: {
+                if (mTouchAction == TOUCH_IGNORE) mTouchAction = TOUCH_NONE;
+                if (xgesturesize == 0.0f) {
+                    show();
+                } else if (mTouchAction == TOUCH_SEEK)
+                    doSeekTouch(Math.round(deltaY), xgesturesize, true);
+                mTouchX = -1f;
+                mTouchY = -1f;
+            }
+        }
+
+        return true;
+    }
+
     private void seekTo(int progress) {
         if (mVideoView.isPlaying()) {
             mVideoView.seekTo(progress);
         }
     }
 
-    public void showSystemUI() {
-        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    private boolean show() {
+
+        if (mController.getVisibility() == View.INVISIBLE) {
+            mHandler.post(mProgressUpdater);
+            mController.setVisibility(View.VISIBLE);
+            mToolbar.setVisibility(View.VISIBLE);
+            SystemUtils.showSystemUI(mDecorView);
+            mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
+            return true;
+        } else {
+            return false;
+        }
+
+
     }
 
     private void updateProgress() {
-        if (mVideoView.isPlaying()) {
+        if (mVideoView.isPlaying() && mController.getVisibility() == View.VISIBLE) {
 
-            mPosition.setText(getSimpleTimestampAsString(mVideoView.getCurrentPosition()));
+            mPosition.setText(DateUtils.getStringForTime(mStringBuilder, mFormatter, mVideoView.getCurrentPosition()));
             mSeekbar.setPosition(mVideoView.getCurrentPosition());
             mHandler.postDelayed(mProgressUpdater, DELAY_IN_MILLIS_UPDATE_PROGRESS);
         }
     }
 
-    private static String getSimpleTimestampAsString(long time) {
-        final long hours = time / 3600000;
-        time %= 3600000;
-        final long mins = time / 60000;
-        time %= 60000;
-        final long sec = time / 1000;
-        return String.format("%02d:%02d:%02d", hours, mins, sec);
-    }
-
-    public static void show(FragmentManager manager, String filePath,int sortBy) {
+    public static void show(FragmentManager manager, String filePath, int sortBy) {
 
         FragmentTransaction transaction = manager.beginTransaction();
         VideoFragment fragment = new VideoFragment();
         if (filePath != null) {
             Bundle bundle = new Bundle();
             bundle.putString(C.EXTRA_FILE_PATH, filePath);
-            bundle.putInt(C.EXTRA_SORT_BY,sortBy);
+            bundle.putInt(C.EXTRA_SORT_BY, sortBy);
             fragment.setArguments(bundle);
         }
         transaction.replace(R.id.container, fragment);
