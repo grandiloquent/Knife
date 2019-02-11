@@ -50,7 +50,7 @@ public class DocumentUtils {
         System.loadLibrary("native-lib");
     }
 
-    public static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
+    static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
 
 
         String description = documentInfos[0].getFileName();
@@ -84,7 +84,7 @@ public class DocumentUtils {
         dlg.show();
     }
 
-    public static void buildRenameDialog(Context context, String originalFileName, Consumer<CharSequence> callback) {
+    static void buildRenameDialog(Context context, String originalFileName, Consumer<CharSequence> callback) {
         EditText editText = new EditText(context);
         if (originalFileName != null) {
             editText.setText(originalFileName);
@@ -111,7 +111,7 @@ public class DocumentUtils {
 
     public static native int deleteDirectories(String[] directories);
 
-    public static List<DocumentInfo> getDocumentInfos(File dir, int sortBy) {
+    static List<DocumentInfo> getDocumentInfos(File dir, int sortBy) {
 
         File[] files = dir.listFiles();
         if (files == null || files.length == 0) return null;
@@ -222,11 +222,11 @@ public class DocumentUtils {
         return infos;
     }
 
-    public static ColorStateList getIconForegroundColorList(Context context) {
+    static ColorStateList getIconForegroundColorList(Context context) {
         return AppCompatResources.getColorStateList(context, R.color.white_mode_tint);
     }
 
-    public static int getType(File file) {
+    private static int getType(File file) {
         if (file.isDirectory()) return C.TYPE_DIRECTORY;
         String ext = StringUtils.substringAfterLast(file.getName(), ".");
         if (ext == null) return C.TYPE_OTHER;
@@ -234,6 +234,7 @@ public class DocumentUtils {
         switch (ext) {
             case "mp3":
                 return C.TYPE_AUDIO;
+            // https://developer.android.com/guide/appendix/media-formats.html
             case "mp4":
                 return C.TYPE_VIDEO;
             case "txt":
@@ -257,7 +258,7 @@ public class DocumentUtils {
     }
 
     static void selectSameTypes(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
-        
+
 
         List<DocumentInfo> infos = delegate.getSelectedItemsAsList();
         if (infos.size() < 1) return;

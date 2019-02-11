@@ -140,6 +140,11 @@ public class StorageUtils {
         return DocumentFile.fromSingleUri(context, Uri.parse(baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"))));
     }
 
+    public static DocumentFile getDocumentFileFromTreeUri(File file) {
+
+        return getDocumentFileFromTreeUri(ContextUtils.getApplicationContext(), getTreeUri().toString(), file);
+    }
+
     public static String getDocumentUriFromTreeUri(Context context, String treeUri, File file) {
         String lastPath = StringUtils.substringAfterLast(treeUri, "/");
         String baseURI = treeUri + "/document/" + lastPath;
@@ -148,9 +153,12 @@ public class StorageUtils {
         return baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"));
     }
 
-    public static DocumentFile getDocumentFileFromTreeUri(File file) {
+    public static Uri getDocumentUriFromTreeUri(File file) {
+        String lastPath = StringUtils.substringAfterLast(getTreeUri().toString(), "/");
+        String baseURI = getTreeUri() + "/document/" + lastPath;
+        String splited = StringUtils.substringBeforeLast(lastPath, "%");
 
-        return getDocumentFileFromTreeUri(ContextUtils.getApplicationContext(), getTreeUri().toString(), file);
+        return Uri.parse(baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/")));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -244,6 +252,27 @@ public class StorageUtils {
         context.grantUriPermission(context.getPackageName(), intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
     }
 
+    public static boolean moveFile(Context context, File src, File destinationDirectory) {
+
+        boolean r = src.renameTo(new File(destinationDirectory, src.getName()));
+
+        if (!r) {
+            if (VERSION.SDK_INT >= VERSION_CODES.N) {
+                try {
+                    Uri resultURI = DocumentsContract.moveDocument(context.getContentResolver(),
+                            getDocumentUriFromTreeUri(src),
+                            getDocumentUriFromTreeUri(src.getParentFile()),
+                            getDocumentUriFromTreeUri(destinationDirectory));
+
+                    r = resultURI != null;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return r;
+    }
+
     public static boolean renameFile(Context context, File src, File dst) {
 
 
@@ -254,9 +283,9 @@ public class StorageUtils {
 
             Uri srcDocumentUri = Uri.parse(getDocumentUriFromTreeUri(context, getTreeUri().toString(), src));
 
-            Log.e("TAG/", "renameFile: " +
-                    "\n" + srcDocumentUri +
-                    "\n" + dst);
+//            Log.e("TAG/", "renameFile: " +
+//                    "\n" + srcDocumentUri +
+//                    "\n" + dst);
             if (src.getParent().equals(dst.getParent())) {
                 try {
 

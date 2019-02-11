@@ -46,8 +46,8 @@ public class MainActivity extends BaseActivity {
 
         if (treeUri == null)
             StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
-        showVideoFragment();
-
+        //showVideoFragment();
+        handleIntent();
     }
 
     @Override

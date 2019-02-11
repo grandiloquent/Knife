@@ -277,6 +277,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
                         NetUtils.getMimeType(documentInfo.getFileName()));
 
+                if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
+                    startActivity(Intent.createChooser(intent, "打开"));
+                    return;
+                }
                 ComponentName foundActivity = intent.resolveActivity(getContext().getPackageManager());
                 if (foundActivity != null) {
                     startActivity(intent);
@@ -305,9 +309,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
-    public boolean onMenuItemClick(MenuItem item)
-
-    {
+    public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.close_menu_id:
                 mToolbar.hideOverflowMenu();
@@ -349,8 +351,18 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             case R.id.action_select_same_type:
                 DocumentUtils.selectSameTypes(mSelectionDelegate, mAdapter);
                 break;
+            case R.id.selection_mode_cut_menu_id:
+
+                OperationManager.instance().setSource(mSelectionDelegate.getSelectedItemsAsList());
+                mSelectionDelegate.clearSelection();
+
+                break;
         }
         return true;
+    }
+
+    public File getDirectory() {
+        return mDirectory;
     }
 
     @Override
@@ -400,9 +412,14 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.getMenu().setGroupVisible(R.id.normal_menu_group, true);
         mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
 
+
         loadPreferences();
         updateRecyclerView(true);
 
+        OperationManager.instance().initialize(this, needRefreshView -> {
+            updateRecyclerView(false);
+            OperationManager.instance().hideActionButtons();
+        });
     }
 
     @Override
