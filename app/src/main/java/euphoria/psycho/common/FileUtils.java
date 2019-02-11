@@ -13,28 +13,16 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Locale;
 
+// https://android.googlesource.com/platform/packages/apps/UnifiedEmail/+/kitkat-mr1-release/src/org/apache/commons/io
+
 /**
  * Helper methods for dealing with Files.
  */
 public class FileUtils {
-    private static final String TAG = "FileUtils";
-
-    /**
-     * Delete the given File and (if it's a directory) everything within it.
-     */
-    public static void recursivelyDeleteFile(File currentFile) {
-        ThreadUtils.assertOnBackgroundThread();
-        if (currentFile.isDirectory()) {
-            File[] files = currentFile.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    recursivelyDeleteFile(file);
-                }
-            }
-        }
-
-        if (!currentFile.delete()) Log.e(TAG, "Failed to delete: " + currentFile);
-    }
+public static final char EXTENSION_SEPARATOR = '.';
+        private static final String TAG = "FileUtils";
+    private static final char UNIX_SEPARATOR = '/';
+    private static final char WINDOWS_SEPARATOR = '\\';
 
     /**
      * Delete the given files or directories by calling {@link #recursivelyDeleteFile(File)}.
@@ -49,6 +37,38 @@ public class FileUtils {
         }
     }
 
+    public static void closeSilently(Closeable closeable) {
+        try {
+            closeable.close();
+        } catch (Exception ignored) {
+
+        }
+    }
+
+    /**
+     * Atomically copies the data from an input stream into an output file.
+     *
+     * @param is      Input file stream to read data from.
+     * @param outFile Output file path.
+     * @param buffer  Caller-provided buffer. Provided to avoid allocating the same
+     *                buffer on each call when copying several files in sequence.
+     * @throws IOException in case of I/O error.
+     */
+    public static void copyFileStreamAtomicWithBuffer(InputStream is, File outFile, byte[] buffer)
+            throws IOException {
+        File tmpOutputFile = new File(outFile.getPath() + ".tmp");
+        try (OutputStream os = new FileOutputStream(tmpOutputFile)) {
+            Log.i(TAG, "Writing to %s", outFile);
+
+            int count = 0;
+            while ((count = is.read(buffer, 0, buffer.length)) != -1) {
+                os.write(buffer, 0, count);
+            }
+        }
+        if (!tmpOutputFile.renameTo(outFile)) {
+            throw new IOException();
+        }
+    }
 
     /**
      * Extracts an asset from the app's APK to a file.
@@ -89,14 +109,6 @@ public class FileUtils {
         return false;
     }
 
-    public static void closeSilently(Closeable closeable) {
-        try {
-            closeable.close();
-        } catch (Exception ignored) {
-
-        }
-    }
-
     public static String formatFileSize(long number) {
         float result = number;
         String suffix = "";
@@ -133,28 +145,21 @@ public class FileUtils {
         return value + suffix;
     }
 
-    /**
-     * Atomically copies the data from an input stream into an output file.
-     *
-     * @param is      Input file stream to read data from.
-     * @param outFile Output file path.
-     * @param buffer  Caller-provided buffer. Provided to avoid allocating the same
-     *                buffer on each call when copying several files in sequence.
-     * @throws IOException in case of I/O error.
-     */
-    public static void copyFileStreamAtomicWithBuffer(InputStream is, File outFile, byte[] buffer)
-            throws IOException {
-        File tmpOutputFile = new File(outFile.getPath() + ".tmp");
-        try (OutputStream os = new FileOutputStream(tmpOutputFile)) {
-            Log.i(TAG, "Writing to %s", outFile);
+    public static String getDirectoryName(String file) {
+        int index = file.lastIndexOf('/');
+        if (index == -1) return "";
+        return file.substring(0, index);
+    }
 
-            int count = 0;
-            while ((count = is.read(buffer, 0, buffer.length)) != -1) {
-                os.write(buffer, 0, count);
-            }
+public static String getExtension(String filename) {
+        if (filename == null) {
+            return null;
         }
-        if (!tmpOutputFile.renameTo(outFile)) {
-            throw new IOException();
+        int index = indexOfExtension(filename);
+        if (index == -1) {
+            return "";
+        } else {
+            return filename.substring(index + 1);
         }
     }
 
@@ -182,21 +187,67 @@ public class FileUtils {
         return uri;
     }
 
-    public static String getDirectoryName(String file) {
-        int index = file.lastIndexOf('/');
-        if (index == -1) return "";
-        return file.substring(0, index);
+    public static int indexOfExtension(String filename) {
+        if (filename == null) {
+            return -1;
+        }
+        int extensionPos = filename.lastIndexOf(EXTENSION_SEPARATOR);
+        int lastSeparator = indexOfLastSeparator(filename);
+        return (lastSeparator > extensionPos ? -1 : extensionPos);
+    }
+    public static int indexOfLastSeparator(String filename) {
+        if (filename == null) {
+            return -1;
+        }
+        int lastUnixPos = filename.lastIndexOf(UNIX_SEPARATOR);
+        int lastWindowsPos = filename.lastIndexOf(WINDOWS_SEPARATOR);
+        return Math.max(lastUnixPos, lastWindowsPos);
     }
 
     /**
-     * Returns the file extension, or an empty string if none.
-     *
-     * @param file Name of the file, with or without the full path.
-     * @return empty string if no extension, extension otherwise.
+     * Delete the given File and (if it's a directory) everything within it.
      */
-    public static String getExtension(String file) {
-        int index = file.lastIndexOf('.');
-        if (index == -1) return "";
-        return file.substring(index + 1).toLowerCase(Locale.US);
+    public static void recursivelyDeleteFile(File currentFile) {
+        ThreadUtils.assertOnBackgroundThread();
+        if (currentFile.isDirectory()) {
+            File[] files = currentFile.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    recursivelyDeleteFile(file);
+                }
+            }
+        }
+
+        if (!currentFile.delete()) Log.e(TAG, "Failed to delete: " + currentFile);
+    }
+
+    public static long sizeOfDirectory(File directory) {
+        if (!directory.exists()) {
+            String message = directory + " does not exist";
+            throw new IllegalArgumentException(message);
+        }
+
+        if (!directory.isDirectory()) {
+            String message = directory + " is not a directory";
+            throw new IllegalArgumentException(message);
+        }
+
+        long size = 0;
+
+        File[] files = directory.listFiles();
+        if (files == null) {  // null if security restricted
+            return 0L;
+        }
+        for (int i = 0; i < files.length; i++) {
+            File file = files[i];
+
+            if (file.isDirectory()) {
+                size += sizeOfDirectory(file);
+            } else {
+                size += file.length();
+            }
+        }
+
+        return size;
     }
 }

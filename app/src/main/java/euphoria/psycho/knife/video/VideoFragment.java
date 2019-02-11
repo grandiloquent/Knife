@@ -18,12 +18,17 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.VideoView;
 
+import com.mp4parser.iso14496.part15.HevcDecoderConfigurationRecord.Array;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.text.Collator;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -69,6 +74,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private ChromeImageButton mPrevious;
     ChromeImageButton mRewind;
     private TimeBar mSeekbar;
+    private int mSortBy = C.SORT_BY_NAME;
     private StringBuilder mStringBuilder = new StringBuilder();
     private Toolbar mToolbar;
     private VideoView mVideoView;
@@ -120,6 +126,25 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
             });
             if (files == null || files.length == 0) return null;
 
+            Collator collator = Collator.getInstance(Locale.CHINA);
+            Arrays.sort(files, (o1, o2) -> {
+                int diff = 0;
+                switch (mSortBy) {
+                    case C.SORT_BY_NAME:
+                        return collator.compare(o1.getName(), o2.getName())*-1;
+                    case C.SORT_BY_SIZE:
+                        diff = (int) (o1.length() - o2.length());
+                        if (diff > 0) return -1;
+                        else if (diff < 0) return 1;
+                        else return 0;
+                    case C.SORT_BY_DATE_MODIFIED:
+                        diff = (int) (o1.lastModified() - o2.lastModified());
+                        if (diff > 0) return -1;
+                        else if (diff < 0) return 1;
+                        else return 0;
+                }
+                return 0;
+            });
             List<String> filePaths = new ArrayList<>();
             for (File file : files) {
                 filePaths.add(file.getAbsolutePath());
@@ -225,8 +250,10 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
                     return false;
                 }
             })[0].getAbsolutePath();
-        } else
+        } else {
             filePath = bundle.getString(C.EXTRA_FILE_PATH);
+            mSortBy = bundle.getInt(C.EXTRA_SORT_BY);
+        }
         mDirectory = new File(filePath).getParentFile();
         mPlayList = getPlayList(mDirectory);
         mCurrentPlaying = lookup(filePath, mPlayList);
@@ -307,13 +334,14 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         return String.format("%02d:%02d:%02d", hours, mins, sec);
     }
 
-    public static void show(FragmentManager manager, String filePath) {
+    public static void show(FragmentManager manager, String filePath,int sortBy) {
 
         FragmentTransaction transaction = manager.beginTransaction();
         VideoFragment fragment = new VideoFragment();
         if (filePath != null) {
             Bundle bundle = new Bundle();
             bundle.putString(C.EXTRA_FILE_PATH, filePath);
+            bundle.putInt(C.EXTRA_SORT_BY,sortBy);
             fragment.setArguments(bundle);
         }
         transaction.replace(R.id.container, fragment);
@@ -365,7 +393,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     }
 
     @Override
-    public void onScrubStart(TimeBar timeBar,long position) {
+    public void onScrubStart(TimeBar timeBar, long position) {
         mHandler.removeCallbacks(mProgressUpdater);
 
     }

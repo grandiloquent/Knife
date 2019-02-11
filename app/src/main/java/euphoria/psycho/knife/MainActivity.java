@@ -40,7 +40,7 @@ public class MainActivity extends BaseActivity {
         Intent intent = getIntent();
         if (intent.getData() != null) {
 
-            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath());
+            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath(),C.SORT_BY_NAME);
         } else {
             DirectoryFragment.show(getSupportFragmentManager());
         }

@@ -264,7 +264,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void onClicked(DocumentInfo documentInfo) {
         switch (documentInfo.getType()) {
             case C.TYPE_VIDEO:
-                VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath());
+                VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath(), mSortBy);
                 break;
             case C.TYPE_DIRECTORY:
                 updateLastVisiblePosition();
