@@ -21,6 +21,15 @@ public class DownloadInfo {
         return (int) ((bytesReceived * 100) / bytesTotal);
     }
 
+
+    public boolean isComplete() {
+        return status == DownloadStatus.COMPLETED;
+    }
+
+    public boolean isPaused() {
+        return status == DownloadStatus.PAUSED;
+    }
+
     @Override
     public String toString() {
         return "DownloadInfo{" +

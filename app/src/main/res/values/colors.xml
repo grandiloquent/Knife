@@ -1,26 +1,27 @@
 <resources>
     <color name="accentColor">#EF3A0F</color>
+    <color name="black_alpha_11">#1d000000</color>
     <color name="black_alpha_24">#3d000000</color>
     <color name="black_alpha_38">#61000000</color>
     <color name="colorAccent">#D81B60</color>
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="default_primary_color">#fff2f2f2</color>
+    <color name="downloads_progress_bar_background_blue">#421a73e8</color>
+    <color name="modern_blue_600">#ff1a73e8</color>
+    <color name="modern_grey_100">#fff1f3f4</color>
+    <color name="modern_grey_600">#ff80868b</color>
+    <color name="modern_grey_700">#ff5f6368</color>
+    <color name="modern_grey_800">#ff3c4043</color>
+    <color name="modern_grey_900">#ff202124</color>
+    <color name="white_alpha_70">#b3ffffff</color>
+    <color name="default_icon_color">@color/modern_grey_800</color>
+    <color name="default_icon_color_blue">@color/modern_blue_600</color>
     <color name="default_text_color">@color/modern_grey_900</color>
     <color name="default_text_color_secondary">@color/modern_grey_700</color>
     <color name="disabled_text_color">@color/black_alpha_38</color>
     <color name="light_active_color">@color/modern_blue_600</color>
-    <color name="modern_blue_600">#ff1a73e8</color>
-    <color name="modern_grey_100">#fff1f3f4</color>
-    <color name="modern_grey_700">#ff5f6368</color>
-    <color name="modern_grey_800">#ff3c4043</color>
-    <color name="modern_grey_900">#ff202124</color>
-    <color name="black_alpha_11">#1d000000</color>
     <color name="modern_primary_color">@android:color/white</color>
     <color name="search_box_hint">@color/default_text_color_secondary</color>
-
-    <color name="white_alpha_70">#b3ffffff</color>
     <color name="toolbar_shadow_color">@color/black_alpha_11</color>
-    <color name="default_icon_color">@color/modern_grey_800</color>
-    <color name="default_icon_color_blue">@color/modern_blue_600</color>
 </resources>

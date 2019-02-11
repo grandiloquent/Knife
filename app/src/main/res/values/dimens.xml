@@ -2,8 +2,11 @@
     <dimen name="action_bar_shadow_height">10.0dip</dimen>
     <dimen name="clear_text_button_end_padding">10.0dip</dimen>
     <dimen name="headline_size">22.0sp</dimen>
+    <dimen name="list_item_default_margin">16.0dip</dimen>
+    <dimen name="list_item_min_height">64.0dip</dimen>
     <dimen name="list_item_start_icon_right_margin">20.0dip</dimen>
     <dimen name="list_item_start_icon_width">36.0dip</dimen>
+    <dimen name="list_item_subsection_margin">40dp</dimen>
     <dimen name="list_menu_width">180.0dip</dimen>
     <dimen name="menu_negative_software_vertical_offset">0.0dip</dimen>
     <dimen name="modern_toolbar_background_corner_radius">24.0dip</dimen>
@@ -16,6 +19,6 @@
     <dimen name="selectable_list_toolbar_nav_button_start_offset">4.0dip</dimen>
     <dimen name="text_size_large">16.0sp</dimen>
     <dimen name="text_size_medium">14.0sp</dimen>
+    <dimen name="disabled_text_alpha">0.38</dimen>
     <dimen name="toolbar_height_no_shadow">56.0dip</dimen>
-
 </resources>

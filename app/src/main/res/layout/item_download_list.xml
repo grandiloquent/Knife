@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<euphoria.psycho.knife.download.DownloadItemView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/layout_container"
+        style="@style/ListItemContainer">
+
+        <euphoria.psycho.common.widget.ChromeImageView
+            android:id="@+id/icon_view"
+            style="@style/DownloadIconView"
+            app:tint="@color/dark_mode_tint" />
+
+        <RelativeLayout
+            android:id="@+id/completed_layout"
+            android:layout_width="0.0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0">
+
+            <TextView
+                android:id="@+id/filename_completed_view"
+                style="@style/DownloadTitleStyle"
+                android:layout_alignParentRight="true" />
+
+            <TextView
+                android:id="@+id/description_view"
+                style="@style/DownloadDescriptionStyle"
+                android:layout_below="@id/filename_completed_view" />
+        </RelativeLayout>
+        <include layout="@layout/list_menu_button" />
+        <RelativeLayout
+            android:id="@+id/progress_layout"
+            android:layout_width="0.0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0">
+
+            <TextView
+                android:id="@+id/filename_progress_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginRight="16.0dip"
+                android:layout_toLeftOf="@id/pause_button"
+                android:minHeight="18.0dip"
+                android:singleLine="true"
+                android:textAppearance="@style/BlackTitle1" />
+
+            <euphoria.psycho.common.widget.MaterialProgressBar
+                android:id="@+id/download_progress_view"
+                android:layout_width="wrap_content"
+                android:layout_height="2.0dip"
+                android:layout_below="@id/filename_progress_view"
+                android:layout_alignParentLeft="true"
+                android:layout_marginTop="5.0dip"
+                android:layout_marginRight="16.0dip"
+                android:layout_marginBottom="5.0dip"
+                android:layout_toLeftOf="@id/pause_button"
+                app:colorBackground="@color/downloads_progress_bar_background_blue"
+                app:colorProgress="@color/light_active_color"
+                app:colorSecondaryProgress="@color/modern_grey_600" />
+
+            <TextView
+                android:id="@+id/status_view"
+                style="@style/DownloadHomeStatusText"
+                android:layout_below="@id/download_progress_view"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginRight="16.0dip"
+                android:layout_toLeftOf="@id/percentage_view" />
+
+            <TextView
+                android:id="@+id/percentage_view"
+                style="@style/DownloadHomeStatusText"
+                android:layout_below="@id/download_progress_view"
+                android:layout_alignParentBottom="true"
+                android:layout_toLeftOf="@id/pause_button" />
+
+            <euphoria.psycho.common.widget.ChromeImageButton
+                android:id="@+id/pause_button"
+                android:layout_width="48.0dip"
+                android:layout_height="48.0dip"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentBottom="true"
+                android:layout_toLeftOf="@id/cancel_button"
+                android:background="?selectableItemBackground"
+                android:contentDescription="@string/download_notification_pause_button"
+                android:padding="8.0dip"
+                android:src="@drawable/ic_pause_white_24dp"
+                app:tint="@color/default_icon_color" />
+
+            <euphoria.psycho.common.widget.ChromeImageButton
+                android:id="@+id/cancel_button"
+                android:layout_width="48.0dip"
+                android:layout_height="48.0dip"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:background="?selectableItemBackground"
+                android:contentDescription="@string/download_notification_cancel_button"
+                android:padding="8.0dip"
+                android:paddingRight="@dimen/selectable_list_layout_row_padding"
+                android:src="@drawable/btn_close"
+                app:tint="@color/default_icon_color" />
+        </RelativeLayout>
+    </LinearLayout>
+</euphoria.psycho.knife.download.DownloadItemView>

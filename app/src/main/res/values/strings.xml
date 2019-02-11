@@ -1,44 +1,44 @@
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="delete_preparing">Preparing...</string>
+<resources>
     <string name="accessibility_cancel_selection">Cancel selection</string>
     <string name="accessibility_drawer_toggle_btn_close">Close navigation drawer</string>
     <string name="accessibility_drawer_toggle_btn_open">Open navigation drawer</string>
     <string name="accessibility_list_menu_button">%1$s Options</string>
     <string name="accessibility_toolbar_btn_back">Go back</string>
-    <string name="notification_touch_for_details">Tap to view details</string>
     <string name="accessibility_toolbar_btn_delete_url">Clear input</string>
-    <plurals name="delete_error_notification_title">
-        <item quantity="one">Couldn\u2019t delete <xliff:g example="1" id="count">%1$d</xliff:g> item</item>
-        <item quantity="other">Couldn\u2019t delete <xliff:g example="2" id="count">%1$d</xliff:g> items</item>
-    </plurals>
-    <string name="share_link_title">Share</string>
-    <string name="dialog_rename_title">Rename File</string>
-    <string name="rename">Rename</string>
     <string name="accessibility_toolbar_multi_select">%1$s selected</string>
-    <string name="directory_description">%1$d items</string>
-    <string name="dialog_delete_title">Ask</string>
-    <string name="delete_progress"><xliff:g example="3" id="count">%1$d</xliff:g> / <xliff:g example="5" id="totalCount">%2$d</xliff:g></string>
-    <string name="dialog_delete_message">Are you sure delete %1$s ?</string>
-    <string name="delete_notification_title">Deleting files</string>
-    <string name="channel_name_directory">Files</string>
-    <string name="remove">Remove</string>
     <string name="accessibility_toolbar_screen_position">"%1$s selected.  Options available near top of the screen"</string>
     <string name="app_name">Knife</string>
-    <string name="directory_no_results">No files found</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
     <string name="bookmark_action_bar_close">Close dialog</string>
+    <string name="channel_name_directory">Files</string>
     <string name="delete">Delete</string>
-    <string name="download_manager_ui_empty">No downloads here</string>
-    <string name="hide_info">Hide Info</string>
+    <string name="delete_notification_title">Deleting files</string>
+    <string name="delete_preparing">Preparing...</string>
+    <string name="dialog_delete_message">Are you sure delete %1$s ?</string>
+    <string name="dialog_delete_title">Ask</string>
+    <string name="dialog_rename_title">Rename File</string>
+    <string name="directory_description">%1$d items</string>
+    <string name="directory_no_results">No files found</string>
     <string name="directory_search">Search your files</string>
-    <string name="properties">Properties</string>
+    <string name="download_manager_ui_empty">No downloads here</string>
+    <string name="download_notification_cancel_button">Cancel</string>
+    <string name="download_notification_pause_button">Pause</string>
+    <string name="download_notification_resume_button">Resume</string>
+    <string name="hide_info">Hide Info</string>
     <string name="menu_sort">Sort by</string>
+    <string name="notification_touch_for_details">Tap to view details</string>
+    <string name="properties">Properties</string>
+    <string name="remove">Remove</string>
+    <string name="rename">Rename</string>
     <string name="search">Search</string>
     <string name="select_items">Select items</string>
     <string name="share">Share</string>
+    <string name="share_link_title">Share</string>
     <string name="show_info">Show Info</string>
     <string name="sort_date">By date modified</string>
     <string name="sort_name">By name</string>
     <string name="sort_size">By size</string>
     <string name="trim_video">Trim Video</string>
+    <string name="delete_progress">
+    <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" example="3" id="count">%1$d</xliff:g> / <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" example="5" id="totalCount">%2$d</xliff:g></string>
 </resources>

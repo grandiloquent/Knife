@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import euphoria.psycho.common.Log;
 
 public abstract class BaseFragment extends Fragment {
 
@@ -31,9 +32,20 @@ public abstract class BaseFragment extends Fragment {
 
     }
 
-    protected abstract void initViews(View view);
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (provideMenuId() > 0) {
+            setHasOptionsMenu(true);
+     
 
-    protected abstract void bindViews();
+
+        }
+    }
+
+    protected abstract void initViews();
+
+    protected abstract void bindViews(View view);
 
     protected abstract int provideMenuId();
 
@@ -50,17 +62,18 @@ public abstract class BaseFragment extends Fragment {
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
-        if (provideLayoutId() != 0) {
+
+
+
+        if (provideMenuId() != 0) {
             inflater.inflate(provideMenuId(), menu);
-            setHasOptionsMenu(true);
         }
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-
-        initViews(view);
-        bindViews();
+        bindViews(view);
+        initViews();
     }
 
 

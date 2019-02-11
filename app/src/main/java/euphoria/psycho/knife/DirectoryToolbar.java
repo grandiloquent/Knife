@@ -17,8 +17,6 @@ public class DirectoryToolbar extends SelectableListToolbar<DocumentInfo> {
     @Override
     public void onSelectionStateChange(List<DocumentInfo> selectedItems) {
         super.onSelectionStateChange(selectedItems);
-
-
     }
 
 }
