@@ -12,6 +12,8 @@ import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.base.BaseActivity;
+import euphoria.psycho.common.base.BaseFragment;
+import euphoria.psycho.knife.download.DownloadFragment;
 import euphoria.psycho.knife.video.VideoFragment;
 
 public class MainActivity extends BaseActivity {
@@ -33,6 +35,10 @@ public class MainActivity extends BaseActivity {
         VideoFragment.show(getSupportFragmentManager(), null, C.SORT_BY_NAME);
     }
 
+    private void showDownloadFragment() {
+        BaseFragment.show(new DownloadFragment(), getSupportFragmentManager(), R.id.container, null);
+    }
+
     @Override
     protected void initialize() {
         setContentView(R.layout.activity_main);
@@ -47,7 +53,9 @@ public class MainActivity extends BaseActivity {
         if (treeUri == null)
             StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
         //showVideoFragment();
-        handleIntent();
+        // handleIntent();
+
+        showDownloadFragment();
     }
 
     @Override
