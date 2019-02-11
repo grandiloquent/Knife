@@ -58,6 +58,7 @@ public class BottomSheet {
             mDialog = dialog;
 
         }
+
         mDialog.show();
 
 
