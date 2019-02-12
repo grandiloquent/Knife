@@ -2,6 +2,7 @@ package euphoria.psycho.knife.download;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.text.format.Formatter;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageButton;
@@ -19,14 +20,13 @@ import euphoria.psycho.common.widget.MaterialProgressBar;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.knife.R;
 
-public class DownloadItemView extends SelectableItemView implements ListMenuButton.Delegate {
+public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ListMenuButton.Delegate {
     private final ColorStateList mCheckedIconForegroundColorList;
     private final int mIconBackgroundResId;
     private final ColorStateList mIconForegroundColorList;
     private final int mMargin;
     private final int mMarginSubsection;
     private DownloadInfo mItem;
-    private DownloadManager mDownloadManager;
     private ImageButton mPauseResumeButton;
     private int mIconSize;
     private LinearLayout mLayoutContainer;
@@ -54,6 +54,12 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
                 AppCompatResources.getColorStateList(context, R.color.dark_mode_tint);
     }
 
+    public void updateProgress(DownloadInfo downloadInfo) {
+        mDownloadStatusView.setText(downloadInfo.getStatusString(getContext()));
+        mProgressView.setProgress(downloadInfo.getPercent());
+        mDownloadPercentageView.setText(downloadInfo.getPercent() + "%");
+    }
+
     public void displayItem(DownloadInfo item) {
         updateView();
         mItem = item;
@@ -66,6 +72,12 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
         mFilenameCompletedView.setText(item.fileName);
         mFilenameInProgressView.setText(item.fileName);
 
+
+        String description = context.getString(R.string.download_manager_list_item_description,
+                Formatter.formatFileSize(getContext(), item.getFileSize()),
+                item.getDisplayName());
+        mDescriptionCompletedView.setText(description);
+
         if (item.isComplete()) {
             showLayout(mLayoutCompleted);
 
@@ -74,7 +86,7 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
             mFilenameCompletedView.requestLayout();
         } else {
             showLayout(mLayoutInProgress);
-            //mDownloadStatusView.setText(item.getStatusString());
+            mDownloadStatusView.setText(item.getStatusString(getContext()));
 
             //Progress progress = item.getDownloadProgress();
 
@@ -87,6 +99,11 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
                 mPauseResumeButton.setContentDescription(
                         getContext().getString(R.string.download_notification_pause_button));
             }
+
+            mProgressView.setProgress(item.getPercent());
+            mDownloadPercentageView.setText(item.getPercent() + "%");
+            MarginLayoutParamsCompat.setMarginEnd(
+                    (MarginLayoutParams) mDownloadPercentageView.getLayoutParams(), mMargin);
         }
 
         mMoreButton.setContentDescriptionContext(item.fileName);
@@ -96,10 +113,6 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
 
         setLongClickable(item.isComplete());
 
-    }
-
-    public void setDownloadManager(DownloadManager downloadManager) {
-        mDownloadManager = downloadManager;
     }
 
     private void showLayout(View layoutToShow) {
@@ -126,7 +139,7 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
 
     @Override
     protected void onClick() {
-
+        DownloadManager.instance().openContent(mItem);
     }
 
     @Override
@@ -152,13 +165,13 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
         mMoreButton.setDelegate(this);
         mPauseResumeButton.setOnClickListener(view -> {
             if (mItem.isPaused()) {
-                mDownloadManager.resume(mItem);
+                DownloadManager.instance().resume(mItem);
             } else if (!mItem.isComplete()) {
-                mDownloadManager.pause(mItem);
+                DownloadManager.instance().pause(mItem);
             }
         });
         mCancelButton.setOnClickListener(view -> {
-            mDownloadManager.cancel(mItem);
+            DownloadManager.instance().cancel(mItem);
         });
     }
 
@@ -178,7 +191,6 @@ public class DownloadItemView extends SelectableItemView implements ListMenuButt
             mCheckDrawable.start();
         } else {
 
-            Log.e("TAG/", "updateView: ");
 
             mIconView.setBackgroundResource(mIconBackgroundResId);
             mIconView.getBackground().setLevel(

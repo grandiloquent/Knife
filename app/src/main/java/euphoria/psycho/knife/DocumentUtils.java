@@ -1,9 +1,12 @@
 package euphoria.psycho.knife;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Handler;
@@ -30,10 +33,12 @@ import java.util.function.Function;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.Log;
+import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.ThreadUtils;
@@ -41,6 +46,7 @@ import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.common.widget.KeyboardVisibilityDelegate;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
+import euphoria.psycho.knife.video.VideoFragment;
 
 
 public class DocumentUtils {
@@ -48,6 +54,37 @@ public class DocumentUtils {
 
     static {
         System.loadLibrary("native-lib");
+    }
+
+
+    public static void openContent(AppCompatActivity context, String path,int backWhere) {
+        openContent(context, new DocumentInfo.Builder()
+                .setPath(path)
+                .setType(getType(new File(path)))
+                .build(),backWhere);
+    }
+
+    public static void openContent(AppCompatActivity context, DocumentInfo documentInfo,int backWhere) {
+        if (documentInfo.getType() == C.TYPE_VIDEO) {
+
+            VideoFragment.show(context.getSupportFragmentManager(), documentInfo.getPath(), C.SORT_BY_DATE_MODIFIED,backWhere);
+            return;
+        }
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
+                NetUtils.getMimeType(documentInfo.getFileName()));
+
+        if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
+            context.startActivity(Intent.createChooser(intent, "打开"));
+            return;
+        }
+        ComponentName foundActivity = intent.resolveActivity(context.getPackageManager());
+        if (foundActivity != null) {
+            context.startActivity(intent);
+        } else {
+            context.startActivity(Intent.createChooser(intent, "打开"));
+        }
     }
 
     static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {

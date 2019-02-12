@@ -25,11 +25,16 @@
     <string name="download_notification_pause_button">Pause</string>
     <string name="download_notification_resume_button">Resume</string>
     <string name="hide_info">Hide Info</string>
+    <string name="download_notification_paused">Download paused</string>
     <string name="menu_sort">Sort by</string>
+    <string name="download_started">Downloading…</string>
+    <string name="download_notification_completed">Download complete</string>
+    <string name="download_manager_list_item_description">%1$s • %2$s</string>
     <string name="notification_touch_for_details">Tap to view details</string>
     <string name="properties">Properties</string>
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>
+    <string name="message_success_insert_download_task">Successfully added the download task \n%1$s\n from the clipboard.</string>
     <string name="search">Search</string>
     <string name="select_items">Select items</string>
     <string name="share">Share</string>

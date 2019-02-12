@@ -44,14 +44,18 @@ import euphoria.psycho.common.ManagerUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
+import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.common.widget.ChromeImageButton;
 import euphoria.psycho.common.widget.SystemUtils;
 import euphoria.psycho.common.widget.TimeBar;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.download.DownloadFragment;
 
 public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
+
+    private static final String EXTRA_NEXT = "next";
     private static final String DEFAULT_DIRECTORY_NAME = "Videos";
     private static final int DELAY_IN_MILLIS_UPDATE_PROGRESS = 1000;
     private static final long HIDE_CONTROLLER_DELAY_IN_MILLIS = 5000;
@@ -59,8 +63,6 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private static final int TOUCH_IGNORE = 1;
     private static final int TOUCH_NONE = 3;
     private static final int TOUCH_SEEK = 2;
-    private StringBuilder mStringBuilder = new StringBuilder();
-
     private AudioManager mAudioManager;
     private ChromeImageButton mForward;
     private ChromeImageButton mNext;
@@ -75,13 +77,15 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private float mInitTouchY = 0f;
     private float mTouchX = -1f;
     private float mTouchY = -1f;
-    private Formatter mFormatter = new Formatter(mStringBuilder);
     private Handler mHandler = new Handler();
+    private int mBackToWhere = 0;
     private int mCurrentPlaying;
     private int mLastVolume;
     private int mSortBy = C.SORT_BY_NAME;
     private int mTouchAction = TOUCH_NONE;
     private List<String> mPlayList;
+    private StringBuilder mStringBuilder = new StringBuilder();
+    private Formatter mFormatter = new Formatter(mStringBuilder);
     private TextView mDuration;
     private TextView mPosition;
     private TimeBar mSeekbar;
@@ -418,7 +422,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
     }
 
-    public static void show(FragmentManager manager, String filePath, int sortBy) {
+    public static void show(FragmentManager manager, String filePath, int sortBy, int next) {
 
         FragmentTransaction transaction = manager.beginTransaction();
         VideoFragment fragment = new VideoFragment();
@@ -426,6 +430,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
             Bundle bundle = new Bundle();
             bundle.putString(C.EXTRA_FILE_PATH, filePath);
             bundle.putInt(C.EXTRA_SORT_BY, sortBy);
+            bundle.putInt(EXTRA_NEXT, next);
             fragment.setArguments(bundle);
         }
         transaction.replace(R.id.container, fragment);
@@ -438,7 +443,14 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ((BaseActivity) getActivity()).setOnBackPressedListener(() -> {
-            DirectoryFragment.show(getFragmentManager());
+
+            mHandler.removeCallbacksAndMessages(null);
+            //SystemUtils.showSystemUI(mDecorView);
+
+            if (mBackToWhere == 0)
+                DirectoryFragment.show(getFragmentManager());
+            else if (mBackToWhere == 1)
+                BaseFragment.show(new DownloadFragment(), getActivity().getSupportFragmentManager(), R.id.container, null);
             return true;
         });
     }

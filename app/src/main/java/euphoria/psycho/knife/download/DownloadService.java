@@ -10,9 +10,10 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 
 import androidx.annotation.Nullable;
+import euphoria.psycho.common.Log;
 
 
-public class DownloadService extends Service {
+public class DownloadService extends Service implements DownloadObserver {
 
     public static final String EXTRA_CANCEL = "cancel";
     private static final String TAG = "TAG/" + DownloadService.class.getSimpleName();
@@ -51,7 +52,7 @@ public class DownloadService extends Service {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             channel = new NotificationChannel(
                     provideChannelId(),
-                    provideChannelId(),
+                    provideChannelName(),
                     provideImportance()
             );
             mNotificationManager.createNotificationChannel(channel);
@@ -70,6 +71,21 @@ public class DownloadService extends Service {
                 service.stopForeground(removeNotification);
             }
         };
+    }
+
+    @Override
+    public void completed(DownloadInfo downloadInfo) {
+
+    }
+
+    @Override
+    public void deleted(DownloadInfo downloadInfo) {
+
+    }
+
+    @Override
+    public void failed(DownloadInfo downloadInfo) {
+
     }
 
     @Nullable
@@ -91,11 +107,18 @@ public class DownloadService extends Service {
         if (mPowerManager == null) {
             mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
         }
+        
+        Log.e("TAG/DownloadService", "onCreate: ");
+
+        //DownloadManager.instance().addObserver(this);
 
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        
+        Log.e("TAG/DownloadService", "onStartCommand: ");
+
         if (intent.hasExtra(EXTRA_CANCEL)) {
             handleCancel(intent);
         } else {
@@ -105,6 +128,36 @@ public class DownloadService extends Service {
         mLastServiceId = startId;
 
         return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        
+        Log.e("TAG/DownloadService", "onDestroy: ");
+
+    }
+
+    @Override
+    public void paused(DownloadInfo downloadInfo) {
+
+    }
+
+    @Override
+    public void retried(DownloadInfo downloadInfo) {
+
+    }
+
+    @Override
+    public void updateProgress(DownloadInfo downloadInfo) {
+
+        Log.e("TAG/DownloadService", "updateProgress: ");
+
+    }
+
+    @Override
+    public void updateStatus(DownloadInfo downloadInfo) {
+
     }
 
     interface ForegroundManager {

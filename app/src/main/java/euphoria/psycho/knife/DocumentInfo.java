@@ -1,6 +1,8 @@
 package euphoria.psycho.knife;
 
 
+import euphoria.psycho.common.StringUtils;
+
 public class DocumentInfo {
 
     private final String fileName;
@@ -21,9 +23,12 @@ public class DocumentInfo {
         return fileName;
     }
 
+
+
     public long getLastModified() {
         return lastModified;
     }
+
 
     public String getPath() {
         return path;

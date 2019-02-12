@@ -11,13 +11,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import euphoria.psycho.common.base.BaseViewHolder;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
-import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
 
 public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
 
     private final List<DownloadInfo> mDownloadInfos;
-    private final List<View> mViews;
+    private final List<DownloadItemView> mViews;
     private SelectionDelegate<DownloadInfo> mSelectionDelegate;
 
     public DownloadAdapter(SelectionDelegate<DownloadInfo> delegate, DownloadFragment fragment) {
@@ -26,6 +25,25 @@ public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
         mSelectionDelegate = delegate;
     }
 
+
+    public void updateItem(DownloadInfo downloadInfo) {
+        if (downloadInfo.status == DownloadStatus.CANCELLED) {
+
+        } else {
+            for (DownloadItemView view : mViews) {
+                if (view.getItem()._id == downloadInfo._id) {
+                    if (downloadInfo.status == DownloadStatus.IN_PROGRESS) {
+                        view.updateProgress(downloadInfo);
+                    } else {
+
+                        view.displayItem(downloadInfo);
+                    }
+                    break;
+
+                }
+            }
+        }
+    }
 
     public void switchDatas(List<DownloadInfo> infos) {
         mDownloadInfos.clear();

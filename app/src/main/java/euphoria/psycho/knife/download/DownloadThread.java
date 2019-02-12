@@ -89,6 +89,8 @@ public class DownloadThread extends Thread {
 
     private void executeDownload() throws DownloadRequestException {
 
+        Log.e("TAG/", "executeDownload: ");
+
         URL url;
 
         try {
@@ -100,7 +102,9 @@ public class DownloadThread extends Thread {
         try {
             appContext = SSLContext.getDefault();
         } catch (NoSuchAlgorithmException e) {
-            Log.e(TAG, "executeDownload: ", e);
+
+            Log.e("TAG/", "executeDownload: " + e.getMessage());
+
         }
         // https://developer.android.com/reference/java/net/HttpURLConnection.html
 
@@ -131,9 +135,9 @@ public class DownloadThread extends Thread {
                     ((HttpsURLConnection) c).setSSLSocketFactory(appContext.getSocketFactory());
                 }
                 int rc = c.getResponseCode();
-                if (DEBUG) {
-                    Log.e(TAG, "executeDownload: " + rc + " " + tries);
-                }
+
+                Log.e("TAG/", "executeDownload: status code = " + rc);
+
                 switch (rc) {
                     case HTTP_OK:
                     case HTTP_PARTIAL: {
@@ -312,12 +316,23 @@ public class DownloadThread extends Thread {
     @Override
     public void run() {
 
+        Log.e("TAG/", "run: ");
+
         mInfo.status = DownloadStatus.STARTED;
         mInfo.message = "下载 " + mInfo.url;
         mObserver.updateProgress(mInfo);
         try {
+            
+            Log.e("TAG/", "run: ");
+
             executeDownload();
+            
+            Log.e("TAG/", "run: ");
+
         } catch (DownloadRequestException e) {
+
+            e.printStackTrace();
+            Log.e("TAG/", "run: " + e);
 
             int s = e.getFinalStatus();
             if (s == DownloadStatus.PAUSED) {

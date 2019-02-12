@@ -1,5 +1,13 @@
 package euphoria.psycho.knife.download;
 
+import android.content.Context;
+
+import java.io.File;
+import java.util.Formatter;
+
+import euphoria.psycho.common.StringUtils;
+import euphoria.psycho.knife.R;
+
 public class DownloadInfo {
     public long _id;
     public long bytesReceived;
@@ -16,6 +24,35 @@ public class DownloadInfo {
         return speed > 0 && bytesTotal > bytesReceived ? ((bytesTotal - bytesReceived) * 1000) / speed : 0;
     }
 
+    public String getDisplayName() {
+        String name = StringUtils.substringAfter(url, "://");
+        if (name == null) return "";
+        name = StringUtils.substringBefore(name, "/");
+        if (name == null) return "";
+        return name;
+    }
+
+    public long getFileSize() {
+        File file = new File(filePath);
+        if (file.isFile()) return file.length();
+        return 0;
+    }
+
+    public String getStatusString(Context context) {
+
+
+        if (status == DownloadStatus.COMPLETED) {
+            return context.getString(R.string.download_notification_completed);
+        } else if (status == DownloadStatus.PAUSED) {
+            return context.getString(R.string.download_notification_paused);
+        } else if (status == DownloadStatus.IN_PROGRESS) {
+            return android.text.format.Formatter.formatFileSize(context, bytesReceived);
+        } else if (status == DownloadStatus.STARTED) {
+            return context.getString(R.string.download_started);
+        }
+        return context.getString(R.string.dialog_delete_message);
+    }
+
     public int getPercent() {
         if (bytesTotal < 1) return 0;
         return (int) ((bytesReceived * 100) / bytesTotal);
@@ -25,6 +62,7 @@ public class DownloadInfo {
     public boolean isComplete() {
         return status == DownloadStatus.COMPLETED;
     }
+
 
     public boolean isPaused() {
         return status == DownloadStatus.PAUSED;
