@@ -19,6 +19,7 @@ import javax.net.ssl.SSLContext;
 
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
+import euphoria.psycho.common.log.FileLogger;
 
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static java.net.HttpURLConnection.HTTP_GONE;
@@ -89,7 +90,6 @@ public class DownloadThread extends Thread {
 
     private void executeDownload() throws DownloadRequestException {
 
-        Log.e("TAG/", "executeDownload: ");
 
         URL url;
 
@@ -103,7 +103,6 @@ public class DownloadThread extends Thread {
             appContext = SSLContext.getDefault();
         } catch (NoSuchAlgorithmException e) {
 
-            Log.e("TAG/", "executeDownload: " + e.getMessage());
 
         }
         // https://developer.android.com/reference/java/net/HttpURLConnection.html
@@ -136,7 +135,6 @@ public class DownloadThread extends Thread {
                 }
                 int rc = c.getResponseCode();
 
-                Log.e("TAG/", "executeDownload: status code = " + rc);
 
                 switch (rc) {
                     case HTTP_OK:
@@ -214,20 +212,21 @@ public class DownloadThread extends Thread {
                 mInfo.bytesTotal = -1L;
             }
         }
+        mObserver.updateStatus(mInfo);
 
 
     }
 
     public void stopDownload() {
+        mObserver.updateStatus(mInfo);
+        FileLogger.log("TAG/DownloadThread", "stopDownload");
         mIsStop = true;
         mInfo.status = DownloadStatus.PAUSED;
         mObserver.updateProgress(mInfo);
     }
 
     private void transferData(HttpURLConnection c) throws DownloadRequestException {
-        if (DEBUG) {
-            Log.e(TAG, "transferData: " + mInfo.toString());
-        }
+
         InputStream in = null;
         RandomAccessFile out = null;
         try {
@@ -308,7 +307,6 @@ public class DownloadThread extends Thread {
         if (bytesDelta > MIN_PROGRESS_STEP && timeDelta > MIN_PROGRESS_TIME) {
             mLastUpdateBytes = currentBytes;
             mLastUpdateTime = now;
-            mObserver.updateProgress(mInfo);
         }
     }
 
@@ -316,23 +314,19 @@ public class DownloadThread extends Thread {
     @Override
     public void run() {
 
-        Log.e("TAG/", "run: ");
 
         mInfo.status = DownloadStatus.STARTED;
         mInfo.message = "下载 " + mInfo.url;
         mObserver.updateProgress(mInfo);
         try {
-            
-            Log.e("TAG/", "run: ");
+
 
             executeDownload();
-            
-            Log.e("TAG/", "run: ");
+
 
         } catch (DownloadRequestException e) {
 
             e.printStackTrace();
-            Log.e("TAG/", "run: " + e);
 
             int s = e.getFinalStatus();
             if (s == DownloadStatus.PAUSED) {
@@ -343,7 +337,6 @@ public class DownloadThread extends Thread {
                 mInfo.status = DownloadStatus.FAILED;
                 mObserver.failed(mInfo);
             } else {
-                Log.e(TAG, "run: ", e);
             }
 
             //mInfo.listener.onError(mTaskId, e.getMessage());

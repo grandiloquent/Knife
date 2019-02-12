@@ -20,6 +20,7 @@
     <string name="directory_description">%1$d items</string>
     <string name="directory_no_results">No files found</string>
     <string name="directory_search">Search your files</string>
+    <string name="download_title">Download</string>
     <string name="download_manager_ui_empty">No downloads here</string>
     <string name="download_notification_cancel_button">Cancel</string>
     <string name="download_notification_pause_button">Pause</string>

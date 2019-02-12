@@ -51,6 +51,8 @@ public class DownloadDatabase extends SQLiteOpenHelper {
                 DownloadInfo downloadInfo = new DownloadInfo();
                 downloadInfo._id = cursor.getLong(0);
                 downloadInfo.status = cursor.getInt(1);
+                if (downloadInfo.status == DownloadStatus.IN_PROGRESS)
+                    downloadInfo.status = DownloadStatus.PAUSED;
                 downloadInfo.fileName = cursor.getString(2);
                 downloadInfo.filePath = cursor.getString(3);
                 downloadInfo.bytesReceived = cursor.getLong(4);

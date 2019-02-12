@@ -296,6 +296,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         } else {
             filePath = bundle.getString(C.EXTRA_FILE_PATH);
             mSortBy = bundle.getInt(C.EXTRA_SORT_BY);
+            mBackToWhere = bundle.getInt(EXTRA_NEXT);
         }
         mDirectory = new File(filePath).getParentFile();
         mPlayList = getPlayList(mDirectory);
@@ -447,11 +448,13 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
             mHandler.removeCallbacksAndMessages(null);
             //SystemUtils.showSystemUI(mDecorView);
 
-            if (mBackToWhere == 0)
+
+
+            if (mBackToWhere == 0) {
                 DirectoryFragment.show(getFragmentManager());
-            else if (mBackToWhere == 1)
-                BaseFragment.show(new DownloadFragment(), getActivity().getSupportFragmentManager(), R.id.container, null);
-            return true;
+                return true;
+            }
+            return false;
         });
     }
 

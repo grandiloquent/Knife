@@ -25,14 +25,14 @@ public class MainActivity extends BaseActivity {
         Intent intent = getIntent();
         if (intent.getData() != null) {
 
-            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath(), C.SORT_BY_NAME,0);
+            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath(), C.SORT_BY_NAME, -1);
         } else {
             DirectoryFragment.show(getSupportFragmentManager());
         }
     }
 
     private void showVideoFragment() {
-        VideoFragment.show(getSupportFragmentManager(), null, C.SORT_BY_NAME,0);
+        VideoFragment.show(getSupportFragmentManager(), null, C.SORT_BY_NAME, 0);
     }
 
     private void showDownloadFragment() {
@@ -55,7 +55,7 @@ public class MainActivity extends BaseActivity {
         //showVideoFragment();
         // handleIntent();
 
-        showDownloadFragment();
+        handleIntent();
     }
 
     @Override

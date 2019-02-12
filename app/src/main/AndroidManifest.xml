@@ -19,7 +19,6 @@
             android:theme="@style/FullscreenWhiteBase">
 
 
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -64,7 +63,9 @@
 
 
         </activity>
-        <activity android:name=".download.DownloadActivity" >
+        <activity
+            android:name=".download.DownloadActivity"
+            android:theme="@style/FullscreenWhiteBase">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

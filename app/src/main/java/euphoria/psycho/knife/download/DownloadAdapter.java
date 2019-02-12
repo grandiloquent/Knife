@@ -26,6 +26,18 @@ public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
     }
 
 
+    public void removeItem(DownloadInfo downloadInfo) {
+        int length = mDownloadInfos.size();
+        for (int i = 0; i < length; i++) {
+            if (downloadInfo._id == mDownloadInfos.get(i)._id) {
+                mDownloadInfos.remove(i);
+
+                notifyItemRemoved(i);
+                break;
+            }
+        }
+    }
+
     public void updateItem(DownloadInfo downloadInfo) {
         if (downloadInfo.status == DownloadStatus.CANCELLED) {
 

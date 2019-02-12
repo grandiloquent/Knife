@@ -3,8 +3,11 @@ package euphoria.psycho.knife;
 import android.provider.ContactsContract.Directory;
 
 import euphoria.psycho.common.ContextUtils;
+import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.BaseApp;
+import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.pool.BytesBufferPool;
+import euphoria.psycho.common.pool.DiscardableReferencePool;
 
 public class App extends BaseApp {
 
@@ -13,6 +16,15 @@ public class App extends BaseApp {
     private static Status mStatus;
     private static BytesBufferPool sBytesBufferPool;
     private static ImageCacheService sImageCacheService;
+    private DiscardableReferencePool mReferencePool;
+
+    public DiscardableReferencePool getReferencePool() {
+        ThreadUtils.assertOnUiThread();
+        if (mReferencePool == null) {
+            mReferencePool = new DiscardableReferencePool();
+        }
+        return mReferencePool;
+    }
 
     public static BytesBufferPool getBytesBufferPool() {
         if (sBytesBufferPool == null) {
@@ -46,6 +58,7 @@ public class App extends BaseApp {
 //                Log.e("TAG/", e.getMessage());
 //            }
 //        });
+        FileLogger.getLogger(getApplicationContext());
     }
 
     public static class Status {
@@ -68,4 +81,5 @@ public class App extends BaseApp {
             mScrollX = scrollX;
         }
     }
+
 }

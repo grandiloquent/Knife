@@ -16,7 +16,9 @@ public class DownloadObserverImpl implements DownloadObserver {
 
     @Override
     public void completed(DownloadInfo downloadInfo) {
-
+        ThreadUtils.postOnUiThread(() -> {
+            mAdapter.updateItem(downloadInfo);
+        });
 
     }
 
@@ -49,12 +51,12 @@ public class DownloadObserverImpl implements DownloadObserver {
     @Override
     public void retried(DownloadInfo downloadInfo) {
 
-        
+
     }
 
     @Override
     public void deleted(DownloadInfo downloadInfo) {
 
-        
+        mAdapter.removeItem(downloadInfo);
     }
 }

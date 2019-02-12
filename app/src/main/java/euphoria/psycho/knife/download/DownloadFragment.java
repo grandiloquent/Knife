@@ -135,7 +135,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         mToolbar = (DownloadToolbar) mContainer.initializeToolbar(
                 R.layout.download_toolbar,
                 mSelectionDelegate,
-                0,
+                R.string.download_title,
                 null,
                 R.id.normal_menu_group,
                 R.id.selection_mode_menu_group,

@@ -2,6 +2,8 @@ package euphoria.psycho.knife.download;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
 import android.view.View;
@@ -9,18 +11,22 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.view.MarginLayoutParamsCompat;
 import euphoria.psycho.common.ApiCompatibilityUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.ViewUtils;
+import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.widget.ListMenuButton;
 import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.MaterialProgressBar;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.cache.ThumbnailProvider;
 
-public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ListMenuButton.Delegate {
+public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ThumbnailProvider.ThumbnailRequest, ListMenuButton.Delegate {
     private final ColorStateList mCheckedIconForegroundColorList;
     private final int mIconBackgroundResId;
     private final ColorStateList mIconForegroundColorList;
@@ -40,7 +46,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
     private View mCancelButton;
     private View mLayoutCompleted;
     private View mLayoutInProgress;
-
+    private Bitmap mThumbnailBitmap;
 
     public DownloadItemView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -54,12 +60,6 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
                 AppCompatResources.getColorStateList(context, R.color.dark_mode_tint);
     }
 
-    public void updateProgress(DownloadInfo downloadInfo) {
-        mDownloadStatusView.setText(downloadInfo.getStatusString(getContext()));
-        mProgressView.setProgress(downloadInfo.getPercent());
-        mDownloadPercentageView.setText(downloadInfo.getPercent() + "%");
-    }
-
     public void displayItem(DownloadInfo item) {
         updateView();
         mItem = item;
@@ -68,10 +68,23 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
         MarginLayoutParamsCompat.setMarginStart(
                 (MarginLayoutParams) mLayoutContainer.getLayoutParams(), mMargin);
 
+        ThumbnailProvider thumbnailProvider = DownloadManager.instance().provideThumbnailProvider();
+
+        thumbnailProvider.cancelRetrieval(this);
+
+        // Request a thumbnail for the file to be sent to the ThumbnailCallback. This will happen
+        // immediately if the thumbnail is cached or asynchronously if it has to be fetched from a
+        // remote source.
+        mThumbnailBitmap = null;
+
+        if (item.status == DownloadStatus.COMPLETED) {
+            thumbnailProvider.getThumbnail(this);
+        }
+        if (mThumbnailBitmap == null) updateView();
+
         Context context = mDescriptionCompletedView.getContext();
         mFilenameCompletedView.setText(item.fileName);
         mFilenameInProgressView.setText(item.fileName);
-
 
         String description = context.getString(R.string.download_manager_list_item_description,
                 Formatter.formatFileSize(getContext(), item.getFileSize()),
@@ -131,10 +144,44 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
         }
     }
 
+    public void updateProgress(DownloadInfo downloadInfo) {
+        mDownloadStatusView.setText(downloadInfo.getStatusString(getContext()));
+        mProgressView.setProgress(downloadInfo.getPercent());
+        mDownloadPercentageView.setText(downloadInfo.getPercent() + "%");
+    }
+
+    @Nullable
+    @Override
+    public String getContentId() {
+        return mItem == null ? "" : Long.toString(mItem._id);
+    }
+
+    @Nullable
+    @Override
+    public String getFilePath() {
+        return mItem == null ? null : mItem.filePath;
+    }
+
+    @Override
+    public int getIconSize() {
+        return mIconSize;
+    }
+
     @Override
     public Item[] getItems() {
         return new Item[]{new Item(getContext(), R.string.share, true),
                 new Item(getContext(), R.string.delete, true)};
+    }
+
+    private void setThumbnailBitmap(Bitmap thumbnail) {
+        mThumbnailBitmap = thumbnail;
+        updateView();
+    }
+
+    @Nullable
+    @Override
+    public String getMimeType() {
+        return null;
     }
 
     @Override
@@ -164,6 +211,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
         mMoreButton.setDelegate(this);
         mPauseResumeButton.setOnClickListener(view -> {
+            FileLogger.log("TAG/DownloadItemView", "PauseResumeButton clicked. _id = " + mItem._id + " isPaused = " + mItem.isPaused());
             if (mItem.isPaused()) {
                 DownloadManager.instance().resume(mItem);
             } else if (!mItem.isComplete()) {
@@ -177,7 +225,21 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
     @Override
     public void onItemSelected(Item item) {
+        switch (item.getTextId()) {
+            case R.string.delete:
+                FileLogger.log("TAG/DownloadItemView", "onItemSelected: delete");
+                DownloadManager.instance().delete(mItem);
+                break;
+        }
+    }
 
+    @Override
+    public void onThumbnailRetrieved(@NonNull String contentId, @Nullable Bitmap thumbnail) {
+        if (TextUtils.equals(getContentId(), contentId) && thumbnail != null
+                && thumbnail.getWidth() > 0 && thumbnail.getHeight() > 0) {
+            assert !thumbnail.isRecycled();
+            setThumbnailBitmap(thumbnail);
+        }
     }
 
     @Override
@@ -189,6 +251,14 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
             mIconView.setImageDrawable(mCheckDrawable);
             ApiCompatibilityUtils.setImageTintList(mIconView, mCheckedIconForegroundColorList);
             mCheckDrawable.start();
+        } else if (mThumbnailBitmap != null) {
+            assert !mThumbnailBitmap.isRecycled();
+            mIconView.setBackground(null);
+            mIconView.setImageDrawable(ViewUtils.createRoundedBitmapDrawable(
+                    Bitmap.createScaledBitmap(mThumbnailBitmap, mIconSize, mIconSize, false),
+                    getResources().getDimensionPixelSize(
+                            R.dimen.list_item_start_icon_corner_radius)));
+            ApiCompatibilityUtils.setImageTintList(mIconView, null);
         } else {
 
 

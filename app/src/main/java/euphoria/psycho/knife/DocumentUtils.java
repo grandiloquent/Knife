@@ -57,17 +57,20 @@ public class DocumentUtils {
     }
 
 
-    public static void openContent(AppCompatActivity context, String path,int backWhere) {
+    public static void openContent(AppCompatActivity context, String path, int backWhere) {
         openContent(context, new DocumentInfo.Builder()
                 .setPath(path)
                 .setType(getType(new File(path)))
-                .build(),backWhere);
+                .build(), backWhere);
     }
 
-    public static void openContent(AppCompatActivity context, DocumentInfo documentInfo,int backWhere) {
+    public static void openContent(AppCompatActivity context, DocumentInfo documentInfo, int backWhere) {
         if (documentInfo.getType() == C.TYPE_VIDEO) {
 
-            VideoFragment.show(context.getSupportFragmentManager(), documentInfo.getPath(), C.SORT_BY_DATE_MODIFIED,backWhere);
+            Intent videoIntent = new Intent(context, MainActivity.class);
+            videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
+            context.startActivity(videoIntent);
+
             return;
         }
         Intent intent = new Intent();
