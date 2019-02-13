@@ -21,11 +21,7 @@ public class DownloadObserverImpl implements DownloadObserver {
         mAdapter.removeItem(downloadInfo);
     }
 
-    @Override
-    public void failed(DownloadInfo downloadInfo) {
 
-
-    }
 
 
     @Override

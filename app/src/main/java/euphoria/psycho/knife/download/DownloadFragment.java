@@ -41,7 +41,6 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
     DownloadToolbar mToolbar;
     SelectionDelegate<DownloadInfo> mSelectionDelegate;
 
-    private DownloadManager mDownloadManager;
     private File mDirectory;
     private TextView mEmptyView;
     ClipboardManager mClipboardManager;
@@ -49,9 +48,6 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         insertTaskFromClipboard();
     };
 
-    public DownloadManager getDownloadManager() {
-        return mDownloadManager;
-    }
 
     private void initializeDirectory() {
         mDirectory = new File(Environment.getExternalStorageDirectory(), "Videos");
@@ -74,7 +70,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         downloadInfo.fileName = fileName;
         downloadInfo.status = DownloadStatus.PAUSED;
         downloadInfo.url = url;
-        downloadInfo._id = DownloadDatabase.instance().insert(downloadInfo);
+        downloadInfo._id =  DownloadManager.instance().getDatabase().insert(downloadInfo);
         if (downloadInfo._id > 0) {
 
             Toast.makeText(getContext(), getString(R.string.message_success_insert_download_task, downloadInfo.fileName), Toast.LENGTH_LONG).show();
@@ -103,7 +99,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
     private void updateRecyclerView() {
 
         ThreadUtils.postOnBackgroundThread(() -> {
-            List<DownloadInfo> downloadInfos = DownloadDatabase.instance().queryPendingTask();
+            List<DownloadInfo> downloadInfos = DownloadManager.instance().getDatabase().queryPendingTask();
 
             ThreadUtils.postOnUiThread(() -> {
                 mAdapter.switchDatas(downloadInfos);
@@ -149,6 +145,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         listenClipboard();
         DownloadManager.instance().addObserver(new DownloadObserverImpl(mAdapter));
         updateRecyclerView();
+        insertTaskFromClipboard();
     }
 
     @Override

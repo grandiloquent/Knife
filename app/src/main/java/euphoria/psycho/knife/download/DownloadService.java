@@ -226,6 +226,7 @@ public class DownloadService extends Service implements DownloadObserver {
                 break;
             }
             case DownloadStatus.PAUSED: {
+                notification = DownloadUtils.buildNotification(this, provideChannelId(), downloadInfo);
                 break;
             }
             case DownloadStatus.COMPLETED: {

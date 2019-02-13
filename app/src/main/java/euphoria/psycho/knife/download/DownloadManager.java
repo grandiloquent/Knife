@@ -3,6 +3,7 @@ package euphoria.psycho.knife.download;
 import android.content.Context;
 import android.content.Intent;
 
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,12 +12,13 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import euphoria.psycho.common.ContextUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.knife.App;
 import euphoria.psycho.knife.DocumentUtils;
+import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
 import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 
@@ -49,7 +51,15 @@ public class DownloadManager implements DownloadObserver {
     }
 
     public void cancel(DownloadInfo downloadInfo) {
-        delete(downloadInfo);
+        new AlertDialog.Builder(mActivity)
+                .setTitle(R.string.ask)
+                .setMessage(mActivity.getString(R.string.dialog_delete_task, downloadInfo.fileName))
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    dialog.dismiss();
+                    delete(downloadInfo);
+                })
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .show();
 
     }
 
@@ -77,6 +87,10 @@ public class DownloadManager implements DownloadObserver {
 
 
         }
+    }
+
+    public DownloadDatabase getDatabase() {
+        return mDatabase;
     }
 
     private void onFinished(DownloadInfo downloadInfo) {
@@ -205,7 +219,7 @@ public class DownloadManager implements DownloadObserver {
 
 
         synchronized (mTasks) {
-          mDatabase.update(downloadInfo);
+            mDatabase.update(downloadInfo);
         }
 
     }

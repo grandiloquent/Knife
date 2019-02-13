@@ -37,7 +37,7 @@ public class DownloadDatabase extends SQLiteOpenHelper {
         contentValues.put("speed", downloadInfo.speed);
         contentValues.put("message", downloadInfo.message);
 
-        return getWritableDatabase().insert(TABLE_NAME, null, contentValues);
+        return getWritableDatabase().insertWithOnConflict(TABLE_NAME, null, contentValues,SQLiteDatabase.CONFLICT_IGNORE);
 
     }
 

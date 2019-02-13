@@ -29,7 +29,10 @@
     <string name="download_notification_paused">Download paused</string>
     <string name="download_notification_resume_button">Resume</string>
     <string name="download_started">Downloading…</string>
+    <string name="ask">Ask</string>
+    <string name="dialog_delete_task">Are you sure you want delete the task %1$s ?</string>
     <string name="download_title">Download</string>
+
     <string name="hide_info">Hide Info</string>
     <string name="menu_sort">Sort by</string>
     <string name="message_success_insert_download_task">Successfully added the download task \n%1$s\n from the clipboard.</string>
@@ -46,6 +49,7 @@
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>
     <string name="search">Search</string>
+    <string name="download_notification_pending">Download pending…</string>
     <string name="select_items">Select items</string>
     <string name="share">Share</string>
     <string name="share_link_title">Share</string>

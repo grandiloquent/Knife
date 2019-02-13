@@ -38,52 +38,32 @@ public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
         }
     }
 
-    public void updateItem(DownloadInfo downloadInfo) {
-
-            for (DownloadItemView view : mViews) {
-                if (view.getItem()._id == downloadInfo._id) {
-
-                    switch(downloadInfo.status){
-                        case DownloadStatus.STARTED:{
-                            break;
-                        }
-                        case DownloadStatus.IN_PROGRESS:{
-                            break;
-                        }
-                        case DownloadStatus.PAUSED:{
-                            break;
-                        }
-                        case DownloadStatus.COMPLETED:{
-                            break;
-                        }
-                        case DownloadStatus.FAILED:{
-                            break;
-                        }
-                        case DownloadStatus.RETIRED:{
-                            break;
-                        }
-                        case DownloadStatus.PENDING:{
-                            break;
-                        }
-                    }
-
-
-                    if (downloadInfo.status == DownloadStatus.IN_PROGRESS) {
-                        view.updateProgress(downloadInfo);
-                    } else {
-
-                        view.displayItem(downloadInfo);
-                    }
-                    break;
-
-                }
-            }
-    }
-
     public void switchDatas(List<DownloadInfo> infos) {
         mDownloadInfos.clear();
         mDownloadInfos.addAll(infos);
         notifyDataSetChanged();
+    }
+
+    public void updateItem(DownloadInfo downloadInfo) {
+
+        for (DownloadItemView view : mViews) {
+            if (view.getItem()._id == downloadInfo._id) {
+                view.updateProgress(downloadInfo);
+                break;
+
+            }
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return mDownloadInfos.size();
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull BaseViewHolder holder, int position) {
+
+        ((DownloadItemView) holder.itemView).displayItem(mDownloadInfos.get(position));
     }
 
     @NonNull
@@ -93,16 +73,5 @@ public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
         downloadItemView.setSelectionDelegate(mSelectionDelegate);
         mViews.add(downloadItemView);
         return new BaseViewHolder(downloadItemView);
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull BaseViewHolder holder, int position) {
-
-        ((DownloadItemView) holder.itemView).displayItem(mDownloadInfos.get(position));
-    }
-
-    @Override
-    public int getItemCount() {
-        return mDownloadInfos.size();
     }
 }

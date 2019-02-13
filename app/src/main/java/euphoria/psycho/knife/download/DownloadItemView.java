@@ -151,9 +151,42 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
     }
 
     public void updateProgress(DownloadInfo downloadInfo) {
+
         mDownloadStatusView.setText(downloadInfo.getStatusString(getContext()));
-        mProgressView.setProgress(downloadInfo.getPercent());
-        mDownloadPercentageView.setText(downloadInfo.getPercent() + "%");
+        switch (downloadInfo.status) {
+            case DownloadStatus.STARTED: {
+                mPauseResumeButton.setImageResource(R.drawable.ic_pause_white_24dp);
+                mPauseResumeButton.setContentDescription(
+                        getContext().getString(R.string.download_notification_pause_button));
+                break;
+            }
+            case DownloadStatus.IN_PROGRESS: {
+
+                mProgressView.setProgress(downloadInfo.getPercent());
+                mDownloadPercentageView.setText(downloadInfo.getPercent() + "%");
+                break;
+            }
+            case DownloadStatus.PAUSED: {
+                mPauseResumeButton.setImageResource(R.drawable.ic_play_arrow_white_24dp);
+                mPauseResumeButton.setContentDescription(
+                        getContext().getString(R.string.download_notification_resume_button));
+
+                break;
+            }
+            case DownloadStatus.COMPLETED: {
+                break;
+            }
+            case DownloadStatus.FAILED: {
+                break;
+            }
+            case DownloadStatus.RETIRED: {
+                break;
+            }
+            case DownloadStatus.PENDING: {
+                break;
+            }
+        }
+
     }
 
     @Nullable

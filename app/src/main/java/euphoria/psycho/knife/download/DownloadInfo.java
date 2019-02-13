@@ -40,16 +40,32 @@ public class DownloadInfo {
 
     public String getStatusString(Context context) {
 
+        switch (status) {
+            case DownloadStatus.STARTED: {
+                return context.getString(R.string.download_started);
+            }
+            case DownloadStatus.IN_PROGRESS: {
+                return android.text.format.Formatter.formatFileSize(context, bytesReceived);
+            }
+            case DownloadStatus.PAUSED: {
+                return context.getString(R.string.download_notification_paused);
+            }
+            case DownloadStatus.COMPLETED: {
 
-        if (status == DownloadStatus.COMPLETED) {
-            return context.getString(R.string.download_notification_completed);
-        } else if (status == DownloadStatus.PAUSED) {
-            return context.getString(R.string.download_notification_paused);
-        } else if (status == DownloadStatus.IN_PROGRESS) {
-            return android.text.format.Formatter.formatFileSize(context, bytesReceived);
-        } else if (status == DownloadStatus.STARTED) {
-            return context.getString(R.string.download_started);
+                return context.getString(R.string.download_notification_completed);
+            }
+            case DownloadStatus.FAILED: {
+                break;
+            }
+            case DownloadStatus.RETIRED: {
+                break;
+            }
+            case DownloadStatus.PENDING: {
+                return context.getString(R.string.download_notification_pending);
+            }
         }
+
+
         return context.getString(R.string.dialog_delete_message);
     }
 
