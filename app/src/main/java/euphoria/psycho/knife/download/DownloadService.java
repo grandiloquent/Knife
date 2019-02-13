@@ -230,6 +230,13 @@ public class DownloadService extends Service implements DownloadObserver {
                 break;
             }
             case DownloadStatus.COMPLETED: {
+                synchronized (mDownloadInfos) {
+                    if (mDownloadInfos.containsKey(downloadInfo._id)) {
+                        mDownloadInfos.remove(downloadInfo._id);
+                    }
+                }
+                updateForgroundState(downloadInfo);
+                mNotificationManager.cancel(String.valueOf(downloadInfo._id), NOTIFICATION_ID_PROGRESS);
                 break;
             }
             case DownloadStatus.FAILED: {
@@ -252,6 +259,7 @@ public class DownloadService extends Service implements DownloadObserver {
 
 
     }
+
 
     @Override
     public void updateStatus(DownloadInfo downloadInfo) {

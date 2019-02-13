@@ -70,7 +70,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         downloadInfo.fileName = fileName;
         downloadInfo.status = DownloadStatus.PAUSED;
         downloadInfo.url = url;
-        downloadInfo._id =  DownloadManager.instance().getDatabase().insert(downloadInfo);
+        downloadInfo._id = DownloadManager.instance().getDatabase().insert(downloadInfo);
         if (downloadInfo._id > 0) {
 
             Toast.makeText(getContext(), getString(R.string.message_success_insert_download_task, downloadInfo.fileName), Toast.LENGTH_LONG).show();
@@ -118,7 +118,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
     @Override
     protected void initViews() {
 
-        
+
         initializeDirectory();
         mSelectionDelegate = new SelectionDelegate<>();
         mSelectionDelegate.addObserver(this);
@@ -144,8 +144,13 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
                 R.string.download_manager_ui_empty, R.string.download_manager_ui_empty);
         listenClipboard();
         DownloadManager.instance().addObserver(new DownloadObserverImpl(mAdapter));
+        DownloadManager.instance().setAdapter(mAdapter);
         updateRecyclerView();
         insertTaskFromClipboard();
+
+        ThreadUtils.postOnUiThreadDelayed(() -> {
+            DownloadManager.instance().fullUpdate();
+        }, 1000);
     }
 
     @Override
@@ -153,7 +158,6 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         super.onCreateOptionsMenu(menu, inflater);
 
 
-        
     }
 
     @Override
@@ -174,7 +178,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
     @Override
     protected int provideMenuId() {
 
-        
+
         return 0;
     }
 }

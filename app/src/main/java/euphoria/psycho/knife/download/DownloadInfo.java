@@ -27,9 +27,9 @@ public class DownloadInfo {
     public String getDisplayName() {
         String name = StringUtils.substringAfter(url, "://");
         if (name == null) return "";
-        name = StringUtils.substringBefore(name, "/");
-        if (name == null) return "";
-        return name;
+        String hostName = StringUtils.substringBefore(name, "/");
+        if (hostName == null) return name;
+        return hostName;
     }
 
     public long getFileSize() {
@@ -55,10 +55,10 @@ public class DownloadInfo {
                 return context.getString(R.string.download_notification_completed);
             }
             case DownloadStatus.FAILED: {
-                break;
+                return context.getString(R.string.download_notification_failed);
             }
             case DownloadStatus.RETIRED: {
-                break;
+                return context.getString(R.string.download_notification_retry, message);
             }
             case DownloadStatus.PENDING: {
                 return context.getString(R.string.download_notification_pending);

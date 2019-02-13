@@ -75,7 +75,6 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
                 (MarginLayoutParams) mLayoutContainer.getLayoutParams(), mMargin);
 
         ThumbnailProvider thumbnailProvider = DownloadManager.instance().provideThumbnailProvider();
-
         thumbnailProvider.cancelRetrieval(this);
 
         // Request a thumbnail for the file to be sent to the ThumbnailCallback. This will happen
@@ -134,6 +133,11 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
     }
 
+    private void setThumbnailBitmap(Bitmap thumbnail) {
+        mThumbnailBitmap = thumbnail;
+        updateView();
+    }
+
     private void showLayout(View layoutToShow) {
         if (mLayoutCompleted != layoutToShow) ViewUtils.removeViewFromParent(mLayoutCompleted);
         if (mLayoutInProgress != layoutToShow) ViewUtils.removeViewFromParent(mLayoutInProgress);
@@ -154,6 +158,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
         mDownloadStatusView.setText(downloadInfo.getStatusString(getContext()));
         switch (downloadInfo.status) {
+            case DownloadStatus.PENDING:
             case DownloadStatus.STARTED: {
                 mPauseResumeButton.setImageResource(R.drawable.ic_pause_white_24dp);
                 mPauseResumeButton.setContentDescription(
@@ -174,6 +179,29 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
                 break;
             }
             case DownloadStatus.COMPLETED: {
+                String description = getContext().getString(R.string.download_manager_list_item_description,
+                        Formatter.formatFileSize(getContext(),
+                                downloadInfo.getFileSize()),
+                        downloadInfo.getDisplayName());
+                mDescriptionCompletedView.setText(description);
+                showLayout(mLayoutCompleted);
+
+                // To ensure that text views have correct width after recycling, we have to request
+                // re-layout.
+                mFilenameCompletedView.requestLayout();
+
+                mMoreButton.setContentDescriptionContext(downloadInfo.fileName);
+                boolean canShowMore = downloadInfo.isComplete();
+                mMoreButton.setVisibility(canShowMore ? View.VISIBLE : View.GONE);
+                mMoreButton.setClickable(true);
+                setLongClickable(downloadInfo.isComplete());
+
+                ThumbnailProvider thumbnailProvider = DownloadManager.instance().provideThumbnailProvider();
+                thumbnailProvider.cancelRetrieval(this);
+
+                mThumbnailBitmap = null;
+                thumbnailProvider.getThumbnail(this);
+                if (mThumbnailBitmap == null) updateView();
                 break;
             }
             case DownloadStatus.FAILED: {
@@ -182,9 +210,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
             case DownloadStatus.RETIRED: {
                 break;
             }
-            case DownloadStatus.PENDING: {
-                break;
-            }
+
         }
 
     }
@@ -210,11 +236,6 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
     public Item[] getItems() {
         return new Item[]{new Item(getContext(), R.string.share, true),
                 new Item(getContext(), R.string.delete, true)};
-    }
-
-    private void setThumbnailBitmap(Bitmap thumbnail) {
-        mThumbnailBitmap = thumbnail;
-        updateView();
     }
 
     @Nullable

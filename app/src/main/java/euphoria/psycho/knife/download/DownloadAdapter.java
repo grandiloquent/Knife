@@ -9,6 +9,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import euphoria.psycho.common.Log;
 import euphoria.psycho.common.base.BaseViewHolder;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.R;
@@ -49,6 +50,27 @@ public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
         for (DownloadItemView view : mViews) {
             if (view.getItem()._id == downloadInfo._id) {
                 view.updateProgress(downloadInfo);
+                break;
+
+            }
+        }
+    }
+    public void fullUpdate(DownloadInfo downloadInfo) {
+
+        Log.e("TAG/", "fullUpdate: " + "downloadInfo = " + downloadInfo
+                );
+
+        Log.e("TAG/DownloadAdapter", "fullUpdate: "+mViews.size());
+
+        for (DownloadItemView view : mViews) {
+
+            Log.e("TAG/DownloadAdapter", "fullUpdate: "+view.getItem()._id);
+
+            if (view.getItem()._id == downloadInfo._id) {
+                view.displayItem(downloadInfo);
+                
+                Log.e("TAG/DownloadAdapter", "fullUpdate: ");
+
                 break;
 
             }

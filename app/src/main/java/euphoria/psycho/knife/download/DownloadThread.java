@@ -107,6 +107,12 @@ public class DownloadThread extends Thread {
         while (tries++ < DEFAULT_RETRIES) {
 
 
+            if (tries > 1) {
+                mInfo.status = DownloadStatus.RETIRED;
+                mInfo.message = Integer.toString(tries);
+                mObserver.updateProgress(mInfo);
+
+            }
             //mInfo.listener.onStatusChanged(mTaskId, "第 " + tries + " 尝试下载 " + FileUtils.getFileName(mInfo.fileName));
             HttpsURLConnection c = null;
 
