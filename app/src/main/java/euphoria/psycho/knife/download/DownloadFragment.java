@@ -122,8 +122,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
     @Override
     protected void initViews() {
 
-        Log.e("TAG/DownloadFragment", "initViews: ");
-
+        
         initializeDirectory();
         mSelectionDelegate = new SelectionDelegate<>();
         mSelectionDelegate.addObserver(this);
@@ -157,8 +156,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         super.onCreateOptionsMenu(menu, inflater);
 
 
-        Log.e("TAG/", "onCreateOptionsMenu: ");
-
+        
     }
 
     @Override
@@ -179,8 +177,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
     @Override
     protected int provideMenuId() {
 
-        Log.e("TAG/", "provideMenuId: ");
-
+        
         return 0;
     }
 }

@@ -19,8 +19,8 @@ import java.util.Locale;
  * Helper methods for dealing with Files.
  */
 public class FileUtils {
-public static final char EXTENSION_SEPARATOR = '.';
-        private static final String TAG = "FileUtils";
+    public static final char EXTENSION_SEPARATOR = '.';
+    private static final String TAG = "FileUtils";
     private static final char UNIX_SEPARATOR = '/';
     private static final char WINDOWS_SEPARATOR = '\\';
 
@@ -151,7 +151,7 @@ public static final char EXTENSION_SEPARATOR = '.';
         return file.substring(0, index);
     }
 
-public static String getExtension(String filename) {
+    public static String getExtension(String filename) {
         if (filename == null) {
             return null;
         }
@@ -195,6 +195,7 @@ public static String getExtension(String filename) {
         int lastSeparator = indexOfLastSeparator(filename);
         return (lastSeparator > extensionPos ? -1 : extensionPos);
     }
+
     public static int indexOfLastSeparator(String filename) {
         if (filename == null) {
             return -1;
@@ -249,5 +250,38 @@ public static String getExtension(String filename) {
         }
 
         return size;
+    }
+
+
+    private static String[] mSupportVideoExtensions;
+
+    public static boolean isSupportedVideo(String fileName) {
+
+        if (mSupportVideoExtensions == null) {
+            mSupportVideoExtensions = new String[]{
+                    ".3gp",
+                    ".mp4",
+                    ".ts",
+                    ".webm",
+                    ".mkv",
+            };
+        }
+        return extensionMatch(mSupportVideoExtensions, fileName);
+    }
+
+    private static boolean extensionMatch(String[] extensions, String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex == -1) return false;
+
+        // somevideo.mp4 => .mp4
+        String extension = fileName.substring(dotIndex).toLowerCase();
+
+
+
+        for (String e : extensions) {
+            if (e.equals(extension)) return true;
+        }
+
+        return false;
     }
 }

@@ -108,8 +108,7 @@ public class DownloadService extends Service implements DownloadObserver {
             mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
         }
         
-        Log.e("TAG/DownloadService", "onCreate: ");
-
+        
         //DownloadManager.instance().addObserver(this);
 
     }
@@ -117,8 +116,7 @@ public class DownloadService extends Service implements DownloadObserver {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         
-        Log.e("TAG/DownloadService", "onStartCommand: ");
-
+        
         if (intent.hasExtra(EXTRA_CANCEL)) {
             handleCancel(intent);
         } else {
@@ -134,8 +132,7 @@ public class DownloadService extends Service implements DownloadObserver {
     public void onDestroy() {
         super.onDestroy();
         
-        Log.e("TAG/DownloadService", "onDestroy: ");
-
+        
     }
 
     @Override
@@ -151,8 +148,7 @@ public class DownloadService extends Service implements DownloadObserver {
     @Override
     public void updateProgress(DownloadInfo downloadInfo) {
 
-        Log.e("TAG/DownloadService", "updateProgress: ");
-
+        
     }
 
     @Override

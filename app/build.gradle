@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.protobuf'
 
 android {
     compileSdkVersion 28
@@ -38,9 +39,37 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.appcompat:appcompat:1.1.0-alpha01"
+    implementation "androidx.appcompat:appcompat:1.1.0-alpha02"
     implementation "androidx.recyclerview:recyclerview:1.1.0-alpha02"
     implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
     implementation "com.googlecode.mp4parser:isoparser:1.1.22"
     implementation "com.google.android.material:material:1.1.0-alpha03"
+    implementation "com.google.protobuf:protobuf-lite:3.0.1"
+    // protobuf files("ext/")
+}
+
+protobuf {
+    protoc {
+        // You still need protoc like in the non-Android case
+        artifact = 'com.google.protobuf:protoc:3.0.0'
+    }
+    plugins {
+        javalite {
+            // The codegen for lite comes as a separate artifact
+            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                // In most cases you don't need the full Java output
+                // if you use the lite output.
+                remove java
+            }
+            task.plugins {
+                javalite { }
+            }
+        }
+    }
+    generatedFilesBaseDir = "$projectDir/src/generated"
 }

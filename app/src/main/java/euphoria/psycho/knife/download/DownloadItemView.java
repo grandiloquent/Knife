@@ -3,6 +3,7 @@ package euphoria.psycho.knife.download;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
@@ -17,6 +18,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.view.MarginLayoutParamsCompat;
 import euphoria.psycho.common.ApiCompatibilityUtils;
 import euphoria.psycho.common.Log;
+import euphoria.psycho.common.Utils;
 import euphoria.psycho.common.ViewUtils;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.widget.ListMenuButton;
@@ -153,7 +155,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
     @Nullable
     @Override
     public String getContentId() {
-        return mItem == null ? "" : Long.toString(mItem._id);
+        return mItem == null ? "" : Long.toString(Utils.crc64Long(mItem.filePath));
     }
 
     @Nullable
@@ -254,10 +256,12 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
         } else if (mThumbnailBitmap != null) {
             assert !mThumbnailBitmap.isRecycled();
             mIconView.setBackground(null);
-            mIconView.setImageDrawable(ViewUtils.createRoundedBitmapDrawable(
-                    Bitmap.createScaledBitmap(mThumbnailBitmap, mIconSize, mIconSize, false),
-                    getResources().getDimensionPixelSize(
-                            R.dimen.list_item_start_icon_corner_radius)));
+            
+            mIconView.setImageDrawable(new BitmapDrawable(mThumbnailBitmap));
+//            mIconView.setImageDrawable(ViewUtils.createRoundedBitmapDrawable(
+//                    Bitmap.createScaledBitmap(mThumbnailBitmap, mIconSize, mIconSize, false),
+//                    getResources().getDimensionPixelSize(
+//                            R.dimen.list_item_start_icon_corner_radius)));
             ApiCompatibilityUtils.setImageTintList(mIconView, null);
         } else {
 
