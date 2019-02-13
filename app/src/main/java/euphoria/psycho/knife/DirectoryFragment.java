@@ -75,6 +75,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private int mLastVisiblePosition;
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
+    private BottomSheet mBottomSheet;
     //    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
 //        @Override
 //        public void onGlobalLayout() {
@@ -98,38 +99,15 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         return false;
     }
 
-
-    private void initializeBottomSheet() {
-
-        BottomSheet.instance(getActivity()).setOnClickListener(this::onBottomSheetClicked);
+    public File getDirectory() {
+        return mDirectory;
     }
 
-    public void onBottomSheetClicked(Pair<Integer, String> item) {
-        switch (item.first) {
-            case R.drawable.ic_action_storage:
-                mDirectory = Environment.getExternalStorageDirectory();
-                break;
-            case R.drawable.ic_action_sd_card:
-                mDirectory = new File(StorageUtils.getSDCardPath());
-                break;
-            case R.drawable.ic_action_file_download:
-                mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
-                break;
-            case R.drawable.ic_action_photo:
-                mDirectory = new File(Environment.getExternalStorageDirectory(), "DCIM");
-                break;
-            case R.drawable.ic_file_download_blue_24px:
-                Intent downloadIntent = new Intent(getContext(), DownloadActivity.class);
-                startActivity(downloadIntent);
-                break;
-            case R.drawable.ic_create_new_folder_blue_24px:
-                DocumentUtils.buildNewDirectoryDialog(getContext(), mDirectory, aBoolean -> {
-                    if (aBoolean)
-                        updateRecyclerView(false);
-                });
-                break;
+    private void initializeBottomSheet() {
+        if (mBottomSheet == null) {
+            mBottomSheet = new BottomSheet(getActivity());
+            mBottomSheet.setOnClickListener(this::onBottomSheetClicked);
         }
-        updateRecyclerView(false);
     }
 
     private void loadPreferences() {
@@ -174,6 +152,34 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
+    public void onBottomSheetClicked(Pair<Integer, String> item) {
+        switch (item.first) {
+            case R.drawable.ic_action_storage:
+                mDirectory = Environment.getExternalStorageDirectory();
+                break;
+            case R.drawable.ic_action_sd_card:
+                mDirectory = new File(StorageUtils.getSDCardPath());
+                break;
+            case R.drawable.ic_action_file_download:
+                mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
+                break;
+            case R.drawable.ic_action_photo:
+                mDirectory = new File(Environment.getExternalStorageDirectory(), "DCIM");
+                break;
+            case R.drawable.ic_file_download_blue_24px:
+                Intent downloadIntent = new Intent(getContext(), DownloadActivity.class);
+                startActivity(downloadIntent);
+                break;
+            case R.drawable.ic_create_new_folder_blue_24px:
+                DocumentUtils.buildNewDirectoryDialog(getContext(), mDirectory, aBoolean -> {
+                    if (aBoolean)
+                        updateRecyclerView(false);
+                });
+                break;
+        }
+        updateRecyclerView(false);
+    }
+
     private void savePreferences() {
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
         updateLastVisiblePosition();
@@ -182,23 +188,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 .putInt(C.KEY_SORT_BY, mSortBy).apply();
     }
 
-    private void scrollToPosition(int position) {
-        LayoutManager layoutManager = mRecyclerView.getLayoutManager();
-        if (layoutManager != null) {
-            int count = layoutManager.getChildCount();
-            Log.e("TAG/", "scrollToPosition: " + position + " " + count);
-            //  && position < count
 
-            if (position != RecyclerView.NO_POSITION) {
-
-
-                layoutManager.scrollToPosition(position);
-            }
-        }
-    }
 
     private void showBottomSheet() {
-        BottomSheet.instance(getActivity()).showDialog();
+        mBottomSheet.showDialog();
     }
 
     private void sortBy(int sortBy) {
@@ -206,7 +199,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mSortBy = sortBy;
         updateRecyclerView(false);
     }
-
 
     private void updateLastVisiblePosition() {
 
@@ -369,10 +361,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 break;
         }
         return true;
-    }
-
-    public File getDirectory() {
-        return mDirectory;
     }
 
     @Override

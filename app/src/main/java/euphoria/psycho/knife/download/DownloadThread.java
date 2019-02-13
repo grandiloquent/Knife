@@ -28,8 +28,6 @@ import static java.net.HttpURLConnection.HTTP_PARTIAL;
 
 
 public class DownloadThread extends Thread {
-    public static final int STATUS_FINISHED = 7;
-    private static final boolean DEBUG = true;
     private static final int DEFAULT_BUFFER_SIZE = 8192;
     private static final int DEFAULT_DELAY_TIME = 5 * 1000;
     private static final int DEFAULT_RETRIES = 20;
@@ -42,8 +40,6 @@ public class DownloadThread extends Thread {
     private static final String HTTP_USER_AGENT = "User-Agent";
     private static final int MIN_PROGRESS_STEP = 65536;
     private static final long MIN_PROGRESS_TIME = 2000;
-    private static final String TAG = "TAG/" + DownloadThread.class.getSimpleName();
-    private final Context mContext;
     private DownloadInfo mInfo;
     private volatile boolean mIsStop = false;
     private long mLastUpdateBytes = 0;
@@ -54,11 +50,10 @@ public class DownloadThread extends Thread {
     private long mSpeedSampleStart = 0L;
     private int mTimeout = 20 * 1000;
 
-    public DownloadThread(DownloadInfo info, Context context, DownloadObserver observer) {
+    public DownloadThread(DownloadInfo info, DownloadObserver observer) {
 
 
         mInfo = info;
-        mContext = context;
         mObserver = observer;
 
     }
@@ -143,7 +138,7 @@ public class DownloadThread extends Thread {
                         parseOkHeaders(c);
                         transferData(c);
                         mInfo.status = DownloadStatus.COMPLETED;
-                        mObserver.completed(mInfo);
+                        mObserver.updateProgress(mInfo);
                         //mInfo.listener.onFinished(mInfo.id);
                         return;
                     }
@@ -222,7 +217,7 @@ public class DownloadThread extends Thread {
         FileLogger.log("TAG/DownloadThread", "stopDownload");
         mIsStop = true;
         mInfo.status = DownloadStatus.PAUSED;
-        mObserver.paused(mInfo);
+        mObserver.updateProgress(mInfo);
     }
 
     private void transferData(HttpURLConnection c) throws DownloadRequestException {
@@ -315,9 +310,9 @@ public class DownloadThread extends Thread {
     public void run() {
 
 
-        mInfo.status = DownloadStatus.STARTED;
         mInfo.message = "下载 " + mInfo.url;
-        mObserver.started(mInfo);
+        mInfo.status = DownloadStatus.STARTED;
+        mObserver.updateProgress(mInfo);
         try {
 
 
@@ -331,11 +326,11 @@ public class DownloadThread extends Thread {
             int s = e.getFinalStatus();
             if (s == DownloadStatus.PAUSED) {
                 mInfo.status = DownloadStatus.PAUSED;
-                mObserver.paused(mInfo);
+                mObserver.updateProgress(mInfo);
             } else if (s == DownloadStatus.FAILED) {
                 mInfo.message = e.getMessage();
                 mInfo.status = DownloadStatus.FAILED;
-                mObserver.failed(mInfo);
+                mObserver.updateProgress(mInfo);
             } else {
             }
 

@@ -14,13 +14,6 @@ public class DownloadObserverImpl implements DownloadObserver {
 
     }
 
-    @Override
-    public void completed(DownloadInfo downloadInfo) {
-        ThreadUtils.postOnUiThread(() -> {
-            mAdapter.updateItem(downloadInfo);
-        });
-
-    }
 
     @Override
     public void deleted(DownloadInfo downloadInfo) {
@@ -34,13 +27,6 @@ public class DownloadObserverImpl implements DownloadObserver {
 
     }
 
-    @Override
-    public void paused(DownloadInfo downloadInfo) {
-
-        ThreadUtils.postOnUiThread(() -> {
-            mAdapter.updateItem(downloadInfo);
-        });
-    }
 
     @Override
     public void retried(DownloadInfo downloadInfo) {
@@ -48,15 +34,35 @@ public class DownloadObserverImpl implements DownloadObserver {
 
     }
 
-    @Override
-    public void started(DownloadInfo downloadInfo) {
-        ThreadUtils.postOnUiThread(() -> {
-            mAdapter.updateItem(downloadInfo);
-        });
-    }
 
     @Override
     public void updateProgress(DownloadInfo downloadInfo) {
+//        switch (downloadInfo.status) {
+//            case DownloadStatus.STARTED: {
+//                break;
+//            }
+//            case DownloadStatus.IN_PROGRESS: {
+//                break;
+//            }
+//            case DownloadStatus.PAUSED: {
+//                break;
+//            }
+//            case DownloadStatus.COMPLETED: {
+//                break;
+//            }
+//            case DownloadStatus.CANCELLED: {
+//                break;
+//            }
+//            case DownloadStatus.FAILED: {
+//                break;
+//            }
+//            case DownloadStatus.RETIRED: {
+//                break;
+//            }
+//            case DownloadStatus.PENDING: {
+//                break;
+//            }
+//        }
 
         ThreadUtils.postOnUiThread(() -> {
             mAdapter.updateItem(downloadInfo);

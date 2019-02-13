@@ -22,23 +22,30 @@ import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 
 public class DownloadManager implements DownloadObserver {
 
+    private final List<DownloadObserver> mObservers = new ArrayList<>();
+    private final Map<Long, DownloadThread> mTasks = new HashMap<>();
     private Context mContext;
     private ExecutorService mExecutor;
-    private Map<Long, DownloadThread> mTasks = new HashMap<>();
     private AppCompatActivity mActivity;
-    private List<DownloadObserver> mObservers;
+    private DownloadDatabase mDatabase;
 
     private DownloadManager(Context context) {
         int numThreads = 3;
         mExecutor = Executors.newFixedThreadPool(numThreads);
         mContext = context;
-        mObservers = new ArrayList<>();
+        mDatabase = new DownloadDatabase(context);
         startService();
     }
 
     public void addObserver(DownloadObserver observer) {
         if (mObservers.indexOf(observer) == -1)
             mObservers.add(observer);
+    }
+
+    private void broadcastProgress(DownloadInfo downloadInfo) {
+        for (DownloadObserver observer : mObservers) {
+            observer.updateProgress(downloadInfo);
+        }
     }
 
     public void cancel(DownloadInfo downloadInfo) {
@@ -61,7 +68,7 @@ public class DownloadManager implements DownloadObserver {
 
             }
 
-            DownloadDatabase.instance().delete(downloadInfo);
+            mDatabase.delete(downloadInfo);
             File downloadFile = new File(downloadInfo.filePath);
             if (downloadFile.isFile()) downloadFile.delete();
             for (DownloadObserver observer : mObservers) {
@@ -72,7 +79,15 @@ public class DownloadManager implements DownloadObserver {
         }
     }
 
-    public void openContent(DownloadInfo downloadInfo) {
+    private void onFinished(DownloadInfo downloadInfo) {
+        synchronized (mTasks) {
+            mDatabase.update(downloadInfo);
+            mTasks.remove(downloadInfo._id);
+        }
+
+    }
+
+    void openContent(DownloadInfo downloadInfo) {
         if (mActivity == null) return;
         DocumentUtils.openContent(mActivity, downloadInfo.filePath, 1);
     }
@@ -85,14 +100,12 @@ public class DownloadManager implements DownloadObserver {
                 DownloadThread thread = mTasks.get(downloadInfo._id);
                 if (thread != null) {
                     thread.stopDownload();
-                    DownloadDatabase.instance().update(downloadInfo);
-
-
+                    mDatabase.update(downloadInfo);
                 }
             } else {
                 FileLogger.log("TAG/DownloadManager", "[异常] [pause]: "
                         + "\n 停止任务列表中的指定任务"
-                        + "\n 目标任务deID = " + downloadInfo._id
+                        + "\n 目标任务的ID = " + downloadInfo._id
                         + "\n 任务列表种包含的任务数 = " + mTasks.size());
 
             }
@@ -101,22 +114,31 @@ public class DownloadManager implements DownloadObserver {
         }
     }
 
+    ThumbnailProvider provideThumbnailProvider() {
+
+        return new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
+    }
+
     void resume(DownloadInfo downloadInfo) {
 
         synchronized (mTasks) {
             if (mTasks.containsKey(downloadInfo._id)) {
-                FileLogger.log("TAG/DownloadManager", "resume: the task is queued. _id = " + downloadInfo._id);
+                FileLogger.log("TAG/DownloadManager", "任务列表中已包含此任务 id = " + downloadInfo._id);
                 return;
             }
 
-            DownloadThread thread = new DownloadThread(downloadInfo, mContext, this);
+            DownloadThread thread = new DownloadThread(downloadInfo, this);
             mTasks.put(downloadInfo._id, thread);
             mExecutor.submit(thread);
+            downloadInfo.status = DownloadStatus.PENDING;
 
+            broadcastProgress(downloadInfo);
         }
     }
 
     public void setActivity(AppCompatActivity activity) {
+
+
         mActivity = activity;
     }
 
@@ -131,46 +153,7 @@ public class DownloadManager implements DownloadObserver {
     }
 
     @Override
-    public synchronized void completed(DownloadInfo downloadInfo) {
-
-        synchronized (mTasks) {
-            DownloadDatabase.instance().update(downloadInfo);
-            for (DownloadObserver observer : mObservers) {
-                observer.completed(downloadInfo);
-            }
-        }
-
-
-    }
-
-    @Override
-    public void started(DownloadInfo downloadInfo) {
-        for (DownloadObserver observer : mObservers) {
-            observer.started(downloadInfo);
-        }
-    }
-
-    @Override
     public void deleted(DownloadInfo downloadInfo) {
-
-    }
-
-    @Override
-    public void failed(DownloadInfo downloadInfo) {
-
-
-    }
-
-    @Override
-    public void paused(DownloadInfo downloadInfo) {
-
-        synchronized (mTasks) {
-            DownloadDatabase.instance().update(downloadInfo);
-            mTasks.remove(downloadInfo._id);
-            for (DownloadObserver observer : mObservers) {
-                observer.paused(downloadInfo);
-            }
-        }
 
     }
 
@@ -184,23 +167,45 @@ public class DownloadManager implements DownloadObserver {
     public void updateProgress(DownloadInfo downloadInfo) {
 
 
-        for (DownloadObserver observer : mObservers) {
+        switch (downloadInfo.status) {
+            case DownloadStatus.STARTED: {
+                break;
+            }
+            case DownloadStatus.IN_PROGRESS: {
+                break;
+            }
+            case DownloadStatus.PAUSED: {
+                onFinished(downloadInfo);
+                break;
+            }
+            case DownloadStatus.COMPLETED: {
+                onFinished(downloadInfo);
+                break;
+            }
 
-            observer.updateProgress(downloadInfo);
+            case DownloadStatus.FAILED: {
+                onFinished(downloadInfo);
+
+                break;
+            }
+            case DownloadStatus.RETIRED: {
+                break;
+            }
+            case DownloadStatus.PENDING: {
+                break;
+            }
         }
+        broadcastProgress(downloadInfo);
+
     }
 
-    public ThumbnailProvider provideThumbnailProvider() {
-
-        return new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
-    }
 
     @Override
     public synchronized void updateStatus(DownloadInfo downloadInfo) {
 
 
         synchronized (mTasks) {
-            DownloadDatabase.instance().update(downloadInfo);
+          mDatabase.update(downloadInfo);
         }
 
     }

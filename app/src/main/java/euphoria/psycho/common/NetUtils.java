@@ -5,7 +5,6 @@ import android.webkit.MimeTypeMap;
 import java.net.URL;
 
 public class NetUtils {
-    private static final String TAG = "TAG/" + NetUtils.class.getSimpleName();
 
     public static boolean isURL(String url) {
         try {
@@ -19,21 +18,23 @@ public class NetUtils {
     public static String getMimeType(String url) {
         String type = null;
         String extension = StringUtils.substringAfterLast(url, ".");
-        if (extension != null) {
-            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-        }
 
-        if (type == null && extension != null) {
+        if (extension != null) {
 
             switch (extension) {
                 case "epub":
                     type = "application/epub+zip";
                     break;
-                default:
-                    type = "application/*";
-                    break;
+
             }
         }
+        if (type == null && extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        }
+
+        if (type == null) type = "application/*";
+
+
         return type;
     }
 }

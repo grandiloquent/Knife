@@ -13,7 +13,6 @@ import euphoria.psycho.knife.R;
 
 public class BottomSheet {
 
-    private static BottomSheet INSTANCE;
     private final Context mContext;
     private BottomSheetAdapter mBottomSheetAdapter;
     private View mContainer;
@@ -28,7 +27,7 @@ public class BottomSheet {
     private OnClickListener mOnClickListener;
     private RecyclerView mRecyclerView;
 
-    private BottomSheet(Context context) {
+    public BottomSheet(Context context) {
         mContext = context;
     }
 
@@ -65,12 +64,7 @@ public class BottomSheet {
 
     }
 
-    public static BottomSheet instance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new BottomSheet(context);
-        }
-        return INSTANCE;
-    }
+
 
 
     public interface OnClickListener {

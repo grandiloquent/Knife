@@ -17,11 +17,9 @@ import euphoria.psycho.common.ContextUtils;
 public class DownloadDatabase extends SQLiteOpenHelper {
     public static final int DATABASE_VERSION = 1;
     private static final String TABLE_NAME = "infos";
-    private final Context mContext;
 
-    private DownloadDatabase(Context context) {
+    public DownloadDatabase(Context context) {
         super(context, getDatabaseFileName(), null, DATABASE_VERSION);
-        mContext = context;
     }
 
     public synchronized void delete(DownloadInfo downloadInfo) {
@@ -70,9 +68,6 @@ public class DownloadDatabase extends SQLiteOpenHelper {
         return new File(Environment.getExternalStorageDirectory(), "infos.db").getAbsolutePath();
     }
 
-    public static DownloadDatabase instance() {
-        return Singleton.INSTANCE;
-    }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -105,8 +100,5 @@ public class DownloadDatabase extends SQLiteOpenHelper {
 // SELECT _id,status,fileName,filePath,bytesReceived,bytesTotal,url,speed FROM table_name;
     }
 
-    private static class Singleton {
-        private static final DownloadDatabase INSTANCE =
-                new DownloadDatabase(ContextUtils.getApplicationContext());
-    }
+
 }

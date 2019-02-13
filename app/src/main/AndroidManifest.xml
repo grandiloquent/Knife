@@ -17,10 +17,7 @@
         <activity
             android:name=".MainActivity"
             android:theme="@style/FullscreenWhiteBase">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -69,7 +66,10 @@
         <activity
             android:name=".download.DownloadActivity"
             android:theme="@style/FullscreenWhiteBase">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <service android:name=".service.FileOperationService" />

@@ -95,6 +95,7 @@ public class DownloadService extends Service implements DownloadObserver {
         }
     }
 
+
     private void updateForgroundState(DownloadInfo downloadInfo) {
         DownloadInfo candidate = mDownloadInfos.isEmpty() ? null : mDownloadInfos.values().iterator().next();
 
@@ -123,15 +124,10 @@ public class DownloadService extends Service implements DownloadObserver {
 
             @Override
             public void stopForeground(boolean removeNotification) {
-                FileLogger.log("TAG/DownloadService", "stopForeground: " );
+                FileLogger.log("TAG/DownloadService", "stopForeground: ");
                 service.stopForeground(removeNotification);
             }
         };
-    }
-
-    @Override
-    public void completed(DownloadInfo downloadInfo) {
-
     }
 
     @Override
@@ -146,10 +142,6 @@ public class DownloadService extends Service implements DownloadObserver {
         mNotificationManager.cancel(String.valueOf(downloadInfo._id), NOTIFICATION_ID_PROGRESS);
     }
 
-    @Override
-    public void failed(DownloadInfo downloadInfo) {
-
-    }
 
     @Nullable
     @Override
@@ -187,9 +179,6 @@ public class DownloadService extends Service implements DownloadObserver {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
 
-        Log.e("TAG/DownloadService", "onStartCommand: "
-                + "\n  intent action = " + intent.getAction());
-
         if (intent.hasExtra(EXTRA_CANCEL)) {
             handleCancel(intent);
         } else {
@@ -201,10 +190,6 @@ public class DownloadService extends Service implements DownloadObserver {
         return START_NOT_STICKY;
     }
 
-    @Override
-    public void paused(DownloadInfo downloadInfo) {
-
-    }
 
     @Override
     public void retried(DownloadInfo downloadInfo) {
@@ -212,31 +197,58 @@ public class DownloadService extends Service implements DownloadObserver {
     }
 
     @Override
-    public void started(DownloadInfo downloadInfo) {
+    public void updateProgress(DownloadInfo downloadInfo) {
+        Notification notification = null;
+
+        switch (downloadInfo.status) {
+            case DownloadStatus.STARTED: {
+                synchronized (mDownloadInfos) {
+                    if (!mDownloadInfos.containsKey(downloadInfo._id)) {
+                        mDownloadInfos.put(downloadInfo._id, downloadInfo);
+                    }
+                }
+                notification = DownloadUtils.buildNotification(this, provideChannelId(), downloadInfo);
+
+                if (mForegroundDownloadInfo.compareAndSet(null, downloadInfo)) {
+
+                    mForegroundManager.startForeground(NOTIFICATION_ID_PROGRESS, notification);
+                }
+
+                // Show start up notification
+
+                break;
+            }
+            case DownloadStatus.IN_PROGRESS: {
+
+                notification = DownloadUtils.buildNotification(this, provideChannelId(), downloadInfo);
 
 
-        synchronized (mDownloadInfos) {
-            if (!mDownloadInfos.containsKey(downloadInfo._id)) {
-                mDownloadInfos.put(downloadInfo._id, downloadInfo);
+                break;
+            }
+            case DownloadStatus.PAUSED: {
+                break;
+            }
+            case DownloadStatus.COMPLETED: {
+                break;
+            }
+            case DownloadStatus.FAILED: {
+                break;
+            }
+            case DownloadStatus.RETIRED: {
+                break;
+            }
+            case DownloadStatus.PENDING: {
+                break;
             }
         }
-        Notification notification = DownloadUtils.buildNotification(this, provideChannelId(), downloadInfo);
 
-        if (mForegroundDownloadInfo.compareAndSet(null, downloadInfo)) {
-
-            mForegroundManager.startForeground(NOTIFICATION_ID_PROGRESS, notification);
+        if (notification != null) {
+            mNotificationManager.notify(
+                    String.valueOf(downloadInfo._id),
+                    NOTIFICATION_ID_PROGRESS,
+                    notification);
         }
 
-        // Show start up notification
-        mNotificationManager.notify(
-                String.valueOf(downloadInfo._id), NOTIFICATION_ID_PROGRESS, notification);
-    }
-
-    @Override
-    public void updateProgress(DownloadInfo downloadInfo) {
-        Notification notification = DownloadUtils.buildNotification(this, provideChannelId(), downloadInfo);
-
-        mNotificationManager.notify(String.valueOf(downloadInfo._id), NOTIFICATION_ID_PROGRESS, notification);
 
     }
 

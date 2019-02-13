@@ -217,7 +217,6 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
         mMoreButton.setDelegate(this);
         mPauseResumeButton.setOnClickListener(view -> {
-            FileLogger.log("TAG/DownloadItemView", "PauseResumeButton clicked. _id = " + mItem._id + " isPaused = " + mItem.isPaused());
             if (mItem.isPaused()) {
                 DownloadManager.instance().resume(mItem);
             } else if (!mItem.isComplete()) {

@@ -39,11 +39,35 @@ public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
     }
 
     public void updateItem(DownloadInfo downloadInfo) {
-        if (downloadInfo.status == DownloadStatus.CANCELLED) {
 
-        } else {
             for (DownloadItemView view : mViews) {
                 if (view.getItem()._id == downloadInfo._id) {
+
+                    switch(downloadInfo.status){
+                        case DownloadStatus.STARTED:{
+                            break;
+                        }
+                        case DownloadStatus.IN_PROGRESS:{
+                            break;
+                        }
+                        case DownloadStatus.PAUSED:{
+                            break;
+                        }
+                        case DownloadStatus.COMPLETED:{
+                            break;
+                        }
+                        case DownloadStatus.FAILED:{
+                            break;
+                        }
+                        case DownloadStatus.RETIRED:{
+                            break;
+                        }
+                        case DownloadStatus.PENDING:{
+                            break;
+                        }
+                    }
+
+
                     if (downloadInfo.status == DownloadStatus.IN_PROGRESS) {
                         view.updateProgress(downloadInfo);
                     } else {
@@ -54,7 +78,6 @@ public class DownloadAdapter extends RecyclerView.Adapter<BaseViewHolder> {
 
                 }
             }
-        }
     }
 
     public void switchDatas(List<DownloadInfo> infos) {
