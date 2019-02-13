@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.Log;
+import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.knife.service.Job;
 
 import static euphoria.psycho.common.C.DEBUG;
@@ -51,7 +52,7 @@ public class DownloadService extends Service implements DownloadObserver {
         String action = intent.getAction();
         if (action == null) return;
         ;
-        if (action.equals(ACTION_DOWNLOAD_PAUSE)){
+        if (action.equals(ACTION_DOWNLOAD_PAUSE)) {
             long id = intent.getLongExtra(EXTRA_DOWNLOAD_ID, 0);
             if (id < 1) {
 
@@ -96,9 +97,13 @@ public class DownloadService extends Service implements DownloadObserver {
 
     private void updateForgroundState(DownloadInfo downloadInfo) {
         DownloadInfo candidate = mDownloadInfos.isEmpty() ? null : mDownloadInfos.values().iterator().next();
+
+
         if (mForegroundDownloadInfo.compareAndSet(downloadInfo, candidate)) {
+
             if (candidate == null) {
                 mForegroundManager.stopForeground(true);
+
             } else {
                 Notification notification = DownloadUtils.buildNotification(this, provideChannelId(), candidate);
                 mForegroundManager.startForeground(NOTIFICATION_ID_PROGRESS, notification
@@ -112,11 +117,13 @@ public class DownloadService extends Service implements DownloadObserver {
         return new ForegroundManager() {
             @Override
             public void startForeground(int id, Notification notification) {
+                FileLogger.log("TAG/DownloadService", "startForeground: id = " + id);
                 service.startForeground(id, notification);
             }
 
             @Override
             public void stopForeground(boolean removeNotification) {
+                FileLogger.log("TAG/DownloadService", "stopForeground: " );
                 service.stopForeground(removeNotification);
             }
         };
@@ -129,7 +136,14 @@ public class DownloadService extends Service implements DownloadObserver {
 
     @Override
     public void deleted(DownloadInfo downloadInfo) {
+        synchronized (mDownloadInfos) {
+            if (mDownloadInfos.containsKey(downloadInfo._id)) {
 
+                mDownloadInfos.remove(downloadInfo._id);
+            }
+        }
+        updateForgroundState(downloadInfo);
+        mNotificationManager.cancel(String.valueOf(downloadInfo._id), NOTIFICATION_ID_PROGRESS);
     }
 
     @Override
@@ -200,7 +214,6 @@ public class DownloadService extends Service implements DownloadObserver {
     @Override
     public void started(DownloadInfo downloadInfo) {
 
-        Log.e("TAG/DownloadService", "started: ");
 
         synchronized (mDownloadInfos) {
             if (!mDownloadInfos.containsKey(downloadInfo._id)) {

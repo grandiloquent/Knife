@@ -10,6 +10,7 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Environment;
 import android.provider.DocumentsContract;
+import android.provider.DocumentsContract.Document;
 import android.text.TextUtils;
 
 import java.io.File;
@@ -28,7 +29,6 @@ public class StorageUtils {
     // https://developer.android.com/guide/topics/providers/document-provider
     // content://com.android.externalstorage.documents/tree/19E7-1704%3A
 
-    private static final String TAG = "TAG/" + StorageUtils.class.getSimpleName();
     private static String sSDCardPath;
     private static Uri sTreeUri;
 
@@ -56,6 +56,35 @@ public class StorageUtils {
         return file;
     }
 
+
+    public static boolean createDirectory(Context context, File parentFile, String directoryName) {
+
+        File dir = new File(parentFile, directoryName);
+        if (dir.isDirectory()) return true;
+        boolean b = dir.mkdirs();
+        if (!b) {
+
+
+            if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+                Uri parentUri = getDocumentUriFromTreeUri(parentFile);
+
+
+                try {
+                    Uri result = DocumentsContract.createDocument(
+                            context.getContentResolver(),
+                            parentUri,
+                            Document.MIME_TYPE_DIR,
+                            directoryName
+                    );
+                    return result != null;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return b;
+    }
+
     public static boolean deleteFile(File file) {
         if (file.getPath().startsWith(getSDCardPath())) {
             if (sTreeUri == null) {
@@ -70,22 +99,20 @@ public class StorageUtils {
         }
     }
 
-    public static boolean deleteFile(Context context, File file, String treeUri) {
-
-        boolean result = file.delete();
-        if (!result) {
-            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, treeUri, file);
-            result = documentFile.delete();
-        }
-        return result;
-    }
+  
 
     public static boolean deleteFile(Context context, File file) {
 
         boolean result = file.delete();
         if (!result) {
-            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, getTreeUri().toString(), file);
-            result = documentFile.delete();
+            if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
+                try {
+                    return DocumentsContract.deleteDocument(context.getContentResolver(), getDocumentUriFromTreeUri(file));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
         return result;
     }
@@ -132,33 +159,22 @@ public class StorageUtils {
         return document;
     }
 
-    public static DocumentFile getDocumentFileFromTreeUri(Context context, String treeUri, File file) {
-        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
-        String baseURI = treeUri + "/document/" + lastPath;
-        String splited = StringUtils.substringBeforeLast(lastPath, "%");
-
-        return DocumentFile.fromSingleUri(context, Uri.parse(baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"))));
-    }
-
-    public static DocumentFile getDocumentFileFromTreeUri(File file) {
-
-        return getDocumentFileFromTreeUri(ContextUtils.getApplicationContext(), getTreeUri().toString(), file);
-    }
-
-    public static String getDocumentUriFromTreeUri(Context context, String treeUri, File file) {
-        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
-        String baseURI = treeUri + "/document/" + lastPath;
-        String splited = StringUtils.substringBeforeLast(lastPath, "%");
-
-        return baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/"));
-    }
 
     public static Uri getDocumentUriFromTreeUri(File file) {
         String lastPath = StringUtils.substringAfterLast(getTreeUri().toString(), "/");
+
         String baseURI = getTreeUri() + "/document/" + lastPath;
         String splited = StringUtils.substringBeforeLast(lastPath, "%");
 
-        return Uri.parse(baseURI + Uri.encode(StringUtils.substringAfter(file.getAbsolutePath(), splited + "/")));
+
+        String subPath = StringUtils.substringAfter(file.getAbsolutePath(), splited + "/");
+
+        if (subPath != null) {
+            subPath = Uri.encode(subPath);
+        } else {
+            subPath = "";
+        }
+        return Uri.parse(baseURI + subPath);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -224,6 +240,19 @@ public class StorageUtils {
         return sTreeUri;
     }
 
+    public static String getValidFilName(String fileName, char replaceChar) {
+        StringBuilder stringBuilder = new StringBuilder(fileName.length());
+        for (int i = 0; i < fileName.length(); i++) {
+            if (isValidFatFilenameChar(fileName.charAt(i))) {
+                stringBuilder.append(fileName.charAt(i));
+
+            } else {
+                stringBuilder.append(replaceChar);
+            }
+        }
+        return stringBuilder.toString();
+    }
+
     private static boolean isValidFatFilenameChar(char c) {
         if ((0x00 <= c && c <= 0x1f)) {
             return false;
@@ -281,7 +310,7 @@ public class StorageUtils {
         if (!result && VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
 
 
-            Uri srcDocumentUri = Uri.parse(getDocumentUriFromTreeUri(context, getTreeUri().toString(), src));
+            Uri srcDocumentUri = getDocumentUriFromTreeUri(src);
 
 //            Log.e("TAG/", "renameFile: " +
 //                    "\n" + srcDocumentUri +

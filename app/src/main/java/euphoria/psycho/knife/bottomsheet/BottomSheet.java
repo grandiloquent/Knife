@@ -9,9 +9,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
 
 public class BottomSheet {
 
@@ -45,10 +43,13 @@ public class BottomSheet {
             mRecyclerView.setHasFixedSize(true);
             mRecyclerView.setLayoutManager(new GridLayoutManager(mContext, 4));
             mBottomSheetAdapter = new BottomSheetAdapter(mListener, new Pair[]{
-                    Pair.create(R.drawable.ic_action_storage, "Internal Storage"),
-                    Pair.create(R.drawable.ic_action_sd_card, "SD Card"),
+                    Pair.create(R.drawable.ic_action_storage, mContext.getString(R.string.menu_internal_storage)),
+                    Pair.create(R.drawable.ic_action_sd_card, mContext.getString(R.string.menu_sd_card)),
                     Pair.create(R.drawable.ic_action_file_download, "Download"),
-                    Pair.create(R.drawable.ic_action_photo, "Picture")
+                    Pair.create(R.drawable.ic_action_photo, "Picture"),
+                    Pair.create(R.drawable.ic_create_new_folder_blue_24px,
+                            mContext.getString(R.string.menu_create_new_directory)),
+                    Pair.create(R.drawable.ic_file_download_blue_24px, mContext.getString(R.string.menu_download_tools))
             });
             mRecyclerView.setAdapter(mBottomSheetAdapter);
 

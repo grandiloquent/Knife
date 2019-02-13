@@ -37,7 +37,9 @@ public class DownloadObserverImpl implements DownloadObserver {
     @Override
     public void paused(DownloadInfo downloadInfo) {
 
-
+        ThreadUtils.postOnUiThread(() -> {
+            mAdapter.updateItem(downloadInfo);
+        });
     }
 
     @Override

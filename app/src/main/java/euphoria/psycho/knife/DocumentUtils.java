@@ -50,44 +50,9 @@ import euphoria.psycho.knife.video.VideoFragment;
 
 
 public class DocumentUtils {
-    private static final String TAG = "TAG/" + DocumentUtils.class.getSimpleName();
 
     static {
         System.loadLibrary("native-lib");
-    }
-
-
-    public static void openContent(AppCompatActivity context, String path, int backWhere) {
-        openContent(context, new DocumentInfo.Builder()
-                .setPath(path)
-                .setType(getType(new File(path)))
-                .build(), backWhere);
-    }
-
-    public static void openContent(AppCompatActivity context, DocumentInfo documentInfo, int backWhere) {
-        if (documentInfo.getType() == C.TYPE_VIDEO) {
-
-            Intent videoIntent = new Intent(context, MainActivity.class);
-            videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
-            context.startActivity(videoIntent);
-
-            return;
-        }
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
-                NetUtils.getMimeType(documentInfo.getFileName()));
-
-        if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
-            context.startActivity(Intent.createChooser(intent, "打开"));
-            return;
-        }
-        ComponentName foundActivity = intent.resolveActivity(context.getPackageManager());
-        if (foundActivity != null) {
-            context.startActivity(intent);
-        } else {
-            context.startActivity(Intent.createChooser(intent, "打开"));
-        }
     }
 
     static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
@@ -145,6 +110,26 @@ public class DocumentUtils {
         editText.requestFocus();
         dlg.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         dlg.show();
+    }
+
+    static void buildNewDirectoryDialog(Context context, File parentFile, Consumer<Boolean> operationCallback) {
+        EditText editText = new EditText(context);
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setView(editText)
+                .setPositiveButton(android.R.string.ok, ((dialog1, which) -> {
+                    dialog1.dismiss();
+                    CharSequence newName = editText.getText();
+                    if (newName == null) return;
+
+                    String fileName = StorageUtils.getValidFilName(newName.toString(), ' ');
+                    operationCallback.accept(StorageUtils.createDirectory(context, parentFile, fileName));
+                }))
+                .setNegativeButton(android.R.string.cancel, (dialog1, which) -> dialog1.dismiss())
+                .create();
+
+        dialog.getWindow().setSoftInputMode(Window.FEATURE_SWIPE_TO_DISMISS);
+        dialog.show();
     }
 
     public static native long calculateDirectory(String dir);
@@ -294,6 +279,39 @@ public class DocumentUtils {
                 return C.TYPE_ZIP;
             default:
                 return C.TYPE_OTHER;
+        }
+    }
+
+    public static void openContent(AppCompatActivity context, String path, int backWhere) {
+        openContent(context, new DocumentInfo.Builder()
+                .setPath(path)
+                .setType(getType(new File(path)))
+                .build(), backWhere);
+    }
+
+    public static void openContent(AppCompatActivity context, DocumentInfo documentInfo, int backWhere) {
+        if (documentInfo.getType() == C.TYPE_VIDEO) {
+
+            Intent videoIntent = new Intent(context, MainActivity.class);
+            videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
+            context.startActivity(videoIntent);
+
+            return;
+        }
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
+                NetUtils.getMimeType(documentInfo.getFileName()));
+
+        if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
+            context.startActivity(Intent.createChooser(intent, "打开"));
+            return;
+        }
+        ComponentName foundActivity = intent.resolveActivity(context.getPackageManager());
+        if (foundActivity != null) {
+            context.startActivity(intent);
+        } else {
+            context.startActivity(Intent.createChooser(intent, "打开"));
         }
     }
 

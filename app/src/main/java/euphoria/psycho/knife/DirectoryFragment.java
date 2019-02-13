@@ -59,6 +59,7 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.DocumentUtils.Consumer;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
+import euphoria.psycho.knife.download.DownloadActivity;
 import euphoria.psycho.knife.video.VideoFragment;
 
 import static euphoria.psycho.knife.DocumentUtils.calculateDirectory;
@@ -100,26 +101,35 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     private void initializeBottomSheet() {
 
-        BottomSheet.instance(getActivity()).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClicked(Pair<Integer, String> item) {
-                switch (item.first) {
-                    case R.drawable.ic_action_storage:
-                        mDirectory = Environment.getExternalStorageDirectory();
-                        break;
-                    case R.drawable.ic_action_sd_card:
-                        mDirectory = new File(StorageUtils.getSDCardPath());
-                        break;
-                    case R.drawable.ic_action_file_download:
-                        mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
-                        break;
-                    case R.drawable.ic_action_photo:
-                        mDirectory = new File(Environment.getExternalStorageDirectory(), "DCIM");
-                        break;
-                }
-                updateRecyclerView(false);
-            }
-        });
+        BottomSheet.instance(getActivity()).setOnClickListener(this::onBottomSheetClicked);
+    }
+
+    public void onBottomSheetClicked(Pair<Integer, String> item) {
+        switch (item.first) {
+            case R.drawable.ic_action_storage:
+                mDirectory = Environment.getExternalStorageDirectory();
+                break;
+            case R.drawable.ic_action_sd_card:
+                mDirectory = new File(StorageUtils.getSDCardPath());
+                break;
+            case R.drawable.ic_action_file_download:
+                mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
+                break;
+            case R.drawable.ic_action_photo:
+                mDirectory = new File(Environment.getExternalStorageDirectory(), "DCIM");
+                break;
+            case R.drawable.ic_file_download_blue_24px:
+                Intent downloadIntent = new Intent(getContext(), DownloadActivity.class);
+                startActivity(downloadIntent);
+                break;
+            case R.drawable.ic_create_new_folder_blue_24px:
+                DocumentUtils.buildNewDirectoryDialog(getContext(), mDirectory, aBoolean -> {
+                    if (aBoolean)
+                        updateRecyclerView(false);
+                });
+                break;
+        }
+        updateRecyclerView(false);
     }
 
     private void loadPreferences() {
@@ -264,7 +274,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void onClicked(DocumentInfo documentInfo) {
         switch (documentInfo.getType()) {
             case C.TYPE_VIDEO:
-                VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath(), mSortBy,0);
+                VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath(), mSortBy, 0);
                 break;
             case C.TYPE_DIRECTORY:
                 updateLastVisiblePosition();
@@ -393,8 +403,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mContainer = view.findViewById(R.id.container);
         mContainer.initializeEmptyView(
                 VectorDrawableCompat.create(
-                        getActivity().getResources(), R.drawable.downloads_big, getActivity().getTheme()),
-                R.string.download_manager_ui_empty, R.string.directory_no_results);
+                        getActivity().getResources(),
+                        R.drawable.downloads_big,
+                        getActivity().getTheme()),
+                R.string.directory_ui_empty, R.string.directory_no_results);
 
         mSelectionDelegate = new SelectionDelegate();
         mSelectionDelegate.addObserver(this);
@@ -402,6 +414,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mRecyclerView = mContainer.initializeRecyclerView(mAdapter);
         mRecyclerView.getItemAnimator().setChangeDuration(0);
         mLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+
+        //
         mToolbar = (DirectoryToolbar) mContainer.initializeToolbar(
                 R.layout.directory_toolbar, mSelectionDelegate,
                 R.string.app_name, null,

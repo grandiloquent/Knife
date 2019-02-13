@@ -44,20 +44,12 @@ public class DeleteJob extends Job {
 
         }
         mDocsProcessed++;
+        delete(path);
         if (isCanceled()) {
             return;
         }
     }
 
-    public static boolean deleteFile(Context context, File file, String treeUri) {
-
-        boolean result = file.delete();
-        if (!result) {
-            DocumentFile documentFile = StorageUtils.getDocumentFileFromTreeUri(context, treeUri, file);
-            result = documentFile.delete();
-        }
-        return result;
-    }
 
     @Override
     Builder createProgressBuilder() {

@@ -11,10 +11,12 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.format.Formatter;
 
 import java.util.concurrent.TimeUnit;
 
 import androidx.core.app.NotificationCompat;
+import euphoria.psycho.common.Log;
 import euphoria.psycho.knife.R;
 
 import static euphoria.psycho.knife.download.DownloadService.ACTION_DOWNLOAD_CANCEL;
@@ -37,13 +39,16 @@ public class DownloadUtils {
 
         return intent;
     }
+
     private static void setSubText(Builder builder, String subText) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder.setSubText(subText);
         } else {
             builder.setContentInfo(subText);
         }
-    }public static String formatRemainingTime(Context context, long millis) {
+    }
+
+    public static String formatRemainingTime(Context context, long millis) {
         long secondsLong = millis / 1000;
 
         int days = 0;
@@ -97,6 +102,7 @@ public class DownloadUtils {
         }
         builder.setAutoCancel(true);
 
+
         int iconId = -1;
         String contentText = "";
         switch (downloadInfo.status) {
@@ -116,6 +122,7 @@ public class DownloadUtils {
                         ACTION_DOWNLOAD_CANCEL,
                         downloadInfo._id);
 
+
                 builder.setOngoing(true)
                         .setPriority(Notification.PRIORITY_HIGH)
                         .setAutoCancel(false)
@@ -126,7 +133,7 @@ public class DownloadUtils {
                                 context.getResources().getString(R.string.download_notification_cancel_button),
                                 buildPendingIntentProvider(context, cancelIntent, (int) downloadInfo._id));
                 builder.setProgress(100, downloadInfo.getPercent(), false);
-                String subText = DownloadUtils.formatRemainingTime(
+                String subText = Formatter.formatFileSize(context,downloadInfo.speed)+ "/s "+DownloadUtils.formatRemainingTime(
                         context, downloadInfo.getRemainingMillis());
                 setSubText(builder, subText);
                 break;

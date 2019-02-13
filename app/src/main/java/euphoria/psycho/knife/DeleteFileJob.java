@@ -68,7 +68,7 @@ public class DeleteFileJob extends Job {
                 updateDialog(path.getAbsolutePath());
             }
         } else {
-            if (path.delete()) {
+            if (StorageUtils.deleteFile(path)) {
                 mDocsProcessed++;
                 updateDialog(path.getAbsolutePath());
             }

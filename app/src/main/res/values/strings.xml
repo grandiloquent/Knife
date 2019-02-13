@@ -20,7 +20,8 @@
     <string name="directory_description">%1$d items</string>
     <string name="directory_no_results">No files found</string>
     <string name="directory_search">Search your files</string>
-    <string name="download_manager_list_item_description">%1$s • %2$s</string>
+    <string name="directory_ui_empty">No files here</string>
+    <string name="download_manager_list_item_description" translatable="false">%1$s • %2$s</string>
     <string name="download_manager_ui_empty">No downloads here</string>
     <string name="download_notification_cancel_button">Cancel</string>
     <string name="download_notification_completed">Download complete</string>
@@ -29,6 +30,11 @@
     <string name="download_notification_resume_button">Resume</string>
     <string name="download_started">Downloading…</string>
     <string name="download_title">Download</string>
+    <string name="hide_info">Hide Info</string>
+    <string name="menu_sort">Sort by</string>
+    <string name="message_success_insert_download_task">Successfully added the download task \n%1$s\n from the clipboard.</string>
+    <string name="notification_touch_for_details">Tap to view details</string>
+    <string name="properties">Properties</string>
     <string name="remaining_duration_days">%1$d days left</string>
     <string name="remaining_duration_hours">%1$d hours left</string>
     <string name="remaining_duration_minutes">%1$d mins left</string>
@@ -37,11 +43,6 @@
     <string name="remaining_duration_one_minute">1 min left</string>
     <string name="remaining_duration_one_second">1 sec left</string>
     <string name="remaining_duration_seconds">%1$d secs left</string>
-    <string name="hide_info">Hide Info</string>
-    <string name="menu_sort">Sort by</string>
-    <string name="message_success_insert_download_task">Successfully added the download task \n%1$s\n from the clipboard.</string>
-    <string name="notification_touch_for_details">Tap to view details</string>
-    <string name="properties">Properties</string>
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>
     <string name="search">Search</string>
@@ -54,4 +55,9 @@
     <string name="sort_size">By size</string>
     <string name="trim_video">Trim Video</string>
     <string name="delete_progress"><xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" example="3" id="count">%1$d</xliff:g> / <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" example="5" id="totalCount">%2$d</xliff:g></string>
+    <string name="menu_download_tools">Download Tools</string>
+    <string name="menu_sd_card">SD Card</string>
+    <string name="menu_internal_storage">Internal Storage</string>
+    <string name="menu_create_new_directory">New Directory</string>
+
 </resources>

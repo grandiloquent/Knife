@@ -222,7 +222,7 @@ public class DownloadThread extends Thread {
         FileLogger.log("TAG/DownloadThread", "stopDownload");
         mIsStop = true;
         mInfo.status = DownloadStatus.PAUSED;
-        mObserver.updateProgress(mInfo);
+        mObserver.paused(mInfo);
     }
 
     private void transferData(HttpURLConnection c) throws DownloadRequestException {

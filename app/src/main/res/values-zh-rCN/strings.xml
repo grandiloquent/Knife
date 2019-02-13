@@ -6,20 +6,37 @@
     <string name="accessibility_list_menu_button">%1$s Options</string>
     <string name="accessibility_toolbar_btn_back">Go back</string>
     <string name="accessibility_toolbar_btn_delete_url">Clear input</string>
-    <string name="accessibility_toolbar_multi_select">%1$s selected</string>
+    <string name="accessibility_toolbar_multi_select">%1$s 选定</string>
     <string name="accessibility_toolbar_screen_position">"%1$s selected.  Options available near top of the screen"</string>
     <string name="bookmark_action_bar_close">Close dialog</string>
-    <string name="bottom_sheet_behavior">android.support.design.widget.BottomSheetBehavior</string>
+    <string name="channel_name_directory">文件</string>
     <string name="delete">删除</string>
+    <string name="share_link_title">分享</string>
+    <string name="directory_search">输入关键词以搜索</string>
+    <string name="directory_ui_empty">没有文件</string>
     <string name="download_manager_ui_empty">空文件夹</string>
+    <string name="download_title">下载</string>
     <string name="hide_info">Hide Info</string>
     <string name="menu_sort">Sort by</string>
-    <string name="search">Search</string>
+    <string name="properties">属性</string>
+
+    <string name="delete_notification_title">删除文件</string>
+    <string name="delete_preparing">准备中...</string>
+    <string name="dialog_delete_message">确定删除文件 %1$s 吗?</string>
+    <string name="dialog_delete_title">询问</string>
+    <string name="dialog_rename_title">重命名文件</string>
+    <string name="directory_description">%1$d 项</string>
+    <string name="directory_no_results">没有找到相应文件</string>
+    <string name="remove">删除</string>
+    <string name="rename">重命名</string>
+    <string name="search">搜索</string>
     <string name="select_items">Select items</string>
     <string name="share">分享</string>
     <string name="show_info">Show Info</string>
     <string name="sort_date">按修改日期</string>
     <string name="sort_name">按名称</string>
+    <string name="message_success_insert_download_task">成功从剪切板添加任务 \n%1$s</string>
+
     <string name="sort_size">按大小</string>
     <string name="trim_video">剪辑视频</string>
 </resources>

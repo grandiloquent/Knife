@@ -42,6 +42,7 @@ public class DownloadManager implements DownloadObserver {
     }
 
     public void cancel(DownloadInfo downloadInfo) {
+        delete(downloadInfo);
 
     }
 
@@ -83,17 +84,17 @@ public class DownloadManager implements DownloadObserver {
             if (mTasks.containsKey(downloadInfo._id)) {
                 DownloadThread thread = mTasks.get(downloadInfo._id);
                 if (thread != null) {
-                    FileLogger.log("TAG/DownloadManager", "pause: found the task."
-                            + "_id = " + downloadInfo._id);
                     thread.stopDownload();
                     DownloadDatabase.instance().update(downloadInfo);
 
 
                 }
             } else {
-                FileLogger.log("TAG/DownloadManager", "pause: cant found the task."
-                        + " mTasks size = " + mTasks.size()
-                        + " target task _id = " + downloadInfo._id);
+                FileLogger.log("TAG/DownloadManager", "[异常] [pause]: "
+                        + "\n 停止任务列表中的指定任务"
+                        + "\n 目标任务deID = " + downloadInfo._id
+                        + "\n 任务列表种包含的任务数 = " + mTasks.size());
+
             }
 
 
@@ -163,10 +164,14 @@ public class DownloadManager implements DownloadObserver {
     @Override
     public void paused(DownloadInfo downloadInfo) {
 
-        mTasks.remove(downloadInfo._id);
-        for (DownloadObserver observer : mObservers) {
-            observer.paused(downloadInfo);
+        synchronized (mTasks) {
+            DownloadDatabase.instance().update(downloadInfo);
+            mTasks.remove(downloadInfo._id);
+            for (DownloadObserver observer : mObservers) {
+                observer.paused(downloadInfo);
+            }
         }
+
     }
 
     @Override
@@ -187,7 +192,7 @@ public class DownloadManager implements DownloadObserver {
 
     public ThumbnailProvider provideThumbnailProvider() {
 
-        return new ThumbnailProviderImpl(((App)ContextUtils.getApplicationContext()).getReferencePool());
+        return new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
     }
 
     @Override
