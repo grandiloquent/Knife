@@ -317,7 +317,7 @@ public class DownloadThread extends Thread {
 
         mInfo.status = DownloadStatus.STARTED;
         mInfo.message = "下载 " + mInfo.url;
-        mObserver.updateProgress(mInfo);
+        mObserver.started(mInfo);
         try {
 
 

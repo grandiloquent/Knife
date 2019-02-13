@@ -23,27 +23,19 @@ public class DownloadObserverImpl implements DownloadObserver {
     }
 
     @Override
-    public void updateStatus(DownloadInfo downloadInfo) {
+    public void deleted(DownloadInfo downloadInfo) {
 
-
-    }
-
-    @Override
-    public void updateProgress(DownloadInfo downloadInfo) {
-
-        ThreadUtils.postOnUiThread(() -> {
-            mAdapter.updateItem(downloadInfo);
-        });
-    }
-
-    @Override
-    public void paused(DownloadInfo downloadInfo) {
-
-
+        mAdapter.removeItem(downloadInfo);
     }
 
     @Override
     public void failed(DownloadInfo downloadInfo) {
+
+
+    }
+
+    @Override
+    public void paused(DownloadInfo downloadInfo) {
 
 
     }
@@ -55,8 +47,23 @@ public class DownloadObserverImpl implements DownloadObserver {
     }
 
     @Override
-    public void deleted(DownloadInfo downloadInfo) {
+    public void started(DownloadInfo downloadInfo) {
+        ThreadUtils.postOnUiThread(() -> {
+            mAdapter.updateItem(downloadInfo);
+        });
+    }
 
-        mAdapter.removeItem(downloadInfo);
+    @Override
+    public void updateProgress(DownloadInfo downloadInfo) {
+
+        ThreadUtils.postOnUiThread(() -> {
+            mAdapter.updateItem(downloadInfo);
+        });
+    }
+
+    @Override
+    public void updateStatus(DownloadInfo downloadInfo) {
+
+
     }
 }

@@ -143,6 +143,13 @@ public class DownloadManager implements DownloadObserver {
     }
 
     @Override
+    public void started(DownloadInfo downloadInfo) {
+        for (DownloadObserver observer : mObservers) {
+            observer.started(downloadInfo);
+        }
+    }
+
+    @Override
     public void deleted(DownloadInfo downloadInfo) {
 
     }

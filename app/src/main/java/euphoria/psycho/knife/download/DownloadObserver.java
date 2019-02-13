@@ -4,6 +4,8 @@ public interface DownloadObserver {
 
     void completed(DownloadInfo downloadInfo);
 
+    void started(DownloadInfo downloadInfo);
+
     void updateStatus(DownloadInfo downloadInfo);
 
     void updateProgress(DownloadInfo downloadInfo);

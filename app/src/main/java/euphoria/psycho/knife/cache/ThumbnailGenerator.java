@@ -46,7 +46,7 @@ public class ThumbnailGenerator {
 //                + "\n iconSize = " + iconSize
 //                + "\n scale = " + scale);
 
-        return BitmapUtils.resizeBitmapByScale(thumbnail, scale, true);
+        return BitmapUtils.resizeAndCropCenter(thumbnail,iconSize,true);
 
     }
 }
