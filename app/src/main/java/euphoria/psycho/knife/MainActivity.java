@@ -5,7 +5,7 @@ import android.content.Intent;
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
-import euphoria.psycho.common.StorageUtils;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.knife.download.DownloadFragment;
@@ -46,7 +46,7 @@ public class MainActivity extends BaseActivity {
         String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
 
         if (treeUri == null)
-            StorageUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
+            FileUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
         //showVideoFragment();
         // handleIntent();
 
@@ -63,7 +63,7 @@ public class MainActivity extends BaseActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_PERMISSION && resultCode == RESULT_OK) {
-            StorageUtils.keepPermission(this, data);
+            FileUtils.keepPermission(this, data);
             ContextUtils.getAppSharedPreferences().edit().putString(C.KEY_TREE_URI, data.getDataString()).apply();
         }
     }

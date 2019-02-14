@@ -27,9 +27,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.NetUtils;
-import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -137,7 +137,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 mDirectory = Environment.getExternalStorageDirectory();
                 break;
             case R.drawable.ic_action_sd_card:
-                mDirectory = new File(StorageUtils.getSDCardPath());
+                mDirectory = new File(FileUtils.getSDCardPath());
                 break;
             case R.drawable.ic_action_file_download:
                 mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
@@ -414,7 +414,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                     if (charSequence == null) return;
                     String newFileName = charSequence.toString();
                     File src = new File(documentInfo.getPath());
-                    boolean renameResult = StorageUtils.renameFile(getContext(),
+                    boolean renameResult = FileUtils.renameFile(getContext(),
                             src,
                             new File(src.getParentFile(), newFileName));
                     if (renameResult) updateRecyclerView(false);

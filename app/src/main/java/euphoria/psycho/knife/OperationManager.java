@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import euphoria.psycho.common.StorageUtils;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
 
 public class OperationManager {
@@ -54,7 +54,7 @@ public class OperationManager {
         for (DocumentInfo documentInfo : mSource) {
             File srcFile = new File(documentInfo.getPath());
             if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;
-            StorageUtils.moveFile(context, srcFile, targetDirectory);
+            FileUtils.moveFile(context, srcFile, targetDirectory);
         }
         if (mListener != null) mListener.onFinished(true);
     }

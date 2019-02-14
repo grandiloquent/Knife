@@ -21,8 +21,8 @@ import java.util.Set;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.NetUtils;
-import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.Job;
@@ -104,8 +104,8 @@ public class DocumentUtils {
                     CharSequence newName = editText.getText();
                     if (newName == null) return;
 
-                    String fileName = StorageUtils.getValidFilName(newName.toString(), ' ');
-                    operationCallback.accept(StorageUtils.createDirectory(context, parentFile, fileName));
+                    String fileName = FileUtils.getValidFilName(newName.toString(), ' ');
+                    operationCallback.accept(FileUtils.createDirectory(context, parentFile, fileName));
                 }))
                 .setNegativeButton(android.R.string.cancel, (dialog1, which) -> dialog1.dismiss())
                 .create();

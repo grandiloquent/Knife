@@ -39,9 +39,9 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.DateUtils;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.ManagerUtils;
-import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.ChromeImageButton;
@@ -102,7 +102,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
 
                     dialog.dismiss();
-                    StorageUtils.deleteFile(getContext(), new File(mPlayList.get(mCurrentPlaying)));
+                    FileUtils.deleteFile(getContext(), new File(mPlayList.get(mCurrentPlaying)));
                     mPlayList = getPlayList(mDirectory);
                     mCurrentPlaying--;
                     onNext(null);
@@ -159,7 +159,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
     private List<String> getPlayList(File dir) {
         if (dir == null) {
-            dir = new File(StorageUtils.getSDCardPath(), DEFAULT_DIRECTORY_NAME);
+            dir = new File(FileUtils.getSDCardPath(), DEFAULT_DIRECTORY_NAME);
             Log.e("TAG/", dir.getAbsolutePath());
         }
         if (dir.isDirectory()) {

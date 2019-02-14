@@ -12,7 +12,6 @@ import android.widget.TextView;
 import java.io.File;
 
 import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.Job;
 
@@ -32,7 +31,7 @@ public class DeleteFileJob extends Job {
         super(listener);
         mSource = source;
         mContext = context;
-        mTreeUri = StorageUtils.getTreeUri().toString();
+        mTreeUri = FileUtils.getTreeUri().toString();
 
         launchDialog();
 
@@ -56,13 +55,13 @@ public class DeleteFileJob extends Job {
         if (path.isFile()) {
 
             long length = path.length();
-            if (StorageUtils.deleteFile(path)) {
+            if (FileUtils.deleteFile(path)) {
                 mDocsProcessed++;
                 mDeletedContentLength += length;
                 updateDialog(path.getAbsolutePath());
             }
         } else {
-            if (StorageUtils.deleteFile(path)) {
+            if (FileUtils.deleteFile(path)) {
                 mDocsProcessed++;
                 updateDialog(path.getAbsolutePath());
             }

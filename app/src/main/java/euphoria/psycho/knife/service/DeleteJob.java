@@ -8,7 +8,7 @@ import android.os.SystemClock;
 import java.io.File;
 import java.util.List;
 
-import euphoria.psycho.common.StorageUtils;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
 
 public class DeleteJob extends Job {
@@ -21,7 +21,7 @@ public class DeleteJob extends Job {
     public DeleteJob(Context context, String id, Listener listener, List<String> source) {
         super(context, id, listener, FileOperationService.OPERATION_DELETE);
         mSource = source;
-        mTreeUri = StorageUtils.getTreeUri().toString();
+        mTreeUri = FileUtils.getTreeUri().toString();
 
     }
 
