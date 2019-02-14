@@ -1,6 +1,7 @@
 package euphoria.psycho.knife;
 
 import euphoria.psycho.common.base.BaseActionDelegate;
+import euphoria.psycho.knife.cache.ThumbnailProvider;
 
 public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo> {
 
@@ -17,4 +18,6 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
     void getProperties(DocumentInfo documentInfo);
 
     void rename(DocumentInfo documentInfo);
+
+    ThumbnailProvider getThumbnailProvider();
 }

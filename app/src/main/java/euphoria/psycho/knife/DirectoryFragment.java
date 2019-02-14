@@ -59,6 +59,8 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.DocumentUtils.Consumer;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
+import euphoria.psycho.knife.cache.ThumbnailProvider;
+import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.knife.download.DownloadActivity;
 import euphoria.psycho.knife.video.VideoFragment;
 
@@ -187,7 +189,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 .putString(C.KEY_DIRECTORY, mDirectory.getAbsolutePath())
                 .putInt(C.KEY_SORT_BY, mSortBy).apply();
     }
-
 
 
     private void showBottomSheet() {
@@ -437,6 +438,16 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                             new File(src.getParentFile(), newFileName));
                     if (renameResult) updateRecyclerView(false);
                 });
+    }
+
+    ThumbnailProvider mThumbnailProvider;
+
+    @Override
+    public ThumbnailProvider getThumbnailProvider() {
+        if (mThumbnailProvider == null) {
+            mThumbnailProvider = new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
+        }
+        return mThumbnailProvider;
     }
 
     @Override

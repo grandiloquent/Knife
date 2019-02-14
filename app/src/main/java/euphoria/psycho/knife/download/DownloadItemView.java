@@ -38,7 +38,6 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
     private final ColorStateList mIconForegroundColorList;
     private final int mMargin;
     private final int mMarginSubsection;
-    private DownloadInfo mItem;
     private ImageButton mPauseResumeButton;
     private int mIconSize;
     private LinearLayout mLayoutContainer;
@@ -68,7 +67,6 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
     public void displayItem(DownloadInfo item) {
         updateView();
-        mItem = item;
         setItem(item);
 
         MarginLayoutParamsCompat.setMarginStart(
@@ -218,13 +216,13 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
     @Nullable
     @Override
     public String getContentId() {
-        return mItem == null ? "" : Long.toString(Utils.crc64Long(mItem.filePath));
+        return getItem() == null ? "" : Long.toString(Utils.crc64Long(getItem().filePath));
     }
 
     @Nullable
     @Override
     public String getFilePath() {
-        return mItem == null ? null : mItem.filePath;
+        return getItem() == null ? null : getItem().filePath;
     }
 
     @Override
@@ -246,7 +244,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
     @Override
     protected void onClick() {
-        DownloadManager.instance().openContent(mItem);
+        DownloadManager.instance().openContent(getItem());
     }
 
     @Override
@@ -271,14 +269,14 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
         mMoreButton.setDelegate(this);
         mPauseResumeButton.setOnClickListener(view -> {
-            if (mItem.isPaused()) {
-                DownloadManager.instance().resume(mItem);
-            } else if (!mItem.isComplete()) {
-                DownloadManager.instance().pause(mItem);
+            if (getItem().isPaused()) {
+                DownloadManager.instance().resume(getItem());
+            } else if (!getItem().isComplete()) {
+                DownloadManager.instance().pause(getItem());
             }
         });
         mCancelButton.setOnClickListener(view -> {
-            DownloadManager.instance().cancel(mItem);
+            DownloadManager.instance().cancel(getItem());
         });
     }
 
@@ -287,7 +285,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
         switch (item.getTextId()) {
             case R.string.delete:
                 FileLogger.log("TAG/DownloadItemView", "onItemSelected: delete");
-                DownloadManager.instance().delete(mItem);
+                DownloadManager.instance().delete(getItem());
                 break;
         }
     }
