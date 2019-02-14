@@ -5,12 +5,15 @@ import android.net.Uri;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.List;
 import java.util.Locale;
 
@@ -20,13 +23,19 @@ import java.util.Locale;
  * Helper methods for dealing with Files.
  */
 public class FileUtils {
+    public static final int EOF = -1;
     public static final char EXTENSION_SEPARATOR = '.';
+    private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+    private static final int SKIP_BUFFER_SIZE = 2048;
+    private static byte[] SKIP_BYTE_BUFFER;
+    private static char[] SKIP_CHAR_BUFFER;
     private static final String TAG = "FileUtils";
     private static final char UNIX_SEPARATOR = '/';
     private static final char WINDOWS_SEPARATOR = '\\';
     private static String[] mSupportVideoExtensions;
     private static String[] mSupportedAudioExtensions;
     private static String[] mSupportedImageExtensions;
+    private static String[] mSupportedTextExtensions;
 
     /**
      * Delete the given files or directories by calling {@link #recursivelyDeleteFile(File)}.
@@ -47,6 +56,11 @@ public class FileUtils {
         } catch (Exception ignored) {
 
         }
+    }
+
+    public static long copy(final InputStream input, final OutputStream output, final int bufferSize)
+            throws IOException {
+        return copyLarge(input, output, new byte[bufferSize]);
     }
 
     /**
@@ -72,6 +86,54 @@ public class FileUtils {
         if (!tmpOutputFile.renameTo(outFile)) {
             throw new IOException();
         }
+    }
+    public static int copy(final InputStream input, final OutputStream output) throws IOException {
+        final long count = copyLarge(input, output);
+        if (count > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return (int) count;
+    }
+    public static long copyLarge(final InputStream input, final OutputStream output, final byte[] buffer)
+            throws IOException {
+        long count = 0;
+        int n;
+        while (EOF != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
+    }
+
+    public static long copyLarge(final InputStream input, final OutputStream output)
+            throws IOException {
+        return copy(input, output, DEFAULT_BUFFER_SIZE);
+    }
+
+    public static long copyLarge(final Reader input, final Writer output, final long inputOffset, final long length,
+                                 final char[] buffer)
+            throws IOException {
+        if (inputOffset > 0) {
+            skipFully(input, inputOffset);
+        }
+        if (length == 0) {
+            return 0;
+        }
+        int bytesToRead = buffer.length;
+        if (length > 0 && length < buffer.length) {
+            bytesToRead = (int) length;
+        }
+        int read;
+        long totalRead = 0;
+        while (bytesToRead > 0 && EOF != (read = input.read(buffer, 0, bytesToRead))) {
+            output.write(buffer, 0, read);
+            totalRead += read;
+            if (length > 0) { // only adjust length if not reading to the end
+                // Note the cast must work because buffer.length is an integer
+                bytesToRead = (int) Math.min(length - totalRead, buffer.length);
+            }
+        }
+        return totalRead;
     }
 
     private static boolean extensionMatch(String[] extensions, String fileName) {
@@ -126,6 +188,17 @@ public class FileUtils {
             }
         }
         return false;
+    }
+
+    public static File findFirstImage(File dir) {
+        File[] files = dir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pathname.isFile() && isSupportedImage(pathname.getName());
+            }
+        });
+        if (files != null && files.length > 0) return files[0];
+        return null;
     }
 
     public static String formatFileSize(long number) {
@@ -215,22 +288,6 @@ public class FileUtils {
         return (lastSeparator > extensionPos ? -1 : extensionPos);
     }
 
-    public static boolean isSupportedText(String fileName) {
-
-        if (mSupportedTextExtensions == null) {
-            mSupportedTextExtensions = new String[]{"css",
-                    "htm",
-                    "js",
-                    "log",
-                    "srt",
-                    "txt",
-            };
-        }
-        return extensionMatch(mSupportedTextExtensions, fileName);
-    }
-
-    private static String[] mSupportedTextExtensions;
-
     public static int indexOfLastSeparator(String filename) {
         if (filename == null) {
             return -1;
@@ -239,7 +296,6 @@ public class FileUtils {
         int lastWindowsPos = filename.lastIndexOf(WINDOWS_SEPARATOR);
         return Math.max(lastUnixPos, lastWindowsPos);
     }
-
 
     public static boolean isSupportedAudio(String fileName) {
         if (mSupportedAudioExtensions == null) {
@@ -279,6 +335,20 @@ public class FileUtils {
         return extensionMatch(mSupportedImageExtensions, fileName);
     }
 
+    public static boolean isSupportedText(String fileName) {
+
+        if (mSupportedTextExtensions == null) {
+            mSupportedTextExtensions = new String[]{"css",
+                    "htm",
+                    "js",
+                    "log",
+                    "srt",
+                    "txt",
+            };
+        }
+        return extensionMatch(mSupportedTextExtensions, fileName);
+    }
+
     public static boolean isSupportedVideo(String fileName) {
 
         if (mSupportVideoExtensions == null) {
@@ -291,18 +361,6 @@ public class FileUtils {
             };
         }
         return extensionMatch(mSupportVideoExtensions, fileName);
-    }
-
-    public static File findFirstImage(File dir) {
-        File[] files = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                if (pathname.isFile() && isSupportedImage(pathname.getName())) return true;
-                return false;
-            }
-        });
-        if (files != null && files.length > 0) return files[0];
-        return null;
     }
 
     /**
@@ -350,5 +408,60 @@ public class FileUtils {
         }
 
         return size;
+    }
+
+    public static long skip(final InputStream input, final long toSkip) throws IOException {
+        if (toSkip < 0) {
+            throw new IllegalArgumentException("Skip count must be non-negative, actual: " + toSkip);
+        }
+        /*
+         * N.B. no need to synchronize this because: - we don't care if the buffer is created multiple times (the data
+         * is ignored) - we always use the same size buffer, so if it it is recreated it will still be OK (if the buffer
+         * size were variable, we would need to synch. to ensure some other thread did not create a smaller one)
+         */
+        if (SKIP_BYTE_BUFFER == null) {
+            SKIP_BYTE_BUFFER = new byte[SKIP_BUFFER_SIZE];
+        }
+        long remain = toSkip;
+        while (remain > 0) {
+            // See https://issues.apache.org/jira/browse/IO-203 for why we use read() rather than delegating to skip()
+            final long n = input.read(SKIP_BYTE_BUFFER, 0, (int) Math.min(remain, SKIP_BUFFER_SIZE));
+            if (n < 0) { // EOF
+                break;
+            }
+            remain -= n;
+        }
+        return toSkip - remain;
+    }
+
+    public static long skip(final Reader input, final long toSkip) throws IOException {
+        if (toSkip < 0) {
+            throw new IllegalArgumentException("Skip count must be non-negative, actual: " + toSkip);
+        }
+        /*
+         * N.B. no need to synchronize this because: - we don't care if the buffer is created multiple times (the data
+         * is ignored) - we always use the same size buffer, so if it it is recreated it will still be OK (if the buffer
+         * size were variable, we would need to synch. to ensure some other thread did not create a smaller one)
+         */
+        if (SKIP_CHAR_BUFFER == null) {
+            SKIP_CHAR_BUFFER = new char[SKIP_BUFFER_SIZE];
+        }
+        long remain = toSkip;
+        while (remain > 0) {
+            // See https://issues.apache.org/jira/browse/IO-203 for why we use read() rather than delegating to skip()
+            final long n = input.read(SKIP_CHAR_BUFFER, 0, (int) Math.min(remain, SKIP_BUFFER_SIZE));
+            if (n < 0) { // EOF
+                break;
+            }
+            remain -= n;
+        }
+        return toSkip - remain;
+    }
+
+    public static void skipFully(final Reader input, final long toSkip) throws IOException {
+        final long skipped = skip(input, toSkip);
+        if (skipped != toSkip) {
+            throw new EOFException("Chars to skip: " + toSkip + " actual: " + skipped);
+        }
     }
 }

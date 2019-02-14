@@ -14,8 +14,10 @@ import android.provider.DocumentsContract.Document;
 import android.text.TextUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
@@ -289,24 +291,25 @@ public class StorageUtils {
             r = src.renameTo(new File(destinationDirectory, src.getName()));
 
 
-            if (!r) {
-                if (VERSION.SDK_INT >= VERSION_CODES.N) {
-                    try {
-                        Uri resultURI = DocumentsContract.moveDocument(context.getContentResolver(),
-                                getDocumentUriFromTreeUri(src),
-                                getDocumentUriFromTreeUri(src.getParentFile()),
-                                getDocumentUriFromTreeUri(destinationDirectory));
+            if (!r && VERSION.SDK_INT >= VERSION_CODES.N) {
+                try {
+                    Uri resultURI = DocumentsContract.moveDocument(context.getContentResolver(),
+                            getDocumentUriFromTreeUri(src),
+                            getDocumentUriFromTreeUri(src.getParentFile()),
+                            getDocumentUriFromTreeUri(destinationDirectory));
 
-                        r = resultURI != null;
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                    r = resultURI != null;
+                } catch (Exception e) {
+                    // java.lang.IllegalStateException: Failed to move to /mnt/media_rw/19E7-1704/19E7-1704
                 }
             }
-        } else {
+        }
 
-            if (VERSION.SDK_INT >= VERSION_CODES.N) {
+        if (!r && VERSION.SDK_INT >= VERSION_CODES.N) {
+            if (!src.getAbsolutePath().startsWith(Environment.getExternalStorageDirectory().getAbsolutePath())) {
                 Uri srcDocumentUri = getDocumentUriFromTreeUri(src);
+
+
                 try {
                     r = DocumentsContract.copyDocument(context.getContentResolver(),
                             srcDocumentUri,
@@ -322,7 +325,27 @@ public class StorageUtils {
                         e.printStackTrace();
                     }
                 }
+            } else {
+                try {
+                    Uri newDocument = DocumentsContract.createDocument(
+                            context.getContentResolver(),
+                            getDocumentUriFromTreeUri(destinationDirectory),
+                            NetUtils.getMimeType(src.getName()),
+                            src.getName());
+                    if (newDocument != null) {
+                        OutputStream outputStream = context.getContentResolver().openOutputStream(newDocument);
+                        FileInputStream inputStream = new FileInputStream(src);
+                        FileUtils.copy(inputStream, outputStream);
+                        FileUtils.closeSilently(inputStream);
+                        FileUtils.closeSilently(outputStream);
+                        src.delete();
+                        r = true;
+                    }
+                } catch (Exception e) {
+
+                }
             }
+
         }
 
 
