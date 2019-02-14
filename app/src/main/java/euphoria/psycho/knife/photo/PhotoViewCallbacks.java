@@ -2,12 +2,10 @@ package euphoria.psycho.knife.photo;
 
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.Loader;
 
-import com.android.ex.photo.adapters.PhotoPagerAdapter;
-import com.android.ex.photo.fragments.PhotoViewFragment;
-import com.android.ex.photo.loaders.PhotoBitmapLoaderInterface.BitmapResult;
+import androidx.fragment.app.Fragment;
+import androidx.loader.content.Loader;
+import euphoria.psycho.knife.photo.PhotoBitmapLoaderInterface.BitmapResult;
 
 public interface PhotoViewCallbacks {
 

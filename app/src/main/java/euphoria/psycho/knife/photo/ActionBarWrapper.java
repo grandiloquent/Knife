@@ -1,7 +1,9 @@
 package euphoria.psycho.knife.photo;
 
-import android.app.ActionBar;
+
 import android.graphics.drawable.Drawable;
+
+import androidx.appcompat.app.ActionBar;
 
 /**
  * Wrapper around {@link ActionBar}.

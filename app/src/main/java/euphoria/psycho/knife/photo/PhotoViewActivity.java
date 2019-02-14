@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2011 Google Inc.
+ * Licensed to The Android Open Source Project.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package euphoria.psycho.knife.photo;
 
 import android.content.Context;
@@ -7,10 +24,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
+import androidx.appcompat.app.AppCompatActivity;
 
-public class PhotoViewActivity extends FragmentActivity
+/**
+ * Activity to view the contents of an album.
+ */
+public class PhotoViewActivity extends AppCompatActivity
         implements PhotoViewController.ActivityInterface {
 
     private PhotoViewController mController;
@@ -23,7 +42,7 @@ public class PhotoViewActivity extends FragmentActivity
         mController.onCreate(savedInstanceState);
     }
 
-    public PhotoViewController createController() {
+    protected PhotoViewController createController() {
         return new PhotoViewController(this);
     }
 
@@ -104,7 +123,7 @@ public class PhotoViewActivity extends FragmentActivity
     @Override
     public ActionBarInterface getActionBarInterface() {
         if (mActionBar == null) {
-            mActionBar = new ActionBarWrapper(getActionBar());
+            mActionBar = new ActionBarWrapper(getSupportActionBar());
         }
         return mActionBar;
     }

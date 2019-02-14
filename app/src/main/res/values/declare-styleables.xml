@@ -1,37 +1,37 @@
 <resources>
-    <declare-styleable name="CompatTextView">
-        <attr name="compoundDrawableWidth" format="dimension" />
-        <attr name="compoundDrawableHeight" format="dimension" />
-        <attr name="drawableStart" format="reference" />
-        <attr name="drawableTop" format="reference" />
-        <attr name="drawableEnd" format="reference" />
-        <attr name="drawableBottom" format="reference" />
-    </declare-styleable>
-    <declare-styleable name="ListMenuButton">
-        <!-- Used to customize the width of the popup menu. -->
-        <attr name="menuWidth" format="reference|dimension" />
-    </declare-styleable>
-    <declare-styleable name="MaterialProgressBar">
-        <attr name="colorBackground" format="reference|color" />
-        <attr name="colorProgress" format="reference|color" />
-        <attr name="colorSecondaryProgress" format="reference|color" />
-    </declare-styleable>
-    <declare-styleable name="MaterialProgressBar1">
-        <attr name="color" />
-        <attr name="stroke_width" format="dimension" />
-        <attr name="min_sweep_angle" format="integer" />
-        <attr name="max_sweep_angle" format="integer" />
-        <attr name="sweep_speed" format="float" />
-        <attr name="rotation_speed" format="float" />
-    </declare-styleable>
-    <declare-styleable name="RecyclerViewPlus">
-        <attr name="gridColumnWidth" format="dimension" />
-        <attr name="type" format="enum">
-            <enum name="list" value="0" />
-            <enum name="grid" value="1" />
-            <enum name="gallery" value="2" />
-            <enum name="custom" value="3" />
-        </attr>
-        <attr name="span" format="integer" />
-    </declare-styleable>
+  <declare-styleable name="CompatTextView">
+    <attr name="compoundDrawableWidth" format="dimension" />
+    <attr name="compoundDrawableHeight" format="dimension" />
+    <attr name="drawableStart" format="reference" />
+    <attr name="drawableTop" format="reference" />
+    <attr name="drawableEnd" format="reference" />
+    <attr name="drawableBottom" format="reference" />
+  </declare-styleable>
+  <declare-styleable name="ListMenuButton">
+    <!-- Used to customize the width of the popup menu. -->
+    <attr name="menuWidth" format="reference|dimension" />
+  </declare-styleable>
+  <declare-styleable name="MaterialProgressBar">
+    <attr name="colorBackground" format="reference|color" />
+    <attr name="colorProgress" format="reference|color" />
+    <attr name="colorSecondaryProgress" format="reference|color" />
+  </declare-styleable>
+  <declare-styleable name="MaterialProgressBar1">
+    <attr name="color" />
+    <attr name="stroke_width" format="dimension" />
+    <attr name="min_sweep_angle" format="integer" />
+    <attr name="max_sweep_angle" format="integer" />
+    <attr name="sweep_speed" format="float" />
+    <attr name="rotation_speed" format="float" />
+  </declare-styleable>
+  <declare-styleable name="RecyclerViewPlus">
+    <attr name="gridColumnWidth" format="dimension" />
+    <attr name="type" format="enum">
+      <enum name="list" value="0" />
+      <enum name="grid" value="1" />
+      <enum name="gallery" value="2" />
+      <enum name="custom" value="3" />
+    </attr>
+    <attr name="span" format="integer" />
+  </declare-styleable>
 </resources>

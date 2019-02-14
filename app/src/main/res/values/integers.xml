@@ -2,4 +2,5 @@
   <integer name="list_item_level_default">0</integer>
   <integer name="list_item_level_incognito">2</integer>
   <integer name="list_item_level_selected">1</integer>
+  <integer name="reenter_fullscreen_delay_time_in_millis">5000</integer>
 </resources>
