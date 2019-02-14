@@ -71,6 +71,7 @@
             android:theme="@style/FullscreenWhiteBase">
 
         </activity>
+        <activity android:name=".photo.PhotoViewActivity" />
 
         <service android:name=".service.FileOperationService" />
         <service android:name=".download.DownloadService" />
