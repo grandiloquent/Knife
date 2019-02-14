@@ -8,6 +8,7 @@ import java.util.zip.ZipFile;
  * Helper methods to deal with stream related tasks.
  */
 public class StreamUtil {
+    public static final int DEFAULT_BUFFER_SIZE= 4096;
     /**
      * Handle closing a {@link Closeable} via {@link Closeable#close()} and catch
      * the potentially thrown {@link IOException}.
