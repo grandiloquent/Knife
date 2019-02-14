@@ -99,7 +99,6 @@ public class StorageUtils {
         }
     }
 
-  
 
     public static boolean deleteFile(Context context, File file) {
 
@@ -283,22 +282,50 @@ public class StorageUtils {
 
     public static boolean moveFile(Context context, File src, File destinationDirectory) {
 
-        boolean r = src.renameTo(new File(destinationDirectory, src.getName()));
+        String[] srcPieces = src.getAbsolutePath().split("/");
+        String[] dstPieces = destinationDirectory.getAbsolutePath().split("/");
+        boolean r = false;
+        if (srcPieces[1].equals(dstPieces[1])) {
+            r = src.renameTo(new File(destinationDirectory, src.getName()));
 
-        if (!r) {
+
+            if (!r) {
+                if (VERSION.SDK_INT >= VERSION_CODES.N) {
+                    try {
+                        Uri resultURI = DocumentsContract.moveDocument(context.getContentResolver(),
+                                getDocumentUriFromTreeUri(src),
+                                getDocumentUriFromTreeUri(src.getParentFile()),
+                                getDocumentUriFromTreeUri(destinationDirectory));
+
+                        r = resultURI != null;
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else {
+
             if (VERSION.SDK_INT >= VERSION_CODES.N) {
+                Uri srcDocumentUri = getDocumentUriFromTreeUri(src);
                 try {
-                    Uri resultURI = DocumentsContract.moveDocument(context.getContentResolver(),
-                            getDocumentUriFromTreeUri(src),
-                            getDocumentUriFromTreeUri(src.getParentFile()),
-                            getDocumentUriFromTreeUri(destinationDirectory));
-
-                    r = resultURI != null;
+                    r = DocumentsContract.copyDocument(context.getContentResolver(),
+                            srcDocumentUri,
+                            getDocumentUriFromTreeUri(destinationDirectory)) != null;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
+                if (r) {
+                    try {
+                        DocumentsContract.deleteDocument(context.getContentResolver(),
+                                srcDocumentUri);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
+
+
         return r;
     }
 

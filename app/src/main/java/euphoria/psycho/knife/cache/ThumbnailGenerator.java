@@ -1,9 +1,12 @@
 package euphoria.psycho.knife.cache;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 
 import euphoria.psycho.common.BitmapUtils;
 import euphoria.psycho.common.FileUtils;
+import euphoria.psycho.common.IconUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.knife.cache.ThumbnailProvider.ThumbnailRequest;
 
@@ -18,6 +21,11 @@ public class ThumbnailGenerator {
 
 
             thumbnail = createVideoThumbnail(request.getFilePath(), request.getIconSize());
+        } else if (FileUtils.isSupportedImage(request.getFilePath())) {
+            thumbnail = createImageThumbnail(request.getFilePath(), request.getIconSize());
+
+        } else if (request.getFilePath().endsWith(".apk")) {
+            thumbnail = IconUtils.drawableToBitmap(IconUtils.getAppIcon(request.getFilePath()));
         }
 
 //        Log.e("TAG/ThumbnailGenerator", "retrieveThumbnail: "
@@ -37,7 +45,6 @@ public class ThumbnailGenerator {
 
         if (thumbnail == null) return null;
         if (thumbnail.getWidth() <= iconSize) return thumbnail;
-        float scale = iconSize*1.0f / thumbnail.getWidth()*1.0f;
 
 
 //        Log.e("TAG/ThumbnailGenerator", "createVideoThumbnail: "
@@ -46,7 +53,20 @@ public class ThumbnailGenerator {
 //                + "\n iconSize = " + iconSize
 //                + "\n scale = " + scale);
 
-        return BitmapUtils.resizeAndCropCenter(thumbnail,iconSize,true);
+        return BitmapUtils.resizeAndCropCenter(thumbnail, iconSize, true);
+
+    }
+
+    private Bitmap createImageThumbnail(String filePath, int iconSize) {
+
+        //BitmapFactory.Options options = new Options();
+
+        Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+
+        if (bitmap.getWidth() <= iconSize) return bitmap;
+
+        return BitmapUtils.resizeAndCropCenter(bitmap, iconSize, true);
+
 
     }
 }

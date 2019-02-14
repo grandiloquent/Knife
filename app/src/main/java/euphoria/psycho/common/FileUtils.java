@@ -6,6 +6,7 @@ import android.net.Uri;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +24,9 @@ public class FileUtils {
     private static final String TAG = "FileUtils";
     private static final char UNIX_SEPARATOR = '/';
     private static final char WINDOWS_SEPARATOR = '\\';
+    private static String[] mSupportVideoExtensions;
+    private static String[] mSupportedAudioExtensions;
+    private static String[] mSupportedImageExtensions;
 
     /**
      * Delete the given files or directories by calling {@link #recursivelyDeleteFile(File)}.
@@ -68,6 +72,21 @@ public class FileUtils {
         if (!tmpOutputFile.renameTo(outFile)) {
             throw new IOException();
         }
+    }
+
+    private static boolean extensionMatch(String[] extensions, String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex == -1) return false;
+
+        // somevideo.mp4 => .mp4
+        String extension = fileName.substring(dotIndex).toLowerCase();
+
+
+        for (String e : extensions) {
+            if (e.equals(extension)) return true;
+        }
+
+        return false;
     }
 
     /**
@@ -196,6 +215,22 @@ public class FileUtils {
         return (lastSeparator > extensionPos ? -1 : extensionPos);
     }
 
+    public static boolean isSupportedText(String fileName) {
+
+        if (mSupportedTextExtensions == null) {
+            mSupportedTextExtensions = new String[]{"css",
+                    "htm",
+                    "js",
+                    "log",
+                    "srt",
+                    "txt",
+            };
+        }
+        return extensionMatch(mSupportedTextExtensions, fileName);
+    }
+
+    private static String[] mSupportedTextExtensions;
+
     public static int indexOfLastSeparator(String filename) {
         if (filename == null) {
             return -1;
@@ -203,6 +238,71 @@ public class FileUtils {
         int lastUnixPos = filename.lastIndexOf(UNIX_SEPARATOR);
         int lastWindowsPos = filename.lastIndexOf(WINDOWS_SEPARATOR);
         return Math.max(lastUnixPos, lastWindowsPos);
+    }
+
+
+    public static boolean isSupportedAudio(String fileName) {
+        if (mSupportedAudioExtensions == null) {
+            mSupportedAudioExtensions = new String[]{
+                    ".3gp",
+                    ".aac",
+                    ".flac",
+                    ".imy",
+                    ".m4a",
+                    ".mid",
+                    ".mkv",
+                    ".mp3",
+                    ".mp4",
+                    ".mxmf",
+                    ".ogg",
+                    ".ota",
+                    ".rtttl",
+                    ".rtx",
+                    ".ts",
+                    ".wav",
+                    ".xmf",
+            };
+        }
+        return extensionMatch(mSupportedAudioExtensions, fileName);
+    }
+
+    public static boolean isSupportedImage(String fileName) {
+        if (mSupportedImageExtensions == null) {
+            mSupportedImageExtensions = new String[]{
+                    ".jpg",
+                    ".gif",
+                    ".png",
+                    ".bmp",
+                    ".webp"
+            };
+        }
+        return extensionMatch(mSupportedImageExtensions, fileName);
+    }
+
+    public static boolean isSupportedVideo(String fileName) {
+
+        if (mSupportVideoExtensions == null) {
+            mSupportVideoExtensions = new String[]{
+                    ".3gp",
+                    ".mkv",
+                    ".mp4",
+                    ".ts",
+                    ".webm",
+            };
+        }
+        return extensionMatch(mSupportVideoExtensions, fileName);
+    }
+
+    public static File findFirstImage(File dir) {
+        File[] files = dir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                if (pathname.isFile() && isSupportedImage(pathname.getName())) return true;
+                return false;
+            }
+        });
+        if (files != null && files.length > 0) return files[0];
+        return null;
     }
 
     /**
@@ -250,38 +350,5 @@ public class FileUtils {
         }
 
         return size;
-    }
-
-
-    private static String[] mSupportVideoExtensions;
-
-    public static boolean isSupportedVideo(String fileName) {
-
-        if (mSupportVideoExtensions == null) {
-            mSupportVideoExtensions = new String[]{
-                    ".3gp",
-                    ".mp4",
-                    ".ts",
-                    ".webm",
-                    ".mkv",
-            };
-        }
-        return extensionMatch(mSupportVideoExtensions, fileName);
-    }
-
-    private static boolean extensionMatch(String[] extensions, String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex == -1) return false;
-
-        // somevideo.mp4 => .mp4
-        String extension = fileName.substring(dotIndex).toLowerCase();
-
-
-
-        for (String e : extensions) {
-            if (e.equals(extension)) return true;
-        }
-
-        return false;
     }
 }

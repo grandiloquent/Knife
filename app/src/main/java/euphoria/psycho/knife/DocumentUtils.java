@@ -37,6 +37,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.common.StorageUtils;
@@ -45,6 +46,7 @@ import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.common.widget.KeyboardVisibilityDelegate;
+import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.video.VideoFragment;
 
@@ -253,19 +255,40 @@ public class DocumentUtils {
 
     private static int getType(File file) {
         if (file.isDirectory()) return C.TYPE_DIRECTORY;
+
+
         String ext = StringUtils.substringAfterLast(file.getName(), ".");
         if (ext == null) return C.TYPE_OTHER;
         ext = ext.toLowerCase();
+
         switch (ext) {
+            case "aac":
+            case "flac":
+            case "imy":
+            case "m4a":
+            case "mid":
             case "mp3":
+            case "mxmf":
+            case "ogg":
+            case "ota":
+            case "rtttl":
+            case "rtx":
+            case "wav":
+            case "xmf":
                 return C.TYPE_AUDIO;
             // https://developer.android.com/guide/appendix/media-formats.html
+            case "3gp":
+            case "mkv":
             case "mp4":
+            case "ts":
+            case "webm":
                 return C.TYPE_VIDEO;
             case "txt":
             case "css":
             case "log":
             case "js":
+            case "java":
+            case "xml":
             case "htm":
             case "srt":
                 return C.TYPE_TEXT;
@@ -277,25 +300,84 @@ public class DocumentUtils {
             case "rar":
             case "gz":
                 return C.TYPE_ZIP;
+            case "bmp":
+            case "gif":
+            case "jpg":
+            case "png":
+            case "webp":
+                return C.TYPE_IMAGE;
             default:
                 return C.TYPE_OTHER;
         }
     }
 
-    public static void openContent(AppCompatActivity context, String path, int backWhere) {
+    public static void openContent(Context context, String path, int backWhere) {
         openContent(context, new DocumentInfo.Builder()
                 .setPath(path)
                 .setType(getType(new File(path)))
                 .build(), backWhere);
     }
 
-    public static void openContent(AppCompatActivity context, DocumentInfo documentInfo, int backWhere) {
+    public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
+        List<Item> items = new ArrayList<>();
+
+        items.add(new Item(context, R.string.delete, true));
+        items.add(new Item(context, R.string.share, true));
+        items.add(new Item(context, R.string.properties, true));
+
+        switch (documentInfo.getType()) {
+            case C.TYPE_APK: {
+                break;
+            }
+            case C.TYPE_AUDIO: {
+                break;
+            }
+            case C.TYPE_DIRECTORY: {
+                break;
+            }
+            case C.TYPE_EXCEL: {
+                break;
+            }
+            case C.TYPE_OTHER: {
+                break;
+            }
+            case C.TYPE_PDF: {
+                break;
+            }
+            case C.TYPE_TEXT: {
+                break;
+            }
+            case C.TYPE_VIDEO: {
+                items.add(new Item(context, R.string.trim_video, true));
+                break;
+            }
+            case C.TYPE_WORD: {
+                break;
+            }
+            case C.TYPE_ZIP: {
+                items.add(new Item(context, R.string.extract, true));
+                break;
+            }
+        }
+
+        return items.toArray(new Item[0]);
+    }
+
+    public static void openContent(Context context, DocumentInfo documentInfo, int backWhere) {
         if (documentInfo.getType() == C.TYPE_VIDEO) {
+
 
             Intent videoIntent = new Intent(context, MainActivity.class);
             videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
             context.startActivity(videoIntent);
 
+            return;
+        } else if (documentInfo.getType() == C.TYPE_TEXT) {
+            // 用 Chrome 浏览器打开，更好的阅读体验
+            Intent textIntent = new Intent();
+            textIntent.setAction(Intent.ACTION_VIEW);
+            textIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), "multipart/related");
+            context.startActivity(textIntent);
             return;
         }
         Intent intent = new Intent();

@@ -136,24 +136,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
 
     @Override
     public ListMenuButton.Item[] getItems() {
-        Context context = getContext();
-        if (getItem().getType() == C.TYPE_VIDEO) {
-            return new ListMenuButton.Item[]{
-                    new Item(context, R.string.rename, true),
-                    new ListMenuButton.Item(context, R.string.delete, true),
-                    new ListMenuButton.Item(context, R.string.share, true),
-                    new ListMenuButton.Item(context, R.string.properties, true),
-                    new ListMenuButton.Item(context, R.string.trim_video, true)
-            };
-        }
-
-        return new ListMenuButton.Item[]{
-                new Item(context, R.string.rename, true),
-                new ListMenuButton.Item(context, R.string.delete, true),
-                new ListMenuButton.Item(context, R.string.share, true),
-                new ListMenuButton.Item(context, R.string.properties, true)
-
-        };
+        return DocumentUtils.generateListMenu(getContext(), getItem());
     }
 
     @Nullable
@@ -194,6 +177,9 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.rename:
                 mDelegate.rename(getItem());
                 break;
+            case R.string.extract:
+                mDelegate.unzip(getItem());
+                break;
         }
     }
 
@@ -223,6 +209,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
                 mDescriptionView.setText(getContext().getString(R.string.directory_description, documentInfo.getSize()));
                 break;
             case C.TYPE_APK:
+            case C.TYPE_IMAGE:
             case C.TYPE_VIDEO:
                 mDelegate.getThumbnailProvider().getThumbnail(this);
                 break;

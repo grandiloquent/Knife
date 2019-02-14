@@ -57,6 +57,7 @@ import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.DocumentUtils.Consumer;
+import euphoria.psycho.knife.UnZipJob.UnZipListener;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
@@ -265,6 +266,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void onClicked(DocumentInfo documentInfo) {
+
+        Log.e("TAG/DirectoryFragment", "onClicked: " + documentInfo.getType());
+
         switch (documentInfo.getType()) {
             case C.TYPE_VIDEO:
                 VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath(), mSortBy, 0);
@@ -275,21 +279,22 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 updateRecyclerView(false);
                 break;
             default:
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
-                        NetUtils.getMimeType(documentInfo.getFileName()));
-
-                if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
-                    startActivity(Intent.createChooser(intent, "打开"));
-                    return;
-                }
-                ComponentName foundActivity = intent.resolveActivity(getContext().getPackageManager());
-                if (foundActivity != null) {
-                    startActivity(intent);
-                } else {
-                    startActivity(Intent.createChooser(intent, "打开"));
-                }
+                DocumentUtils.openContent(getActivity(), documentInfo, 0);
+//                Intent intent = new Intent();
+//                intent.setAction(Intent.ACTION_VIEW);
+//                intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
+//                        NetUtils.getMimeType(documentInfo.getFileName()));
+//
+//                if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
+//                    startActivity(Intent.createChooser(intent, "打开"));
+//                    return;
+//                }
+//                ComponentName foundActivity = intent.resolveActivity(getContext().getPackageManager());
+//                if (foundActivity != null) {
+//                    startActivity(intent);
+//                } else {
+//                    startActivity(Intent.createChooser(intent, "打开"));
+//                }
                 break;
         }
     }
@@ -466,5 +471,21 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void updateItem(DocumentInfo documentInfo) {
 
+    }
+
+    @Override
+    public void unzip(DocumentInfo documentInfo) {
+        ThreadUtils.postOnBackgroundThread(() -> {
+            UnZipJob job = new UnZipJob(new UnZipListener() {
+                @Override
+                public void onError(Exception exception) {
+
+                    exception.printStackTrace();
+                    Log.e("TAG/DirectoryFragment", "onError: " + exception);
+
+                }
+            });
+            job.unzip(documentInfo.getPath());
+        });
     }
 }

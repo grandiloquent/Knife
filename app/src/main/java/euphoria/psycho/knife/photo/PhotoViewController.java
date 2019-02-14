@@ -7,11 +7,15 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Process;
+import android.provider.MediaStore;
+import android.provider.MediaStore.Images.Media;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -31,6 +35,7 @@ import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,16 +48,20 @@ import androidx.fragment.app.FragmentManager;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
+import euphoria.psycho.common.ContentUriUtils;
+import euphoria.psycho.common.FileProviderHelper;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.photo.ActionBarInterface.OnMenuVisibilityListener;
 import euphoria.psycho.knife.photo.PhotoBitmapLoaderInterface.BitmapResult;
+import euphoria.psycho.knife.photo.PhotoContract.PhotoViewColumns;
 import euphoria.psycho.knife.photo.PhotoViewPager.InterceptType;
 import euphoria.psycho.knife.photo.PhotoViewPager.OnInterceptTouchListener;
 
 /**
  * This class implements all the logic of the photo view activity. An activity should use this class
  * calling through from relevant activity methods to the methods of the same name here.
- *
+ * <p>
  * To customize the photo viewer activity, you should subclass this and implement your
  * customizations here. Then subclass {@link PhotoViewActivity} and override just
  * {@link PhotoViewActivity#createController createController} to instantiate your controller
@@ -60,134 +69,144 @@ import euphoria.psycho.knife.photo.PhotoViewPager.OnInterceptTouchListener;
  */
 public class PhotoViewController implements
         LoaderManager.LoaderCallbacks<Cursor>, OnPageChangeListener, OnInterceptTouchListener,
-        OnMenuVisibilityListener, PhotoViewCallbacks  {
+        OnMenuVisibilityListener, PhotoViewCallbacks {
 
     /**
-     * Defines the interface between the Activity and this class.
-     *
-     * The activity itself must delegate all appropriate method calls into this class, to the
-     * methods of the same name.
+     * Count used when the real photo count is unknown [but, may be determined]
      */
-    public interface ActivityInterface {
-        public Context getContext();
-        public Context getApplicationContext();
-        public Intent getIntent();
-        public void setContentView(int resId);
-        public <T extends View> T findViewById(int id);
-        public Resources getResources();
-        public FragmentManager getSupportFragmentManager();
-        public LoaderManager getSupportLoaderManager();
-        public ActionBarInterface getActionBarInterface();
-        public boolean onOptionsItemSelected(MenuItem item);
-        public void finish();
-        public void overridePendingTransition(int enterAnim, int exitAnim);
-        public PhotoViewController getController();
-    }
-
-    private final static String TAG = "PhotoViewController";
-
-    private final static String STATE_INITIAL_URI_KEY =
-            "com.android.ex.PhotoViewFragment.INITIAL_URI";
-    private final static String STATE_CURRENT_URI_KEY =
-            "com.android.ex.PhotoViewFragment.CURRENT_URI";
-    private final static String STATE_CURRENT_INDEX_KEY =
-            "com.android.ex.PhotoViewFragment.CURRENT_INDEX";
-    private final static String STATE_FULLSCREEN_KEY =
-            "com.android.ex.PhotoViewFragment.FULLSCREEN";
-    private final static String STATE_ACTIONBARTITLE_KEY =
-            "com.android.ex.PhotoViewFragment.ACTIONBARTITLE";
-    private final static String STATE_ACTIONBARSUBTITLE_KEY =
-            "com.android.ex.PhotoViewFragment.ACTIONBARSUBTITLE";
-    private final static String STATE_ENTERANIMATIONFINISHED_KEY =
-            "com.android.ex.PhotoViewFragment.SCALEANIMATIONFINISHED";
-
-    protected final static String ARG_IMAGE_URI = "image_uri";
-
-    public static final int LOADER_PHOTO_LIST = 100;
-
-    /** Count used when the real photo count is unknown [but, may be determined] */
     public static final int ALBUM_COUNT_UNKNOWN = -1;
-
     public static final int ENTER_ANIMATION_DURATION_MS = 250;
     public static final int EXIT_ANIMATION_DURATION_MS = 250;
-
-    /** Argument key for the dialog message */
+    /**
+     * Argument key for the dialog message
+     */
     public static final String KEY_MESSAGE = "dialog_message";
-
-    public static int sMemoryClass;
+    public static final int LOADER_PHOTO_LIST = 100;
     public static int sMaxPhotoSize; // The maximum size (either width or height)
-
+    public static int sMemoryClass;
+    protected final static String ARG_IMAGE_URI = "image_uri";
+    private final static String STATE_ACTIONBARSUBTITLE_KEY =
+            "euphoria.psycho.knife.photo.PhotoViewFragment.ACTIONBARSUBTITLE";
+    private final static String STATE_ACTIONBARTITLE_KEY =
+            "euphoria.psycho.knife.photo.PhotoViewFragment.ACTIONBARTITLE";
+    private final static String STATE_CURRENT_INDEX_KEY =
+            "euphoria.psycho.knife.photo.PhotoViewFragment.CURRENT_INDEX";
+    private final static String STATE_CURRENT_URI_KEY =
+            "euphoria.psycho.knife.photo.PhotoViewFragment.CURRENT_URI";
+    private final static String STATE_ENTERANIMATIONFINISHED_KEY =
+            "euphoria.psycho.knife.photo.PhotoViewFragment.SCALEANIMATIONFINISHED";
+    private final static String STATE_FULLSCREEN_KEY =
+            "euphoria.psycho.knife.photo.PhotoViewFragment.FULLSCREEN";
+    private final static String STATE_INITIAL_URI_KEY =
+            "euphoria.psycho.knife.photo.PhotoViewFragment.INITIAL_URI";
+    private final static String TAG = "PhotoViewController";
+    private final AccessibilityManager mAccessibilityManager;
     private final ActivityInterface mActivity;
-
-    private int mLastFlags;
-
-    private final View.OnSystemUiVisibilityChangeListener mSystemUiVisibilityChangeListener;
-
-    /** The URI of the photos we're viewing; may be {@code null} */
-    private String mPhotosUri;
-    /** The uri of the initial photo */
-    private String mInitialPhotoUri;
-    /** The index of the currently viewed photo */
-    private int mCurrentPhotoIndex;
-    /** The uri of the currently viewed photo */
-    private String mCurrentPhotoUri;
-    /** The query projection to use; may be {@code null} */
-    private String[] mProjection;
-    /** The total number of photos; only valid if {@link #mIsEmpty} is {@code false}. */
-    protected int mAlbumCount = ALBUM_COUNT_UNKNOWN;
-    /** {@code true} if the view is empty. Otherwise, {@code false}. */
-    protected boolean mIsEmpty;
-    /** the main root view */
-    protected View mRootView;
-    /** Background image that contains nothing, so it can be alpha faded from
-     * transparent to black without affecting any other views. */
-    @Nullable
-    protected View mBackground;
-    /** The main pager; provides left/right swipe between photos */
-    protected PhotoViewPager mViewPager;
-    /** The temporary image so that we can quickly scale up the fullscreen thumbnail */
-    @Nullable
-    protected ImageView mTemporaryImage;
-    /** Adapter to create pager views */
-    protected PhotoPagerAdapter mAdapter;
-    /** Whether or not we're in "full screen" mode */
-    protected boolean mFullScreen;
-    /** The listeners wanting full screen state for each screen position */
+    /**
+     * The set of listeners wanting full screen state
+     */
+    private final Set<CursorChangedListener> mCursorListeners = new HashSet<CursorChangedListener>();
+    protected final Handler mHandler = new Handler();
+    /**
+     * The listeners wanting full screen state for each screen position
+     */
     private final Map<Integer, OnScreenListener>
             mScreenListeners = new HashMap<Integer, OnScreenListener>();
-    /** The set of listeners wanting full screen state */
-    private final Set<CursorChangedListener> mCursorListeners = new HashSet<CursorChangedListener>();
-    /** When {@code true}, restart the loader when the activity becomes active */
+    private final View.OnSystemUiVisibilityChangeListener mSystemUiVisibilityChangeListener;
+    private int mLastFlags;
+    /**
+     * The URI of the photos we're viewing; may be {@code null}
+     */
+    private String mPhotosUri;
+    /**
+     * The uri of the initial photo
+     */
+    private String mInitialPhotoUri;
+    /**
+     * The index of the currently viewed photo
+     */
+    private int mCurrentPhotoIndex;
+    /**
+     * The uri of the currently viewed photo
+     */
+    private String mCurrentPhotoUri;
+    /**
+     * The query projection to use; may be {@code null}
+     */
+    private String[] mProjection;
+    /**
+     * The total number of photos; only valid if {@link #mIsEmpty} is {@code false}.
+     */
+    protected int mAlbumCount = ALBUM_COUNT_UNKNOWN;
+    /**
+     * {@code true} if the view is empty. Otherwise, {@code false}.
+     */
+    protected boolean mIsEmpty;
+    /**
+     * the main root view
+     */
+    protected View mRootView;
+    /**
+     * Background image that contains nothing, so it can be alpha faded from
+     * transparent to black without affecting any other views.
+     */
+    @Nullable
+    protected View mBackground;
+    /**
+     * The main pager; provides left/right swipe between photos
+     */
+    protected PhotoViewPager mViewPager;
+    /**
+     * The temporary image so that we can quickly scale up the fullscreen thumbnail
+     */
+    @Nullable
+    protected ImageView mTemporaryImage;
+    /**
+     * Adapter to create pager views
+     */
+    protected PhotoPagerAdapter mAdapter;
+    /**
+     * Whether or not we're in "full screen" mode
+     */
+    protected boolean mFullScreen;
+    /**
+     * When {@code true}, restart the loader when the activity becomes active
+     */
     private boolean mKickLoader;
-    /** Don't attempt operations that may trigger a fragment transaction when the activity is
-     * destroyed */
+    /**
+     * Don't attempt operations that may trigger a fragment transaction when the activity is
+     * destroyed
+     */
     private boolean mIsDestroyedCompat;
-    /** Whether or not this activity is paused */
+    /**
+     * Whether or not this activity is paused
+     */
     protected boolean mIsPaused = true;
-    /** The maximum scale factor applied to images when they are initially displayed */
+    /**
+     * The maximum scale factor applied to images when they are initially displayed
+     */
     protected float mMaxInitialScale;
-    /** The title in the actionbar */
+    /**
+     * The title in the actionbar
+     */
     protected String mActionBarTitle;
-    /** The subtitle in the actionbar */
+    /**
+     * The subtitle in the actionbar
+     */
     protected String mActionBarSubtitle;
-
     private boolean mEnterAnimationFinished;
     protected boolean mScaleAnimationEnabled;
     protected int mAnimationStartX;
     protected int mAnimationStartY;
     protected int mAnimationStartWidth;
     protected int mAnimationStartHeight;
-
-    /** Whether lights out should invoked based on timer */
+    /**
+     * Whether lights out should invoked based on timer
+     */
     protected boolean mIsTimerLightsOutEnabled;
     protected boolean mActionBarHiddenInitially;
     protected boolean mDisplayThumbsFullScreen;
-
-    private final AccessibilityManager mAccessibilityManager;
-
     protected BitmapCallback mBitmapCallback;
-    protected final Handler mHandler = new Handler();
-
     // TODO Find a better way to do this. We basically want the activity to display the
     // "loading..." progress until the fragment takes over and shows it's own "loading..."
     // progress [located in photo_header_view.xml]. We could potentially have all status displayed
@@ -195,7 +214,12 @@ public class PhotoViewController implements
     // track the loading by this variable which is fragile and may cause phantom "loading..."
     // text.
     private long mEnterFullScreenDelayTime;
-
+    private final Runnable mEnterFullScreenRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setFullScreen(true, true);
+        }
+    };
     private int lastAnnouncedTitle = -1;
 
     public PhotoViewController(ActivityInterface activity) {
@@ -220,13 +244,272 @@ public class PhotoViewController implements
                 activity.getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
     }
 
+    private int calculateTranslate(int start, int startSize, int totalSize, float scale) {
+        // Translation takes precedence over scale.  What this means is that if
+        // we want an view's upper left corner to be a particular spot on screen,
+        // but that view is scaled to something other than 1, we need to take into
+        // account the pixels lost to scaling.
+        // So if we have a view that is 200x300, and we want it's upper left corner
+        // to be at 50x50, but it's scaled by 50%, we can't just translate it to 50x50.
+        // If we were to do that, the view's *visible* upper left corner would be at
+        // 100x200.  We need to take into account the difference between the outside
+        // size of the view (i.e. the size prior to scaling) and the scaled size.
+        // scaleFromEdge is the difference between the visible left edge and the
+        // actual left edge, due to scaling.
+        // scaleFromTop is the difference between the visible top edge, and the
+        // actual top edge, due to scaling.
+        int scaleFromEdge = Math.round((totalSize - totalSize * scale) / 2);
+
+        // The imageView is fullscreen, regardless of the aspect ratio of the actual image.
+        // This means that some portion of the imageView will be blank.  We need to
+        // take into account the size of the blank area so that the actual image
+        // lines up with the starting image.
+        int blankSize = Math.round((totalSize * scale - startSize) / 2);
+
+        return start - scaleFromEdge - blankSize;
+    }
+
+    private void cancelEnterFullScreenRunnable() {
+        mHandler.removeCallbacks(mEnterFullScreenRunnable);
+    }
+
     public PhotoPagerAdapter createPhotoPagerAdapter(Context context,
-          FragmentManager fm, Cursor c, float maxScale) {
+                                                     FragmentManager fm, Cursor c, float maxScale) {
         return new PhotoPagerAdapter(context, fm, c, maxScale, mDisplayThumbsFullScreen);
+    }
+
+    protected View findViewById(int id) {
+        return mActivity.findViewById(id);
     }
 
     public ActivityInterface getActivity() {
         return mActivity;
+    }
+
+    /**
+     * Returns the android view for the viewer's background view, if it has one. Subclasses should
+     * override this if they have a different (or no) background view.
+     */
+    @Nullable
+    protected View getBackground() {
+        return findViewById(R.id.photo_activity_background);
+    }
+
+    /**
+     * Returns the android layout id of the root layout that should be inflated for the viewer.
+     * Subclasses should override this method if they provide their own layout.
+     */
+    @IdRes
+    protected int getContentViewId() {
+        return R.layout.photo_activity_view;
+    }
+
+    public Cursor getCursor() {
+        return (mAdapter == null) ? null : mAdapter.getCursor();
+    }
+
+    /**
+     * Utility method that will return the cursor that contains the data
+     * at the current position so that it refers to the current image on screen.
+     *
+     * @return the cursor at the current position or
+     * null if no cursor exists or if the {@link PhotoViewPager} is null.
+     */
+    public Cursor getCursorAtProperPosition() {
+        if (mViewPager == null) {
+            return null;
+        }
+
+        final int position = mViewPager.getCurrentItem();
+        final Cursor cursor = mAdapter.getCursor();
+
+        if (cursor == null) {
+            return null;
+        }
+
+        cursor.moveToPosition(position);
+
+        return cursor;
+    }
+
+    /**
+     * Returns a string used as an announcement for accessibility after the user moves to a new
+     * photo. It will be called after {@link #updateActionBar} has been called.
+     *
+     * @param position the index in the album of the currently active photo
+     * @return announcement for accessibility
+     */
+    protected String getPhotoAccessibilityAnnouncement(int position) {
+        String announcement = mActionBarTitle;
+        if (mActionBarSubtitle != null) {
+            announcement = mActivity.getContext().getResources().getString(
+                    R.string.titles, mActionBarTitle, mActionBarSubtitle);
+        }
+        return announcement;
+    }
+
+    public View getRootView() {
+        return mRootView;
+    }
+
+    /**
+     * Returns the android id of the viewer's root view. Subclasses should override this method if
+     * they provide their own layout.
+     */
+    @IdRes
+    protected int getRootViewId() {
+        return R.id.photo_activity_root_view;
+    }
+
+    /**
+     * Note: This should only be called when API level is 11 or above.
+     */
+    public View.OnSystemUiVisibilityChangeListener getSystemUiVisibilityChangeListener() {
+        return mSystemUiVisibilityChangeListener;
+    }
+
+    /**
+     * Returns the android view for the viewer's temporary image, if it has one. Subclasses should
+     * override this if they have a different (or no) temporary image view.
+     */
+    @Nullable
+    protected ImageView getTemporaryImage() {
+        return (ImageView) findViewById(R.id.photo_activity_temporary_image);
+    }
+
+    /**
+     * Returns whether or not the view has a background object. Subclasses should override this if
+     * they do not contain a background object.
+     */
+    protected boolean hasBackground() {
+        return mBackground != null;
+    }
+
+    /**
+     * Returns whether or not the view has a temporary image view. Subclasses should override this
+     * if they do not use a temporary image.
+     */
+    protected boolean hasTemporaryImage() {
+        return mTemporaryImage != null;
+    }
+
+    public void hideActionBar() {
+        mActivity.getActionBarInterface().hide();
+    }
+
+    private void initMaxPhotoSize() {
+        if (sMaxPhotoSize == 0) {
+            final DisplayMetrics metrics = new DisplayMetrics();
+            final WindowManager wm = (WindowManager)
+                    mActivity.getContext().getSystemService(Context.WINDOW_SERVICE);
+            final ImageUtils.ImageSize imageSize = ImageUtils.sUseImageSize;
+            wm.getDefaultDisplay().getMetrics(metrics);
+            switch (imageSize) {
+                case EXTRA_SMALL:
+                    // Use a photo that's 80% of the "small" size
+                    sMaxPhotoSize = (Math.min(metrics.heightPixels, metrics.widthPixels) * 800) / 1000;
+                    break;
+                case SMALL:
+                    // Fall through.
+                case NORMAL:
+                    // Fall through.
+                default:
+                    sMaxPhotoSize = Math.min(metrics.heightPixels, metrics.widthPixels);
+                    break;
+            }
+        }
+    }
+
+    private void initTemporaryImage(Drawable drawable) {
+        if (mEnterAnimationFinished) {
+            // Forget this, we've already run the animation.
+            return;
+        }
+        if (hasTemporaryImage()) {
+            mTemporaryImage.setImageDrawable(drawable);
+        }
+        if (drawable != null) {
+            // We have not yet run the enter animation. Start it now.
+            int totalWidth = mRootView.getMeasuredWidth();
+            if (totalWidth == 0) {
+                // the measure pass has not yet finished.  We can't properly
+                // run out animation until that is done. Listen for the layout
+                // to occur, then fire the animation.
+                final View base = mRootView;
+                base.getViewTreeObserver().addOnGlobalLayoutListener(
+                        new OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                int version = Build.VERSION.SDK_INT;
+                                if (version >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    base.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                                } else {
+                                    base.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                                }
+                                runEnterAnimation();
+                            }
+                        });
+            } else {
+                // initiate the animation
+                runEnterAnimation();
+            }
+        }
+        // Kick off the photo list loader
+        mActivity.getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
+    }
+
+    private boolean isDestroyedCompat() {
+        return mIsDestroyedCompat;
+    }
+
+    public boolean isEnterAnimationFinished() {
+        return mEnterAnimationFinished;
+    }
+
+    protected boolean isFullScreen() {
+        return mFullScreen;
+    }
+
+    public boolean isScaleAnimationEnabled() {
+        return mScaleAnimationEnabled;
+    }
+
+    /**
+     * Return true iff the app is being run as a secondary user on kitkat.
+     * <p>
+     * This is a hack which we only know to work on kitkat.
+     */
+    private boolean kitkatIsSecondaryUser() {
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.KITKAT) {
+            throw new IllegalStateException("kitkatIsSecondary user is only callable on KitKat");
+        }
+        return Process.myUid() > 100000;
+    }
+
+    private synchronized void notifyCursorListeners(Cursor data) {
+        // tell all of the objects listening for cursor changes
+        // that the cursor has changed
+        for (CursorChangedListener listener : mCursorListeners) {
+            listener.onCursorChanged(data);
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    }
+
+    public boolean onBackPressed() {
+        // If we are in fullscreen mode, and the default is not full screen, then
+        // switch back to actionBar display mode.
+        if (mFullScreen && !mActionBarHiddenInitially) {
+            toggleFullScreen();
+        } else {
+            if (mScaleAnimationEnabled) {
+                runExitAnimation();
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void onCreate(Bundle savedInstanceState) {
@@ -303,7 +586,7 @@ public class PhotoViewController implements
 
         // Create the adapter and add the view pager
         mAdapter = createPhotoPagerAdapter(mActivity.getContext(),
-                        mActivity.getSupportFragmentManager(), null, mMaxInitialScale);
+                mActivity.getSupportFragmentManager(), null, mMaxInitialScale);
         final Resources resources = mActivity.getResources();
         mRootView = findViewById(getRootViewId());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -361,187 +644,37 @@ public class PhotoViewController implements
         }
     }
 
-    private void initMaxPhotoSize() {
-        if (sMaxPhotoSize == 0) {
-            final DisplayMetrics metrics = new DisplayMetrics();
-            final WindowManager wm = (WindowManager)
-                    mActivity.getContext().getSystemService(Context.WINDOW_SERVICE);
-            final ImageUtils.ImageSize imageSize = ImageUtils.sUseImageSize;
-            wm.getDefaultDisplay().getMetrics(metrics);
-            switch (imageSize) {
-                case EXTRA_SMALL:
-                    // Use a photo that's 80% of the "small" size
-                    sMaxPhotoSize = (Math.min(metrics.heightPixels, metrics.widthPixels) * 800) / 1000;
-                    break;
-                case SMALL:
-                    // Fall through.
-                case NORMAL:
-                    // Fall through.
-                default:
-                    sMaxPhotoSize = Math.min(metrics.heightPixels, metrics.widthPixels);
-                    break;
-            }
-        }
-    }
-
     public boolean onCreateOptionsMenu(Menu menu) {
         return true;
     }
-
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        return true;
-    }
-
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {}
-
-    protected View findViewById(int id) {
-        return mActivity.findViewById(id);
-    }
-
-    /**
-     * Returns the android id of the viewer's root view. Subclasses should override this method if
-     * they provide their own layout.
-     */
-    @IdRes
-    protected int getRootViewId() {
-      return R.id.photo_activity_root_view;
-    }
-
-    /**
-     * Returns the android layout id of the root layout that should be inflated for the viewer.
-     * Subclasses should override this method if they provide their own layout.
-     */
-    @IdRes
-    protected int getContentViewId() {
-        return R.layout.photo_activity_view;
-    }
-
-    /**
-     * Returns the android view for the viewer's background view, if it has one. Subclasses should
-     * override this if they have a different (or no) background view.
-     */
-    @Nullable
-    protected View getBackground() {
-        return findViewById(R.id.photo_activity_background);
-    }
-
-    /**
-     * Returns whether or not the view has a background object. Subclasses should override this if
-     * they do not contain a background object.
-     */
-    protected boolean hasBackground() {
-        return mBackground != null;
-    }
-
-    /**
-     * Returns the android view for the viewer's temporary image, if it has one. Subclasses should
-     * override this if they have a different (or no) temporary image view.
-     */
-    @Nullable
-    protected ImageView getTemporaryImage() {
-        return (ImageView) findViewById(R.id.photo_activity_temporary_image);
-    }
-
-    /**
-     * Returns whether or not the view has a temporary image view. Subclasses should override this
-     * if they do not use a temporary image.
-     */
-    protected boolean hasTemporaryImage() {
-        return mTemporaryImage != null;
-    }
-
-    public void onStart() {}
-
-    public void onResume() {
-        setFullScreen(mFullScreen, false);
-
-        mIsPaused = false;
-        if (mKickLoader) {
-            mKickLoader = false;
-            mActivity.getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
-        }
-    }
-
-    public void onPause() {
-        mIsPaused = true;
-    }
-
-    public void onStop() {}
 
     public void onDestroy() {
         mIsDestroyedCompat = true;
     }
 
-    private boolean isDestroyedCompat() {
-        return mIsDestroyedCompat;
+    public void onEnterAnimationComplete() {
+        mEnterAnimationFinished = true;
+        mViewPager.setVisibility(View.VISIBLE);
+        setLightsOutMode(mFullScreen);
     }
 
-    public boolean onBackPressed() {
-        // If we are in fullscreen mode, and the default is not full screen, then
-        // switch back to actionBar display mode.
-        if (mFullScreen && !mActionBarHiddenInitially) {
-            toggleFullScreen();
-        } else {
-            if (mScaleAnimationEnabled) {
-                runExitAnimation();
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putString(STATE_INITIAL_URI_KEY, mInitialPhotoUri);
-        outState.putString(STATE_CURRENT_URI_KEY, mCurrentPhotoUri);
-        outState.putInt(STATE_CURRENT_INDEX_KEY, mCurrentPhotoIndex);
-        outState.putBoolean(STATE_FULLSCREEN_KEY, mFullScreen);
-        outState.putString(STATE_ACTIONBARTITLE_KEY, mActionBarTitle);
-        outState.putString(STATE_ACTIONBARSUBTITLE_KEY, mActionBarSubtitle);
-        outState.putBoolean(STATE_ENTERANIMATIONFINISHED_KEY, mEnterAnimationFinished);
+    private void onExitAnimationComplete() {
+        mActivity.finish();
+        mActivity.overridePendingTransition(0, 0);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
-       switch (item.getItemId()) {
-          case android.R.id.home:
-             mActivity.finish();
-             return true;
-          default:
-             return false;
-       }
-    }
-
-    @Override
-    public void addScreenListener(int position, OnScreenListener listener) {
-        mScreenListeners.put(position, listener);
-    }
-
-    @Override
-    public void removeScreenListener(int position) {
-        mScreenListeners.remove(position);
-    }
-
-    @Override
-    public synchronized void addCursorListener(CursorChangedListener listener) {
-        mCursorListeners.add(listener);
-    }
-
-    @Override
-    public synchronized void removeCursorListener(CursorChangedListener listener) {
-        mCursorListeners.remove(listener);
-    }
-
-    @Override
-    public boolean isFragmentFullScreen(Fragment fragment) {
-        if (mViewPager == null || mAdapter == null || mAdapter.getCount() == 0) {
-            return mFullScreen;
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                mActivity.finish();
+                return true;
+            default:
+                return false;
         }
-        return mFullScreen || (mViewPager.getCurrentItem() != mAdapter.getItemPosition(fragment));
     }
 
-    @Override
-    public void toggleFullScreen() {
-        setFullScreen(!mFullScreen, true);
+    public void onPause() {
+        mIsPaused = true;
     }
 
     public void onPhotoRemoved(long photoId) {
@@ -560,209 +693,34 @@ public class PhotoViewController implements
         mActivity.getSupportLoaderManager().restartLoader(LOADER_PHOTO_LIST, null, this);
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        if (id == LOADER_PHOTO_LIST) {
-            return new PhotoPagerLoader(mActivity.getContext(), Uri.parse(mPhotosUri), mProjection);
-        }
-        return null;
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return true;
     }
 
-    @Override
-    public Loader<BitmapResult> onCreateBitmapLoader(int id, Bundle args, String uri) {
-        switch (id) {
-            case BITMAP_LOADER_AVATAR:
-            case BITMAP_LOADER_THUMBNAIL:
-            case BITMAP_LOADER_PHOTO:
-                return new PhotoBitmapLoader(mActivity.getContext(), uri);
-            default:
-                return null;
+    public void onResume() {
+        setFullScreen(mFullScreen, false);
+
+        mIsPaused = false;
+        if (mKickLoader) {
+            mKickLoader = false;
+            mActivity.getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
         }
     }
 
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        final int id = loader.getId();
-        if (id == LOADER_PHOTO_LIST) {
-            if (data == null || data.getCount() == 0) {
-                mIsEmpty = true;
-                mAdapter.swapCursor(null);
-            } else {
-                mAlbumCount = data.getCount();
-                if (mCurrentPhotoUri != null) {
-                    int index = 0;
-                    // Clear query params. Compare only the path.
-                    final int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
-                    final Uri currentPhotoUri;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                        currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
-                                .clearQuery().build();
-                    } else {
-                        currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
-                                .query(null).build();
-                    }
-                    // Rewind data cursor to the start if it has already advanced.
-                    data.moveToPosition(-1);
-                    while (data.moveToNext()) {
-                        final String uriString = data.getString(uriIndex);
-                        final Uri uri;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                            uri = Uri.parse(uriString).buildUpon().clearQuery().build();
-                        } else {
-                            uri = Uri.parse(uriString).buildUpon().query(null).build();
-                        }
-                        if (currentPhotoUri != null && currentPhotoUri.equals(uri)) {
-                            mCurrentPhotoIndex = index;
-                            break;
-                        }
-                        index++;
-                    }
-                }
-
-                // We're paused; don't do anything now, we'll get re-invoked
-                // when the activity becomes active again
-                if (mIsPaused) {
-                    mKickLoader = true;
-                    mAdapter.swapCursor(null);
-                    return;
-                }
-                boolean wasEmpty = mIsEmpty;
-                mIsEmpty = false;
-
-                mAdapter.swapCursor(data);
-                if (mViewPager.getAdapter() == null) {
-                    mViewPager.setAdapter(mAdapter);
-                }
-                notifyCursorListeners(data);
-
-                // Use an index of 0 if the index wasn't specified or couldn't be found
-                if (mCurrentPhotoIndex < 0) {
-                    mCurrentPhotoIndex = 0;
-                }
-
-                mViewPager.setCurrentItem(mCurrentPhotoIndex, false);
-                if (wasEmpty) {
-                    setViewActivated(mCurrentPhotoIndex);
-                }
-            }
-            // Update the any action items
-            updateActionItems();
-        }
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(STATE_INITIAL_URI_KEY, mInitialPhotoUri);
+        outState.putString(STATE_CURRENT_URI_KEY, mCurrentPhotoUri);
+        outState.putInt(STATE_CURRENT_INDEX_KEY, mCurrentPhotoIndex);
+        outState.putBoolean(STATE_FULLSCREEN_KEY, mFullScreen);
+        outState.putString(STATE_ACTIONBARTITLE_KEY, mActionBarTitle);
+        outState.putString(STATE_ACTIONBARSUBTITLE_KEY, mActionBarSubtitle);
+        outState.putBoolean(STATE_ENTERANIMATIONFINISHED_KEY, mEnterAnimationFinished);
     }
 
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        // If the loader is reset, remove the reference in the adapter to this cursor
-        if (!isDestroyedCompat()) {
-            // This will cause a fragment transaction which can't happen if we're destroyed,
-            // but we don't care in that case because we're destroyed anyways.
-            mAdapter.swapCursor(null);
-        }
+    public void onStart() {
     }
 
-    public void updateActionItems() {
-        // Do nothing, but allow extending classes to do work
-    }
-
-    private synchronized void notifyCursorListeners(Cursor data) {
-        // tell all of the objects listening for cursor changes
-        // that the cursor has changed
-        for (CursorChangedListener listener : mCursorListeners) {
-            listener.onCursorChanged(data);
-        }
-    }
-
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        if (positionOffset < 0.0001) {
-            OnScreenListener before = mScreenListeners.get(position - 1);
-            if (before != null) {
-                before.onViewUpNext();
-            }
-            OnScreenListener after = mScreenListeners.get(position + 1);
-            if (after != null) {
-                after.onViewUpNext();
-            }
-        }
-    }
-
-    @Override
-    public void onPageSelected(int position) {
-        mCurrentPhotoIndex = position;
-        setViewActivated(position);
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int state) {
-    }
-
-    @Override
-    public boolean isFragmentActive(Fragment fragment) {
-        if (mViewPager == null || mAdapter == null) {
-            return false;
-        }
-        return mViewPager.getCurrentItem() == mAdapter.getItemPosition(fragment);
-    }
-
-    @Override
-    public void onFragmentVisible(PhotoViewFragment fragment) {
-        // Do nothing, we handle this in setViewActivated
-    }
-
-    @Override
-    public InterceptType onTouchIntercept(float origX, float origY) {
-        boolean interceptLeft = false;
-        boolean interceptRight = false;
-
-        for (OnScreenListener listener : mScreenListeners.values()) {
-            if (!interceptLeft) {
-                interceptLeft = listener.onInterceptMoveLeft(origX, origY);
-            }
-            if (!interceptRight) {
-                interceptRight = listener.onInterceptMoveRight(origX, origY);
-            }
-        }
-
-        if (interceptLeft) {
-            if (interceptRight) {
-                return InterceptType.BOTH;
-            }
-            return InterceptType.LEFT;
-        } else if (interceptRight) {
-            return InterceptType.RIGHT;
-        }
-        return InterceptType.NONE;
-    }
-
-    /**
-     * Updates the title bar according to the value of {@link #mFullScreen}.
-     */
-    protected void setFullScreen(boolean fullScreen, boolean setDelayedRunnable) {
-        if (Util.isTouchExplorationEnabled(mAccessibilityManager)) {
-            // Disallow full screen mode when accessibility is enabled so that the action bar
-            // stays accessible.
-            fullScreen = false;
-            setDelayedRunnable = false;
-        }
-
-        final boolean fullScreenChanged = (fullScreen != mFullScreen);
-        mFullScreen = fullScreen;
-
-        if (mFullScreen) {
-            setLightsOutMode(true);
-            cancelEnterFullScreenRunnable();
-        } else {
-            setLightsOutMode(false);
-            if (setDelayedRunnable) {
-                postEnterFullScreenRunnableWithDelay();
-            }
-        }
-
-        if (fullScreenChanged) {
-            for (OnScreenListener listener : mScreenListeners.values()) {
-                listener.onFullScreenChanged(mFullScreen);
-            }
-        }
+    public void onStop() {
     }
 
     /**
@@ -773,210 +731,6 @@ public class PhotoViewController implements
         if (mIsTimerLightsOutEnabled) {
             mHandler.postDelayed(mEnterFullScreenRunnable, mEnterFullScreenDelayTime);
         }
-    }
-
-    private void cancelEnterFullScreenRunnable() {
-        mHandler.removeCallbacks(mEnterFullScreenRunnable);
-    }
-
-    protected void setLightsOutMode(boolean enabled) {
-        setImmersiveMode(enabled);
-    }
-
-    private final Runnable mEnterFullScreenRunnable = new Runnable() {
-        @Override
-        public void run() {
-            setFullScreen(true, true);
-        }
-    };
-
-    @Override
-    public void setViewActivated(int position) {
-        OnScreenListener listener = mScreenListeners.get(position);
-        if (listener != null) {
-            listener.onViewActivated();
-        }
-        final Cursor cursor = getCursorAtProperPosition();
-        mCurrentPhotoIndex = position;
-        // FLAG: get the column indexes once in onLoadFinished().
-        // That would make this more efficient, instead of looking these up
-        // repeatedly whenever we want them.
-        int uriIndex = cursor.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
-        mCurrentPhotoUri = cursor.getString(uriIndex);
-        updateActionBar();
-        if (mAccessibilityManager.isEnabled() && lastAnnouncedTitle != position) {
-            String announcement = getPhotoAccessibilityAnnouncement(position);
-            if (announcement != null) {
-                Util.announceForAccessibility(mRootView, mAccessibilityManager, announcement);
-                lastAnnouncedTitle = position;
-            }
-        }
-
-        // Restart the timer to return to fullscreen.
-        cancelEnterFullScreenRunnable();
-        postEnterFullScreenRunnableWithDelay();
-    }
-
-    /**
-     * Adjusts the activity title and subtitle to reflect the photo name and count.
-     */
-    public void updateActionBar() {
-        final int position = mViewPager.getCurrentItem() + 1;
-        final boolean hasAlbumCount = mAlbumCount >= 0;
-
-        final Cursor cursor = getCursorAtProperPosition();
-        if (cursor != null) {
-            // FLAG: We should grab the indexes when we first get the cursor
-            // and store them so we don't need to do it each time.
-            final int photoNameIndex = cursor.getColumnIndex(PhotoContract.PhotoViewColumns.NAME);
-            mActionBarTitle = cursor.getString(photoNameIndex);
-        } else {
-            mActionBarTitle = null;
-        }
-
-        if (mIsEmpty || !hasAlbumCount || position <= 0) {
-            mActionBarSubtitle = null;
-        } else {
-            mActionBarSubtitle = mActivity.getResources().getString(
-                    R.string.photo_view_count, position, mAlbumCount);
-        }
-
-        setActionBarTitles(mActivity.getActionBarInterface());
-    }
-
-    /**
-     * Returns a string used as an announcement for accessibility after the user moves to a new
-     * photo. It will be called after {@link #updateActionBar} has been called.
-     * @param position the index in the album of the currently active photo
-     * @return announcement for accessibility
-     */
-    protected String getPhotoAccessibilityAnnouncement(int position) {
-        String announcement = mActionBarTitle;
-        if (mActionBarSubtitle != null) {
-            announcement = mActivity.getContext().getResources().getString(
-                    R.string.titles, mActionBarTitle, mActionBarSubtitle);
-        }
-        return announcement;
-    }
-
-    /**
-     * Sets the Action Bar title to {@link #mActionBarTitle} and the subtitle to
-     * {@link #mActionBarSubtitle}
-     */
-    protected final void setActionBarTitles(ActionBarInterface actionBar) {
-        if (actionBar == null) {
-            return;
-        }
-        actionBar.setTitle(getInputOrEmpty(mActionBarTitle));
-        actionBar.setSubtitle(getInputOrEmpty(mActionBarSubtitle));
-    }
-
-    /**
-     * If the input string is non-null, it is returned, otherwise an empty string is returned;
-     * @param in
-     * @return
-     */
-    private static final String getInputOrEmpty(String in) {
-        if (in == null) {
-            return "";
-        }
-        return in;
-    }
-
-    /**
-     * Utility method that will return the cursor that contains the data
-     * at the current position so that it refers to the current image on screen.
-     * @return the cursor at the current position or
-     * null if no cursor exists or if the {@link PhotoViewPager} is null.
-     */
-    public Cursor getCursorAtProperPosition() {
-        if (mViewPager == null) {
-            return null;
-        }
-
-        final int position = mViewPager.getCurrentItem();
-        final Cursor cursor = mAdapter.getCursor();
-
-        if (cursor == null) {
-            return null;
-        }
-
-        cursor.moveToPosition(position);
-
-        return cursor;
-    }
-
-    public Cursor getCursor() {
-        return (mAdapter == null) ? null : mAdapter.getCursor();
-    }
-
-    @Override
-    public void onMenuVisibilityChanged(boolean isVisible) {
-        if (isVisible) {
-            cancelEnterFullScreenRunnable();
-        } else {
-            postEnterFullScreenRunnableWithDelay();
-        }
-    }
-
-    @Override
-    public void onNewPhotoLoaded(int position) {
-        // do nothing
-    }
-
-    protected void setPhotoIndex(int index) {
-        mCurrentPhotoIndex = index;
-    }
-
-    @Override
-    public void onFragmentPhotoLoadComplete(PhotoViewFragment fragment, boolean success) {
-        if (hasTemporaryImage() && mTemporaryImage.getVisibility() != View.GONE &&
-                TextUtils.equals(fragment.getPhotoUri(), mCurrentPhotoUri)) {
-            if (success) {
-                // The fragment for the current image is now ready for display.
-                if (hasTemporaryImage()) {
-                    mTemporaryImage.setVisibility(View.GONE);
-                }
-                mViewPager.setVisibility(View.VISIBLE);
-            } else {
-                // This means that we are unable to load the fragment's photo.
-                // I'm not sure what the best thing to do here is, but at least if
-                // we display the viewPager, the fragment itself can decide how to
-                // display the failure of its own image.
-                Log.w(TAG, "Failed to load fragment image");
-                if (hasTemporaryImage()) {
-                    mTemporaryImage.setVisibility(View.GONE);
-                }
-                mViewPager.setVisibility(View.VISIBLE);
-            }
-            mActivity.getSupportLoaderManager().destroyLoader(
-                    PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL);
-        }
-    }
-
-    protected boolean isFullScreen() {
-        return mFullScreen;
-    }
-
-    @Override
-    public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor) {
-        // do nothing
-    }
-
-    @Override
-    public PhotoPagerAdapter getAdapter() {
-        return mAdapter;
-    }
-
-    public void onEnterAnimationComplete() {
-        mEnterAnimationFinished = true;
-        mViewPager.setVisibility(View.VISIBLE);
-        setLightsOutMode(mFullScreen);
-    }
-
-    private void onExitAnimationComplete() {
-        mActivity.finish();
-        mActivity.overridePendingTransition(0, 0);
     }
 
     private void runEnterAnimation() {
@@ -1024,7 +778,7 @@ public class PhotoViewController implements
                     }
                 };
                 ViewPropertyAnimator animator = mTemporaryImage.animate().scaleX(1f).scaleY(1f)
-                    .translationX(0).translationY(0).setDuration(ENTER_ANIMATION_DURATION_MS);
+                        .translationX(0).translationY(0).setDuration(ENTER_ANIMATION_DURATION_MS);
                 if (version >= Build.VERSION_CODES.JELLY_BEAN) {
                     animator.withEndAction(endRunnable);
                 } else {
@@ -1111,12 +865,12 @@ public class PhotoViewController implements
             ViewPropertyAnimator animator = null;
             if (hasTemporaryImage() && mTemporaryImage.getVisibility() == View.VISIBLE) {
                 animator = mTemporaryImage.animate().scaleX(scale).scaleY(scale)
-                    .translationX(translateX).translationY(translateY)
-                    .setDuration(EXIT_ANIMATION_DURATION_MS);
+                        .translationX(translateX).translationY(translateY)
+                        .setDuration(EXIT_ANIMATION_DURATION_MS);
             } else {
                 animator = mViewPager.animate().scaleX(scale).scaleY(scale)
-                    .translationX(translateX).translationY(translateY)
-                    .setDuration(EXIT_ANIMATION_DURATION_MS);
+                        .translationX(translateX).translationY(translateY)
+                        .setDuration(EXIT_ANIMATION_DURATION_MS);
             }
             // If the user has swiped to a different photo, fade out the current photo
             // along with the scale animation.
@@ -1165,128 +919,46 @@ public class PhotoViewController implements
         }
     }
 
-    private int calculateTranslate(int start, int startSize, int totalSize, float scale) {
-        // Translation takes precedence over scale.  What this means is that if
-        // we want an view's upper left corner to be a particular spot on screen,
-        // but that view is scaled to something other than 1, we need to take into
-        // account the pixels lost to scaling.
-        // So if we have a view that is 200x300, and we want it's upper left corner
-        // to be at 50x50, but it's scaled by 50%, we can't just translate it to 50x50.
-        // If we were to do that, the view's *visible* upper left corner would be at
-        // 100x200.  We need to take into account the difference between the outside
-        // size of the view (i.e. the size prior to scaling) and the scaled size.
-        // scaleFromEdge is the difference between the visible left edge and the
-        // actual left edge, due to scaling.
-        // scaleFromTop is the difference between the visible top edge, and the
-        // actual top edge, due to scaling.
-        int scaleFromEdge = Math.round((totalSize - totalSize * scale) / 2);
-
-        // The imageView is fullscreen, regardless of the aspect ratio of the actual image.
-        // This means that some portion of the imageView will be blank.  We need to
-        // take into account the size of the blank area so that the actual image
-        // lines up with the starting image.
-        int blankSize = Math.round((totalSize * scale - startSize) / 2);
-
-        return start - scaleFromEdge - blankSize;
-    }
-
-    private void initTemporaryImage(Drawable drawable) {
-        if (mEnterAnimationFinished) {
-            // Forget this, we've already run the animation.
+    /**
+     * Sets the Action Bar title to {@link #mActionBarTitle} and the subtitle to
+     * {@link #mActionBarSubtitle}
+     */
+    protected final void setActionBarTitles(ActionBarInterface actionBar) {
+        if (actionBar == null) {
             return;
         }
-        if (hasTemporaryImage()) {
-            mTemporaryImage.setImageDrawable(drawable);
-        }
-        if (drawable != null) {
-            // We have not yet run the enter animation. Start it now.
-            int totalWidth = mRootView.getMeasuredWidth();
-            if (totalWidth == 0) {
-                // the measure pass has not yet finished.  We can't properly
-                // run out animation until that is done. Listen for the layout
-                // to occur, then fire the animation.
-                final View base = mRootView;
-                base.getViewTreeObserver().addOnGlobalLayoutListener(
-                        new OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        int version = Build.VERSION.SDK_INT;
-                        if (version >= Build.VERSION_CODES.JELLY_BEAN) {
-                            base.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        } else {
-                            base.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                        }
-                        runEnterAnimation();
-                    }
-                });
-            } else {
-                // initiate the animation
-                runEnterAnimation();
-            }
-        }
-        // Kick off the photo list loader
-        mActivity.getSupportLoaderManager().initLoader(LOADER_PHOTO_LIST, null, this);
+        actionBar.setTitle(getInputOrEmpty(mActionBarTitle));
+        actionBar.setSubtitle(getInputOrEmpty(mActionBarSubtitle));
     }
 
-    public void showActionBar() {
-        mActivity.getActionBarInterface().show();
-    }
-
-    public void hideActionBar() {
-        mActivity.getActionBarInterface().hide();
-    }
-
-    public boolean isScaleAnimationEnabled() {
-        return mScaleAnimationEnabled;
-    }
-
-    public boolean isEnterAnimationFinished() {
-        return mEnterAnimationFinished;
-    }
-
-    public View getRootView() {
-        return mRootView;
-    }
-
-    private class BitmapCallback implements LoaderManager.LoaderCallbacks<BitmapResult> {
-
-        @Override
-        public Loader<BitmapResult> onCreateLoader(int id, Bundle args) {
-            String uri = args.getString(ARG_IMAGE_URI);
-            switch (id) {
-                case PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL:
-                    return onCreateBitmapLoader(PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL,
-                            args, uri);
-                case PhotoViewCallbacks.BITMAP_LOADER_AVATAR:
-                    return onCreateBitmapLoader(PhotoViewCallbacks.BITMAP_LOADER_AVATAR,
-                            args, uri);
-            }
-            return null;
+    /**
+     * Updates the title bar according to the value of {@link #mFullScreen}.
+     */
+    protected void setFullScreen(boolean fullScreen, boolean setDelayedRunnable) {
+        if (Util.isTouchExplorationEnabled(mAccessibilityManager)) {
+            // Disallow full screen mode when accessibility is enabled so that the action bar
+            // stays accessible.
+            fullScreen = false;
+            setDelayedRunnable = false;
         }
 
-        @Override
-        public void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
-            Drawable drawable = result.getDrawable(mActivity.getResources());
-            final ActionBarInterface actionBar = mActivity.getActionBarInterface();
-            switch (loader.getId()) {
-                case PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL:
-                    // We just loaded the initial thumbnail that we can display
-                    // while waiting for the full viewPager to get initialized.
-                    initTemporaryImage(drawable);
-                    break;
-                case PhotoViewCallbacks.BITMAP_LOADER_AVATAR:
-                    if (drawable == null) {
-                        actionBar.setLogo(null);
-                    } else {
-                        actionBar.setLogo(drawable);
-                    }
-                    break;
+        final boolean fullScreenChanged = (fullScreen != mFullScreen);
+        mFullScreen = fullScreen;
+
+        if (mFullScreen) {
+            setLightsOutMode(true);
+            cancelEnterFullScreenRunnable();
+        } else {
+            setLightsOutMode(false);
+            if (setDelayedRunnable) {
+                postEnterFullScreenRunnableWithDelay();
             }
         }
 
-        @Override
-        public void onLoaderReset(Loader<BitmapResult> loader) {
-            // Do nothing
+        if (fullScreenChanged) {
+            for (OnScreenListener listener : mScreenListeners.values()) {
+                listener.onFullScreenChanged(mFullScreen);
+            }
         }
     }
 
@@ -1354,22 +1026,418 @@ public class PhotoViewController implements
         }
     }
 
-    /**
-     * Return true iff the app is being run as a secondary user on kitkat.
-     *
-     * This is a hack which we only know to work on kitkat.
-     */
-    private boolean kitkatIsSecondaryUser() {
-        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.KITKAT) {
-            throw new IllegalStateException("kitkatIsSecondary user is only callable on KitKat");
-        }
-        return Process.myUid() > 100000;
+    protected void setLightsOutMode(boolean enabled) {
+        setImmersiveMode(enabled);
+    }
+
+    protected void setPhotoIndex(int index) {
+        mCurrentPhotoIndex = index;
+    }
+
+    public void showActionBar() {
+        mActivity.getActionBarInterface().show();
     }
 
     /**
-     * Note: This should only be called when API level is 11 or above.
+     * Adjusts the activity title and subtitle to reflect the photo name and count.
      */
-    public View.OnSystemUiVisibilityChangeListener getSystemUiVisibilityChangeListener() {
-        return mSystemUiVisibilityChangeListener;
+    public void updateActionBar() {
+        final int position = mViewPager.getCurrentItem() + 1;
+        final boolean hasAlbumCount = mAlbumCount >= 0;
+
+        final Cursor cursor = getCursorAtProperPosition();
+        if (cursor != null) {
+            // FLAG: We should grab the indexes when we first get the cursor
+            // and store them so we don't need to do it each time.
+            final int photoNameIndex = cursor.getColumnIndex(PhotoContract.PhotoViewColumns.NAME);
+            mActionBarTitle = cursor.getString(photoNameIndex);
+        } else {
+            mActionBarTitle = null;
+        }
+
+        if (mIsEmpty || !hasAlbumCount || position <= 0) {
+            mActionBarSubtitle = null;
+        } else {
+            mActionBarSubtitle = mActivity.getResources().getString(
+                    R.string.photo_view_count, position, mAlbumCount);
+        }
+
+        setActionBarTitles(mActivity.getActionBarInterface());
+    }
+
+    public void updateActionItems() {
+        // Do nothing, but allow extending classes to do work
+    }
+
+    /**
+     * If the input string is non-null, it is returned, otherwise an empty string is returned;
+     *
+     * @param in
+     * @return
+     */
+    private static final String getInputOrEmpty(String in) {
+        if (in == null) {
+            return "";
+        }
+        return in;
+    }
+
+    @Override
+    public synchronized void addCursorListener(CursorChangedListener listener) {
+        mCursorListeners.add(listener);
+    }
+
+    @Override
+    public void addScreenListener(int position, OnScreenListener listener) {
+        mScreenListeners.put(position, listener);
+    }
+
+    @Override
+    public PhotoPagerAdapter getAdapter() {
+        return mAdapter;
+    }
+
+    @Override
+    public boolean isFragmentActive(Fragment fragment) {
+        if (mViewPager == null || mAdapter == null) {
+            return false;
+        }
+        return mViewPager.getCurrentItem() == mAdapter.getItemPosition(fragment);
+    }
+
+    @Override
+    public boolean isFragmentFullScreen(Fragment fragment) {
+        if (mViewPager == null || mAdapter == null || mAdapter.getCount() == 0) {
+            return mFullScreen;
+        }
+        return mFullScreen || (mViewPager.getCurrentItem() != mAdapter.getItemPosition(fragment));
+    }
+
+    @Override
+    public Loader<BitmapResult> onCreateBitmapLoader(int id, Bundle args, String uri) {
+        switch (id) {
+            case BITMAP_LOADER_AVATAR:
+            case BITMAP_LOADER_THUMBNAIL:
+            case BITMAP_LOADER_PHOTO:
+                return new PhotoBitmapLoader(mActivity.getContext(), uri);
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (id == LOADER_PHOTO_LIST) {
+            if (mPhotosUri == null) {
+                mPhotosUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString();
+                mProjection=new  String[] {
+                        Media.DATA
+                };
+                // /data/data/com.android.providers.media/databases/internal.db
+            }
+
+
+            Log.e("TAG/PhotoViewController", "onCreateLoader: " + mProjection);
+
+            return new PhotoPagerLoader(mActivity.getContext(), Uri.parse(mPhotosUri), mProjection);
+        }
+        return null;
+    }
+
+    @Override
+    public void onCursorChanged(PhotoViewFragment fragment, Cursor cursor) {
+        // do nothing
+    }
+
+    @Override
+    public void onFragmentPhotoLoadComplete(PhotoViewFragment fragment, boolean success) {
+        if (hasTemporaryImage() && mTemporaryImage.getVisibility() != View.GONE &&
+                TextUtils.equals(fragment.getPhotoUri(), mCurrentPhotoUri)) {
+            if (success) {
+                // The fragment for the current image is now ready for display.
+                if (hasTemporaryImage()) {
+                    mTemporaryImage.setVisibility(View.GONE);
+                }
+                mViewPager.setVisibility(View.VISIBLE);
+            } else {
+                // This means that we are unable to load the fragment's photo.
+                // I'm not sure what the best thing to do here is, but at least if
+                // we display the viewPager, the fragment itself can decide how to
+                // display the failure of its own image.
+                Log.w(TAG, "Failed to load fragment image");
+                if (hasTemporaryImage()) {
+                    mTemporaryImage.setVisibility(View.GONE);
+                }
+                mViewPager.setVisibility(View.VISIBLE);
+            }
+            mActivity.getSupportLoaderManager().destroyLoader(
+                    PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL);
+        }
+    }
+
+    @Override
+    public void onFragmentVisible(PhotoViewFragment fragment) {
+        // Do nothing, we handle this in setViewActivated
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        final int id = loader.getId();
+        if (id == LOADER_PHOTO_LIST) {
+            if (data == null || data.getCount() == 0) {
+                mIsEmpty = true;
+                mAdapter.swapCursor(null);
+            } else {
+                mAlbumCount = data.getCount();
+                if (mCurrentPhotoUri != null) {
+                    int index = 0;
+                    // Clear query params. Compare only the path.
+                    final int uriIndex = data.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
+                    final Uri currentPhotoUri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                        currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
+                                .clearQuery().build();
+                    } else {
+                        currentPhotoUri = Uri.parse(mCurrentPhotoUri).buildUpon()
+                                .query(null).build();
+                    }
+                    // Rewind data cursor to the start if it has already advanced.
+                    data.moveToPosition(-1);
+                    while (data.moveToNext()) {
+                        final String uriString = data.getString(uriIndex);
+                        final Uri uri;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                            uri = Uri.parse(uriString).buildUpon().clearQuery().build();
+                        } else {
+                            uri = Uri.parse(uriString).buildUpon().query(null).build();
+                        }
+                        if (currentPhotoUri != null && currentPhotoUri.equals(uri)) {
+                            mCurrentPhotoIndex = index;
+                            break;
+                        }
+                        index++;
+                    }
+                }
+
+                // We're paused; don't do anything now, we'll get re-invoked
+                // when the activity becomes active again
+                if (mIsPaused) {
+                    mKickLoader = true;
+                    mAdapter.swapCursor(null);
+                    return;
+                }
+                boolean wasEmpty = mIsEmpty;
+                mIsEmpty = false;
+
+                mAdapter.swapCursor(data);
+                if (mViewPager.getAdapter() == null) {
+                    mViewPager.setAdapter(mAdapter);
+                }
+                notifyCursorListeners(data);
+
+                // Use an index of 0 if the index wasn't specified or couldn't be found
+                if (mCurrentPhotoIndex < 0) {
+                    mCurrentPhotoIndex = 0;
+                }
+
+                mViewPager.setCurrentItem(mCurrentPhotoIndex, false);
+                if (wasEmpty) {
+                    setViewActivated(mCurrentPhotoIndex);
+                }
+            }
+            // Update the any action items
+            updateActionItems();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        // If the loader is reset, remove the reference in the adapter to this cursor
+        if (!isDestroyedCompat()) {
+            // This will cause a fragment transaction which can't happen if we're destroyed,
+            // but we don't care in that case because we're destroyed anyways.
+            mAdapter.swapCursor(null);
+        }
+    }
+
+    @Override
+    public void onMenuVisibilityChanged(boolean isVisible) {
+        if (isVisible) {
+            cancelEnterFullScreenRunnable();
+        } else {
+            postEnterFullScreenRunnableWithDelay();
+        }
+    }
+
+    @Override
+    public void onNewPhotoLoaded(int position) {
+        // do nothing
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+        if (positionOffset < 0.0001) {
+            OnScreenListener before = mScreenListeners.get(position - 1);
+            if (before != null) {
+                before.onViewUpNext();
+            }
+            OnScreenListener after = mScreenListeners.get(position + 1);
+            if (after != null) {
+                after.onViewUpNext();
+            }
+        }
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        mCurrentPhotoIndex = position;
+        setViewActivated(position);
+    }
+
+    @Override
+    public InterceptType onTouchIntercept(float origX, float origY) {
+        boolean interceptLeft = false;
+        boolean interceptRight = false;
+
+        for (OnScreenListener listener : mScreenListeners.values()) {
+            if (!interceptLeft) {
+                interceptLeft = listener.onInterceptMoveLeft(origX, origY);
+            }
+            if (!interceptRight) {
+                interceptRight = listener.onInterceptMoveRight(origX, origY);
+            }
+        }
+
+        if (interceptLeft) {
+            if (interceptRight) {
+                return InterceptType.BOTH;
+            }
+            return InterceptType.LEFT;
+        } else if (interceptRight) {
+            return InterceptType.RIGHT;
+        }
+        return InterceptType.NONE;
+    }
+
+    @Override
+    public synchronized void removeCursorListener(CursorChangedListener listener) {
+        mCursorListeners.remove(listener);
+    }
+
+    @Override
+    public void removeScreenListener(int position) {
+        mScreenListeners.remove(position);
+    }
+
+    @Override
+    public void setViewActivated(int position) {
+        OnScreenListener listener = mScreenListeners.get(position);
+        if (listener != null) {
+            listener.onViewActivated();
+        }
+        final Cursor cursor = getCursorAtProperPosition();
+        mCurrentPhotoIndex = position;
+        // FLAG: get the column indexes once in onLoadFinished().
+        // That would make this more efficient, instead of looking these up
+        // repeatedly whenever we want them.
+        int uriIndex = cursor.getColumnIndex(PhotoContract.PhotoViewColumns.URI);
+        mCurrentPhotoUri = cursor.getString(uriIndex);
+        updateActionBar();
+        if (mAccessibilityManager.isEnabled() && lastAnnouncedTitle != position) {
+            String announcement = getPhotoAccessibilityAnnouncement(position);
+            if (announcement != null) {
+                Util.announceForAccessibility(mRootView, mAccessibilityManager, announcement);
+                lastAnnouncedTitle = position;
+            }
+        }
+
+        // Restart the timer to return to fullscreen.
+        cancelEnterFullScreenRunnable();
+        postEnterFullScreenRunnableWithDelay();
+    }
+
+    @Override
+    public void toggleFullScreen() {
+        setFullScreen(!mFullScreen, true);
+    }
+
+    /**
+     * Defines the interface between the Activity and this class.
+     * <p>
+     * The activity itself must delegate all appropriate method calls into this class, to the
+     * methods of the same name.
+     */
+    public interface ActivityInterface {
+        public <T extends View> T findViewById(int id);
+
+        public void finish();
+
+        public ActionBarInterface getActionBarInterface();
+
+        public Context getApplicationContext();
+
+        public Context getContext();
+
+        public PhotoViewController getController();
+
+        public Intent getIntent();
+
+        public Resources getResources();
+
+        public FragmentManager getSupportFragmentManager();
+
+        public LoaderManager getSupportLoaderManager();
+
+        public boolean onOptionsItemSelected(MenuItem item);
+
+        public void overridePendingTransition(int enterAnim, int exitAnim);
+
+        public void setContentView(int resId);
+    }
+
+    private class BitmapCallback implements LoaderManager.LoaderCallbacks<BitmapResult> {
+
+        @Override
+        public Loader<BitmapResult> onCreateLoader(int id, Bundle args) {
+            String uri = args.getString(ARG_IMAGE_URI);
+            switch (id) {
+                case PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL:
+                    return onCreateBitmapLoader(PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL,
+                            args, uri);
+                case PhotoViewCallbacks.BITMAP_LOADER_AVATAR:
+                    return onCreateBitmapLoader(PhotoViewCallbacks.BITMAP_LOADER_AVATAR,
+                            args, uri);
+            }
+            return null;
+        }
+
+        @Override
+        public void onLoadFinished(Loader<BitmapResult> loader, BitmapResult result) {
+            Drawable drawable = result.getDrawable(mActivity.getResources());
+            final ActionBarInterface actionBar = mActivity.getActionBarInterface();
+            switch (loader.getId()) {
+                case PhotoViewCallbacks.BITMAP_LOADER_THUMBNAIL:
+                    // We just loaded the initial thumbnail that we can display
+                    // while waiting for the full viewPager to get initialized.
+                    initTemporaryImage(drawable);
+                    break;
+                case PhotoViewCallbacks.BITMAP_LOADER_AVATAR:
+                    if (drawable == null) {
+                        actionBar.setLogo(null);
+                    } else {
+                        actionBar.setLogo(drawable);
+                    }
+                    break;
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<BitmapResult> loader) {
+            // Do nothing
+        }
     }
 }

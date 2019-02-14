@@ -7,7 +7,10 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
 
     void onClicked(DocumentInfo documentInfo);
 
+
     void updateItem(DocumentInfo documentInfo);
+
+    void unzip(DocumentInfo documentInfo);
 
     void share(DocumentInfo documentInfo);
 
