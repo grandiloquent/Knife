@@ -32,8 +32,9 @@ public class UnZipJob {
             if (!outputDirectory.isDirectory())
                 outputDirectory.mkdir();
         }
-        byte[] data = readAllBytes(srcFile);
-
+        FileInputStream inputStream = new FileInputStream(srcFile);
+        byte[] data = FileUtils.toByteArray(inputStream);
+        FileUtils.closeSilently(inputStream);
 
         ByteArrayInputStream bai = new ByteArrayInputStream(data);
         GzipCompressorInputStream gci = new GzipCompressorInputStream(bai);
@@ -139,26 +140,6 @@ public class UnZipJob {
         File d = new File(outdir, path);
         if (!d.exists())
             d.mkdirs();
-    }
-
-    public static byte[] readAllBytes(File file) throws Exception {
-        FileInputStream fis = new FileInputStream(file);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] result = null;
-        try {
-            byte[] fetchByte = new byte[1024];
-            int readByte = fis.read(fetchByte);
-            while (readByte != -1) {
-                baos.write(fetchByte, 0, readByte);
-                readByte = fis.read(fetchByte);
-            }
-            result = baos.toByteArray();
-        } catch (Exception e) {
-        } finally {
-            baos.close();
-            fis.close();
-        }
-        return result;
     }
 
 

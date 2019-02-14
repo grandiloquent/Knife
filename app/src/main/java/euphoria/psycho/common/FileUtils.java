@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.File;
@@ -494,6 +495,13 @@ public class FileUtils {
         final long skipped = skip(input, toSkip);
         if (skipped != toSkip) {
             throw new EOFException("Chars to skip: " + toSkip + " actual: " + skipped);
+        }
+    }
+
+    public static byte[] toByteArray(final InputStream input) throws IOException {
+        try (final ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            copy(input, output);
+            return output.toByteArray();
         }
     }
 }
