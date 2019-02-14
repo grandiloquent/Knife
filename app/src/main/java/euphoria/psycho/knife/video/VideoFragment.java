@@ -44,13 +44,11 @@ import euphoria.psycho.common.ManagerUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
-import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.common.widget.ChromeImageButton;
 import euphoria.psycho.common.widget.SystemUtils;
 import euphoria.psycho.common.widget.TimeBar;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.download.DownloadFragment;
 
 public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 

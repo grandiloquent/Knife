@@ -16,9 +16,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.log.FileLogger;
-import euphoria.psycho.knife.service.Job;
-
-import static euphoria.psycho.common.C.DEBUG;
 
 
 public class DownloadService extends Service implements DownloadObserver {

@@ -1,16 +1,13 @@
 package euphoria.psycho.knife.download;
 
-import android.app.Activity;
 import android.content.ClipboardManager;
 import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.Context;
 import android.os.Environment;
-import android.text.Selection;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.URLUtil;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,7 +20,6 @@ import androidx.appcompat.widget.Toolbar.OnMenuItemClickListener;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.ContentUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.ThreadUtils;

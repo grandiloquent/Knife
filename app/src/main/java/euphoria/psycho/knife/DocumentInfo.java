@@ -1,8 +1,6 @@
 package euphoria.psycho.knife;
 
 
-import euphoria.psycho.common.StringUtils;
-
 public class DocumentInfo {
 
     private final String fileName;

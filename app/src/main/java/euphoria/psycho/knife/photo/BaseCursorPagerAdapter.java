@@ -6,7 +6,6 @@ import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.View;
 
-
 import java.util.HashMap;
 
 import androidx.fragment.app.Fragment;

@@ -1,6 +1,5 @@
 package euphoria.psycho.knife.download;
 
-import android.content.Context;
 import android.os.SystemClock;
 
 import java.io.File;
@@ -16,9 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
-
 import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.log.FileLogger;
 
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;

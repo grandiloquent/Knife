@@ -7,12 +7,10 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 
-import java.util.Formatter;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class TimeBar extends View {

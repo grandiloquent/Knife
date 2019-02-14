@@ -1,24 +1,13 @@
 package euphoria.psycho.knife;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.Uri;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
-import android.os.Handler;
-import android.os.Looper;
-import android.provider.DocumentsContract;
-import android.text.Selection;
 import android.view.Window;
-import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
 import java.text.Collator;
@@ -28,27 +17,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AlertDialog.Builder;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
-import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
-import euphoria.psycho.common.widget.KeyboardVisibilityDelegate;
 import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
-import euphoria.psycho.knife.video.VideoFragment;
 
 
 public class DocumentUtils {

@@ -1,71 +1,47 @@
 package euphoria.psycho.knife;
 
-import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
-import android.widget.LinearLayout;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.RecyclerView.LayoutManager;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
-import euphoria.psycho.common.BitmapUtils;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;
-import euphoria.psycho.common.IconUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
-import euphoria.psycho.common.base.Job;
-import euphoria.psycho.common.base.Job.Listener;
-import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
-import euphoria.psycho.knife.DocumentUtils.Consumer;
 import euphoria.psycho.knife.UnZipJob.UnZipListener;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
-import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
 import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.knife.download.DownloadActivity;
 import euphoria.psycho.knife.video.VideoFragment;
 
-import static euphoria.psycho.knife.DocumentUtils.calculateDirectory;
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
 
 public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,

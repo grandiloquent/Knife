@@ -2,14 +2,9 @@ package euphoria.psycho.knife.photo;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaScannerConnection;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import java.io.File;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;

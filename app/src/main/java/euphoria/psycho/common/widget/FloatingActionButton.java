@@ -20,8 +20,6 @@ import android.graphics.drawable.shapes.OvalShape;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 
 import euphoria.psycho.knife.R;

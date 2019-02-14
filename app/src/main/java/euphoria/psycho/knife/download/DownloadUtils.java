@@ -15,8 +15,6 @@ import android.text.format.Formatter;
 
 import java.util.concurrent.TimeUnit;
 
-import androidx.core.app.NotificationCompat;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.knife.R;
 
 import static euphoria.psycho.knife.download.DownloadService.ACTION_DOWNLOAD_CANCEL;

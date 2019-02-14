@@ -15,7 +15,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.List;
-import java.util.Locale;
+import java.util.zip.ZipFile;
 
 // https://android.googlesource.com/platform/packages/apps/UnifiedEmail/+/kitkat-mr1-release/src/org/apache/commons/io
 
@@ -23,9 +23,9 @@ import java.util.Locale;
  * Helper methods for dealing with Files.
  */
 public class FileUtils {
+    public static final int DEFAULT_BUFFER_SIZE= 4096;
     public static final int EOF = -1;
     public static final char EXTENSION_SEPARATOR = '.';
-    private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     private static final int SKIP_BUFFER_SIZE = 2048;
     private static byte[] SKIP_BYTE_BUFFER;
     private static char[] SKIP_CHAR_BUFFER;
@@ -50,6 +50,36 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Handle closing a {@link Closeable} via {@link Closeable#close()} and catch
+     * the potentially thrown {@link IOException}.
+     * @param closeable The Closeable to be closed.
+     */
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable == null) return;
+
+        try {
+            closeable.close();
+        } catch (IOException ex) {
+            // Ignore the exception on close.
+        }
+    }
+
+    /**
+     * Overload of the above function for {@link ZipFile} which implements Closeable only starting
+     * from api19.
+     * @param zipFile - the ZipFile to be closed.
+     */
+    public static void closeQuietly(ZipFile zipFile) {
+        if (zipFile == null) return;
+
+        try {
+            zipFile.close();
+        } catch (IOException ex) {
+            // Ignore the exception on close.
+        }
+    }
+
     public static void closeSilently(Closeable closeable) {
         try {
             closeable.close();
@@ -61,6 +91,14 @@ public class FileUtils {
     public static long copy(final InputStream input, final OutputStream output, final int bufferSize)
             throws IOException {
         return copyLarge(input, output, new byte[bufferSize]);
+    }
+
+    public static int copy(final InputStream input, final OutputStream output) throws IOException {
+        final long count = copyLarge(input, output);
+        if (count > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return (int) count;
     }
 
     /**
@@ -87,13 +125,7 @@ public class FileUtils {
             throw new IOException();
         }
     }
-    public static int copy(final InputStream input, final OutputStream output) throws IOException {
-        final long count = copyLarge(input, output);
-        if (count > Integer.MAX_VALUE) {
-            return -1;
-        }
-        return (int) count;
-    }
+
     public static long copyLarge(final InputStream input, final OutputStream output, final byte[] buffer)
             throws IOException {
         long count = 0;

@@ -2,12 +2,10 @@ package euphoria.psycho.knife.cache;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapFactory.Options;
 
 import euphoria.psycho.common.BitmapUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.IconUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.knife.cache.ThumbnailProvider.ThumbnailRequest;
 
 public class ThumbnailGenerator {

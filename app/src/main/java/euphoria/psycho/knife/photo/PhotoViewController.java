@@ -7,11 +7,9 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Process;
 import android.provider.MediaStore;
@@ -34,8 +32,6 @@ import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 
-
-import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,13 +44,9 @@ import androidx.fragment.app.FragmentManager;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
-import euphoria.psycho.common.ContentUriUtils;
-import euphoria.psycho.common.FileProviderHelper;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.photo.ActionBarInterface.OnMenuVisibilityListener;
 import euphoria.psycho.knife.photo.PhotoBitmapLoaderInterface.BitmapResult;
-import euphoria.psycho.knife.photo.PhotoContract.PhotoViewColumns;
 import euphoria.psycho.knife.photo.PhotoViewPager.InterceptType;
 import euphoria.psycho.knife.photo.PhotoViewPager.OnInterceptTouchListener;
 

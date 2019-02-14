@@ -1,8 +1,5 @@
 package euphoria.psycho.common.task;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import euphoria.psycho.common.annotations.VisibleForTesting;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 class ChromeThreadPoolExecutor extends ThreadPoolExecutor {
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();

@@ -8,7 +8,6 @@ import android.os.SystemClock;
 import java.io.File;
 import java.util.List;
 
-import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.knife.R;
 

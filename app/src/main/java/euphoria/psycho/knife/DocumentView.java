@@ -13,25 +13,18 @@ import java.io.ByteArrayOutputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.content.res.AppCompatResources;
 import euphoria.psycho.common.ApiCompatibilityUtils;
 import euphoria.psycho.common.BitmapUtils;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.IconUtils;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.Utils;
-import euphoria.psycho.common.ViewUtils;
 import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.widget.ListMenuButton;
-import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
-import euphoria.psycho.knife.download.DownloadStatus;
-
-import static euphoria.psycho.common.C.DEBUG;
 
 public class DocumentView extends SelectableItemView<DocumentInfo> implements ListMenuButton.Delegate, ThumbnailProvider.ThumbnailRequest {
 

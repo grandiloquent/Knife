@@ -3,7 +3,6 @@ package euphoria.psycho.knife.download;
 import android.content.Context;
 
 import java.io.File;
-import java.util.Formatter;
 
 import euphoria.psycho.common.StringUtils;
 import euphoria.psycho.knife.R;

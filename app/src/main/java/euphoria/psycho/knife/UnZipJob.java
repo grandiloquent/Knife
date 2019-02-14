@@ -11,17 +11,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import euphoria.psycho.common.Log;
-import euphoria.psycho.common.StreamUtil;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.StringUtils;
 
 public class UnZipJob {
@@ -47,7 +40,7 @@ public class UnZipJob {
         TarArchiveInputStream tai = new TarArchiveInputStream(gci);
 
         try {
-            byte[] buffer = new byte[StreamUtil.DEFAULT_BUFFER_SIZE];
+            byte[] buffer = new byte[FileUtils.DEFAULT_BUFFER_SIZE];
             TarArchiveEntry entry = tai.getNextTarEntry();
             while (entry != null) {
                 if (entry.isDirectory()) {
@@ -134,7 +127,7 @@ public class UnZipJob {
     }
 
     private static void extractFile(ZipInputStream in, File outdir, String name) throws IOException {
-        byte[] buffer = new byte[StreamUtil.DEFAULT_BUFFER_SIZE];
+        byte[] buffer = new byte[FileUtils.DEFAULT_BUFFER_SIZE];
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outdir, name)));
         int count = -1;
         while ((count = in.read(buffer)) != -1)

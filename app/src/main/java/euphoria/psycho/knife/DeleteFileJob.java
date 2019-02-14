@@ -3,8 +3,6 @@ package euphoria.psycho.knife;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -12,15 +10,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.File;
-import java.util.List;
 
-import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.StorageUtils;
 import euphoria.psycho.common.ThreadUtils;
 import euphoria.psycho.common.base.Job;
-
-import static euphoria.psycho.common.StorageUtils.deleteFile;
 
 public class DeleteFileJob extends Job {
     private final Context mContext;

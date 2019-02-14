@@ -3,7 +3,6 @@ package euphoria.psycho.knife.cache;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Locale;

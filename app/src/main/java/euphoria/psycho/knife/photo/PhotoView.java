@@ -19,7 +19,6 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
 
-
 import androidx.core.view.GestureDetectorCompat;
 import androidx.core.view.ScaleGestureDetectorCompat;
 import euphoria.psycho.knife.R;

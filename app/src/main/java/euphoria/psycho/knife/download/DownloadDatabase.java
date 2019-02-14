@@ -11,8 +11,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import euphoria.psycho.common.ContextUtils;
-
 
 public class DownloadDatabase extends SQLiteOpenHelper {
     public static final int DATABASE_VERSION = 1;

@@ -1,12 +1,7 @@
 package euphoria.psycho.knife;
 
 import android.content.Intent;
-import android.os.Environment;
-import android.view.MenuItem;
 
-import java.io.File;
-
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.ContextUtils;

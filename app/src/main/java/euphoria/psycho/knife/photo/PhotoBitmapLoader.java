@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.DisplayMetrics;
 
-
 import androidx.loader.content.AsyncTaskLoader;
 import euphoria.psycho.knife.photo.PhotoBitmapLoaderInterface.BitmapResult;
 
