@@ -6,7 +6,7 @@
 * [ ] 基于目录浏览的图片浏览器
 * [ ] 深度清理储存空间
 
-[下载](/app/release/app-release.apk)
+[下载](https://github.com/grandiloquent/Knife/blob/master/app/release/app-release.apk?raw=true)
 
 <div>
 <img width="360" src="screenshots\Screenshot_2019-02-11-14-30-05.png">
