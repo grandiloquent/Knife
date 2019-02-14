@@ -35,10 +35,8 @@ import static euphoria.psycho.common.C.DEBUG;
 
 public class DocumentView extends SelectableItemView<DocumentInfo> implements ListMenuButton.Delegate, ThumbnailProvider.ThumbnailRequest {
 
-    private static final String TAG = "TAG/" + DocumentView.class.getSimpleName();
     private final ColorStateList mCheckedIconForegroundColorList;
     private final int mIconBackgroundResId;
-    private final ColorStateList mIconForegroundColorList;
     DocumentActionDelegate mDelegate;
     private ListMenuButton mMore;
     private int mIconSize;
@@ -52,8 +50,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
 
         mIconBackgroundResId = R.drawable.list_item_icon_modern_bg;
         mCheckedIconForegroundColorList = DocumentUtils.getIconForegroundColorList(context);
-        mIconForegroundColorList =
-                AppCompatResources.getColorStateList(context, R.color.dark_mode_tint);
+
     }
 
     public void initializeActionDelegate(DocumentActionDelegate delegate, SelectionDelegate selectionDelegate) {
@@ -214,6 +211,8 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
     public void setItem(DocumentInfo documentInfo) {
         if (getItem() == documentInfo) return;
         super.setItem(documentInfo);
+        mDelegate.getThumbnailProvider().cancelRetrieval(this);
+        mThumbnailBitmap = null;
 
         mTitleView.setText(documentInfo.getFileName());
         mIconDrawable = IconHelper.getIcon(documentInfo.getType());
@@ -225,10 +224,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
                 break;
             case C.TYPE_APK:
             case C.TYPE_VIDEO:
-                mDelegate.getThumbnailProvider().cancelRetrieval(this);
-                mThumbnailBitmap = null;
                 mDelegate.getThumbnailProvider().getThumbnail(this);
-                if (mThumbnailBitmap == null) updateView();
                 break;
 
         }
@@ -255,11 +251,11 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             assert !mThumbnailBitmap.isRecycled();
             mIconView.setBackground(null);
 
-
-            mIconView.setImageDrawable(ViewUtils.createRoundedBitmapDrawable(
-                    Bitmap.createScaledBitmap(mThumbnailBitmap, mIconSize, mIconSize, false),
-                    getResources().getDimensionPixelSize(
-                            R.dimen.list_item_start_icon_corner_radius)));
+            mIconView.setImageDrawable(new BitmapDrawable(mThumbnailBitmap));
+//            mIconView.setImageDrawable(ViewUtils.createRoundedBitmapDrawable(
+//                    Bitmap.createScaledBitmap(mThumbnailBitmap, mIconSize, mIconSize, false),
+//                    getResources().getDimensionPixelSize(
+//                            R.dimen.list_item_start_icon_corner_radius)));
             ApiCompatibilityUtils.setImageTintList(mIconView, null);
         } else {
 
@@ -268,7 +264,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             mIconView.getBackground().setLevel(
                     getResources().getInteger(R.integer.list_item_level_default));
             mIconView.setImageDrawable(mIconDrawable);
-            //ApiCompatibilityUtils.setImageTintList(mIconView, mIconForegroundColorList);
+            ApiCompatibilityUtils.setImageTintList(mIconView, null);
         }
     }
 }
