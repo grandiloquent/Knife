@@ -111,9 +111,7 @@ public class PhotoManager {
 
     }
 
-    public static File getCameraDirectory() {
-        return new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DCIM), "Camera");
-    }
+
 
     public boolean kitkatIsSecondaryUser() {
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.KITKAT) {

@@ -1,4 +1,4 @@
-package euphoria.psycho.common;
+package euphoria.psycho.share.util;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,9 +8,8 @@ import android.text.TextUtils;
 
 import java.io.File;
 
-import euphoria.psycho.knife.R;
+import euphoria.psycho.share.R;
 
-import static euphoria.psycho.common.C.DEBUG;
 
 public class IntentUtils {
 
@@ -44,11 +43,9 @@ public class IntentUtils {
     public static void shareFile(Context context, String path) {
 
         Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(path)));
-        if (DEBUG) {
-            Log.e(TAG, "shareFile: " + NetUtils.getMimeType(path));
-        }
-        intent.setType(NetUtils.getMimeType(path));
+        Uri uri = Uri.fromFile(new File(path));
+        intent.setDataAndType(uri, MimeTypeUtils.getMimeTypeForIntent(path));
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
         context.startActivity(Intent.createChooser(intent, context.getResources().getText(R.string.share)));
     }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
+import euphoria.psycho.share.util.StorageUtils;
 
 public class OperationManager {
     private FloatingActionButton mPaste;
@@ -53,7 +54,21 @@ public class OperationManager {
     }
 
     private void copy() {
+        if (mSource.size() == 0) {
+            hideActionButtons();
+            return;
+        }
 
+        File targetDirectory = mFragment.getDirectory();
+        Context context = mFragment.getContext();
+        String treeUri = FileUtils.getTreeUri().toString();
+
+        for (DocumentInfo documentInfo : mSource) {
+            File srcFile = new File(documentInfo.getPath());
+            if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;
+            StorageUtils.copyFile(context, srcFile, targetDirectory, treeUri);
+        }
+        if (mListener != null) mListener.onFinished(true);
     }
 
     private void cut() {

@@ -19,7 +19,7 @@ import euphoria.psycho.common.C;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.share.util.IconUtils;
 import euphoria.psycho.share.util.ThreadUtils;
-import euphoria.psycho.common.Utils;
+import euphoria.psycho.share.util.Utils;
 import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.widget.ListMenuButton;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
@@ -51,63 +51,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
         setSelectionDelegate(selectionDelegate);
     }
 
-    private void updateImageView(DocumentInfo documentInfo, boolean isVideo) {
-        ThreadUtils.postOnBackgroundThread(() -> {
-            String path = documentInfo.getPath();
-            Drawable drawable = null;
-            BytesBufferPool.BytesBuffer bytesBuffer = App.getBytesBufferPool().get();
 
-            boolean result = App.getImageCacheService().getImageData(documentInfo.getPath(),
-                    C.THUMBNAIL_SMALL, bytesBuffer);
-
-            if (result) {
-
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytesBuffer.data, bytesBuffer.offset, bytesBuffer.length);
-
-                drawable = new BitmapDrawable(getResources(), bitmap);
-
-            } else {
-                Bitmap bitmap;
-                if (isVideo) {
-
-                    bitmap = BitmapUtils.createVideoThumbnail(getItem().getPath());
-
-                    if (bitmap != null) {
-                        bitmap = BitmapUtils.resizeAndCropCenter(bitmap, C.THUMBNAIL_SMALL_SIZE, true);
-                        drawable = new BitmapDrawable(getResources(), bitmap);
-                    }
-
-                } else {
-                    drawable = IconUtils.getAppIcon(documentInfo.getPath());
-                    bitmap = IconUtils.drawableToBitmap(drawable);
-                    if (bitmap != null)
-                        bitmap = BitmapUtils.resizeAndCropCenter(bitmap, C.THUMBNAIL_SMALL_SIZE, true);
-
-                }
-
-                if (bitmap != null) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream(65536);
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                    if (path.equals(getItem().getPath())) {
-                        App.getImageCacheService().putImageData(documentInfo.getPath(),
-
-                                C.THUMBNAIL_SMALL, baos.toByteArray());
-                    }
-                }
-            }
-
-            Drawable finalDrawable = drawable;
-            ThreadUtils.postOnUiThread(() ->
-            {
-                if (finalDrawable != null) {
-                    MemoryCache.instance().put(documentInfo.getPath(), finalDrawable);
-                    if (path.equals(getItem().getPath()))
-                        setIconDrawable(finalDrawable);
-                    //mIconView.setImageDrawable(finalDrawable);
-                }
-            });
-        });
-    }
 
     @Nullable
     @Override

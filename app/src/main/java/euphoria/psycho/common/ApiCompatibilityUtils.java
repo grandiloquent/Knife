@@ -372,30 +372,7 @@ public class ApiCompatibilityUtils {
         return intent;
     }
 
-    /**
-     * Get the URI for a downloaded file.
-     *
-     * @param file A downloaded file.
-     * @return URI for |file|.
-     */
-    public static Uri getUriForDownloadedFile(File file) {
-        return Build.VERSION.SDK_INT > Build.VERSION_CODES.M
-                ? FileUtils.getUriForFile(file)
-                : Uri.fromFile(file);
-    }
 
-    /**
-     * Get a URI for |file| which has the image capture. This function assumes that path of |file|
-     * is based on the result of UiUtils.getDirectoryForImageCapture().
-     *
-     * @param file image capture file.
-     * @return URI for |file|.
-     */
-    public static Uri getUriForImageCaptureFile(File file) {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
-                ? ContentUriUtils.getContentUriFromFile(file)
-                : Uri.fromFile(file);
-    }
 
     /**
      * @see PackageManager#getUserBadgedDrawableForDensity(Drawable drawable,

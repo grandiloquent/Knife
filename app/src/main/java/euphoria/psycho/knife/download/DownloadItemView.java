@@ -16,7 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.view.MarginLayoutParamsCompat;
 import euphoria.psycho.common.ApiCompatibilityUtils;
-import euphoria.psycho.common.Utils;
+import euphoria.psycho.share.util.Utils;
 import euphoria.psycho.common.ViewUtils;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.widget.ListMenuButton;

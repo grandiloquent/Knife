@@ -2,6 +2,7 @@ package euphoria.psycho.knife.photo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.ImageDecoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,10 @@ public class PhotoPagerAdapter extends BaseFragmentPagerAdapter {
         super(fm);
         mContext = context;
         mMaxScale = maxScale;
+    }
+
+    public ImageInfo getImageInfo(int position) {
+        return mImageInfos.get(position);
     }
 
 

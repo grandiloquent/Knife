@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.C;
+import euphoria.psycho.knife.photo.PhotoViewActivity;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
@@ -143,7 +144,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
                 break;
             case R.drawable.ic_action_photo:
-                mDirectory = new File(Environment.getExternalStorageDirectory(), "DCIM");
+                Intent pictureIntent = new Intent(getContext(), PhotoViewActivity.class);
+                startActivity(pictureIntent);
                 break;
             case R.drawable.ic_file_download_blue_24px:
                 Intent downloadIntent = new Intent(getContext(), DownloadActivity.class);

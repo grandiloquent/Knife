@@ -15,7 +15,6 @@ public class App extends BaseApp {
     private static final int BYTESBUFFE_POOL_SIZE = 4;
     private static Status mStatus;
     private static BytesBufferPool sBytesBufferPool;
-    private static ImageCacheService sImageCacheService;
     private DiscardableReferencePool mReferencePool;
 
     public DiscardableReferencePool getReferencePool() {
@@ -33,12 +32,7 @@ public class App extends BaseApp {
         return sBytesBufferPool;
     }
 
-    public static ImageCacheService getImageCacheService() {
-        if (sImageCacheService == null) {
-            sImageCacheService = new ImageCacheService(ContextUtils.getApplicationContext());
-        }
-        return sImageCacheService;
-    }
+
 
     public static Status getmStatus() {
         return mStatus;

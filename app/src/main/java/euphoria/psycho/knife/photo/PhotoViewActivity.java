@@ -3,13 +3,19 @@ package euphoria.psycho.knife.photo;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
+import euphoria.psycho.share.util.AccessibilityUtils;
+import euphoria.psycho.share.util.SystemUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.knife.R;
@@ -22,6 +28,9 @@ public class PhotoViewActivity extends BaseActivity implements
         OnInterceptTouchListener,
         PhotoDelegate {
 
+    public static final int ALBUM_COUNT_UNKNOWN = -1;
+    private final Map<Integer, OnScreenListener>
+            mScreenListeners = new HashMap<Integer, OnScreenListener>();
     private PhotoManager mPhotoManager;
     private PhotoPagerAdapter mAdapter;
     private boolean mFullScreen;
@@ -36,6 +45,29 @@ public class PhotoViewActivity extends BaseActivity implements
     private File mDirectory;
     private ImageLoader mImageLoader;
     private String mPhotosUri;
+    private int mCurrentPhotoIndex;
+    String mActionBarTitle;
+    String mActionBarSubtitle;
+    private int mLastAnnouncedTitle;
+    private String mCurrentPhotoUri;
+    int mAlbumCount = ALBUM_COUNT_UNKNOWN;
+    boolean mIsEmpty;
+    boolean mIsTimerLightsOutEnabled;
+    long mEnterFullScreenDelayTime;
+    private final Runnable mEnterFullScreenRunnable = () -> setFullScreen(true, true);
+
+    private void cancelEnterFullScreenRunnable() {
+        mHandler.removeCallbacks(mEnterFullScreenRunnable);
+    }
+
+    protected String getPhotoAccessibilityAnnouncement(int position) {
+        String announcement = mActionBarTitle;
+        if (mActionBarSubtitle != null) {
+            announcement = getResources().getString(
+                    R.string.titles, mActionBarTitle, mActionBarSubtitle);
+        }
+        return announcement;
+    }
 
     private View getRootView() {
         return mRootView;
@@ -62,14 +94,25 @@ public class PhotoViewActivity extends BaseActivity implements
     private void loadImages() {
         ThreadUtils.postOnBackgroundThread(() -> {
             List<ImageInfo> imageInfos = PhotoManager.collectImageInfos(mDirectory);
+            if (imageInfos == null) {
+                mIsEmpty = true;
+                mAlbumCount = 0;
+            } else {
+                mIsEmpty = false;
+                mAlbumCount = imageInfos.size();
+            }
             ThreadUtils.postOnUiThread(() -> {
                 mAdapter.switchDatas(imageInfos);
+                mViewPager.setVisibility(View.VISIBLE);
+                setViewActivated(mCurrentPhotoIndex);
             });
         });
     }
 
     private void postEnterFullScreenRunnableWithDelay() {
-
+        if (mIsTimerLightsOutEnabled) {
+            mHandler.postDelayed(mEnterFullScreenRunnable, mEnterFullScreenDelayTime);
+        }
     }
 
     private void setFullScreen(boolean fullScreen, boolean setDelayedRunnable) {
@@ -158,7 +201,53 @@ public class PhotoViewActivity extends BaseActivity implements
         }
     }
 
+    public void setViewActivated(int position) {
+
+        Log.e("TAG/PhotoViewActivity", "setViewActivated: ");
+
+        OnScreenListener listener = mScreenListeners.get(position);
+        if (listener != null) {
+            listener.onViewActivated();
+        }
+
+        mCurrentPhotoIndex = position;
+        // FLAG: get the column indexes once in onLoadFinished().
+        // That would make this more efficient, instead of looking these up
+        // repeatedly whenever we want them.
+        mCurrentPhotoUri = mAdapter.getImageInfo(position).getPath();
+        updateActionBar();
+        if (getPhotoManager().getAccessibilityManager().isEnabled() && mLastAnnouncedTitle != position) {
+            String announcement = getPhotoAccessibilityAnnouncement(position);
+            if (announcement != null) {
+                AccessibilityUtils.announceForAccessibility(mRootView, getPhotoManager().getAccessibilityManager(), announcement);
+                mLastAnnouncedTitle = position;
+            }
+        }
+
+        // Restart the timer to return to fullscreen.
+        cancelEnterFullScreenRunnable();
+        postEnterFullScreenRunnableWithDelay();
+    }
+
     private void showActionBar() {
+    }
+
+    public void updateActionBar() {
+        final int position = mViewPager.getCurrentItem() + 1;
+        final boolean hasAlbumCount = mAlbumCount >= 0;
+
+
+        mActionBarTitle = mAdapter.getImageInfo(position).getTitle();
+
+        if (mIsEmpty || !hasAlbumCount || position <= 0) {
+            mActionBarSubtitle = null;
+        } else {
+            mActionBarSubtitle = getResources().getString(
+                    R.string.photo_view_count, position, mAlbumCount);
+        }
+
+        getSupportActionBar().setTitle(mActionBarTitle);
+        getSupportActionBar().setSubtitle(mActionBarSubtitle);
     }
 
     @Override
@@ -197,10 +286,14 @@ public class PhotoViewActivity extends BaseActivity implements
             mPhotosUri = intent.getStringExtra(PhotoManager.EXTRA_PHOTOS_URI);
             mDirectory = new File(mPhotosUri).getParentFile();
         } else {
-            mDirectory = PhotoManager.getCameraDirectory();
+            mDirectory = SystemUtils.getCameraDirectory();
 
 
         }
+
+        mEnterFullScreenDelayTime =
+                getResources().getInteger(R.integer.reenter_fullscreen_delay_time_in_millis);
+        mScaleAnimationEnabled = true;
 
         initializeToolbar();
         mRootView = findViewById(R.id.photo_activity_root_view);
@@ -221,15 +314,25 @@ public class PhotoViewActivity extends BaseActivity implements
                 mBackground.setVisibility(View.VISIBLE);
             }
         } else {
+            if (mBackground != null) {
+                mBackground.setVisibility(View.VISIBLE);
+            }
             mViewPager.setVisibility(View.GONE);
             loadImages();
         }
-
+        //setImmersiveMode(false);
     }
-
+    public void onEnterAnimationComplete() {
+        mEnterAnimationFinished = true;
+        mViewPager.setVisibility(View.VISIBLE);
+        setImmersiveMode(mFullScreen);
+    }
     @Override
     public boolean isFragmentActive(PhotoViewFragment fragment) {
-        return false;
+        if (mViewPager == null || mAdapter == null) {
+            return false;
+        }
+        return mViewPager.getCurrentItem() == mAdapter.getItemPosition(fragment);
     }
 
     @Override
@@ -239,8 +342,8 @@ public class PhotoViewActivity extends BaseActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        MenuItemUtils.addDeleteMenuItem(menu);
         MenuItemUtils.addShareMenuItem(menu);
-
         return super.onCreateOptionsMenu(menu);
 
     }
@@ -262,11 +365,22 @@ public class PhotoViewActivity extends BaseActivity implements
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
+        if (positionOffset < 0.0001) {
+            OnScreenListener before = mScreenListeners.get(position - 1);
+            if (before != null) {
+                before.onViewUpNext();
+            }
+            OnScreenListener after = mScreenListeners.get(position + 1);
+            if (after != null) {
+                after.onViewUpNext();
+            }
+        }
     }
 
     @Override
     public void onPageSelected(int position) {
+        mCurrentPhotoIndex = position;
+        setViewActivated(position);
 
     }
 

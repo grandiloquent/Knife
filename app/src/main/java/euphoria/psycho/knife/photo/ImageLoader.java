@@ -1,14 +1,11 @@
 package euphoria.psycho.knife.photo;
 
 import android.content.Context;
-import android.os.Handler;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import euphoria.psycho.common.Utils;
 
 public class ImageLoader {
 
