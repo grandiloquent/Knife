@@ -2,114 +2,287 @@ package euphoria.psycho.knife.photo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Process;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewPropertyAnimator;
+import android.view.accessibility.AccessibilityManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
+import euphoria.psycho.common.Log;
+import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.common.base.BaseActivity;
+import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.download.DownloadManager;
+import euphoria.psycho.knife.photo.PhotoViewPager.InterceptType;
+import euphoria.psycho.knife.photo.PhotoViewPager.OnInterceptTouchListener;
 
-/**
- * Activity to view the contents of an album.
- */
-public class PhotoViewActivity extends AppCompatActivity
-        implements PhotoViewController.ActivityInterface {
+import static android.os.Environment.DIRECTORY_DCIM;
 
-    private PhotoViewController mController;
-    private ActionBarWrapper mActionBar;
+public class PhotoViewActivity extends BaseActivity implements
+        OnPageChangeListener,
+        OnInterceptTouchListener,
+        PhotoDelegate {
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mController = createController();
+    private PhotoManager mPhotoManager;
+    private PhotoPagerAdapter mAdapter;
+    private boolean mFullScreen;
+    private boolean mIsPause;
+    private Handler mHandler = new Handler();
+    boolean mScaleAnimationEnabled;
+    int mLastFlags;
+    boolean mEnterAnimationFinished;
+    View mBackground;
+    View mRootView;
+    PhotoViewPager mViewPager;
+    private File mDirectory;
+    private ImageLoader mImageLoader;
+    private String mPhotosUri;
 
-        mController.onCreate(savedInstanceState);
+    private View getRootView() {
+        return mRootView;
     }
 
-    protected PhotoViewController createController() {
-        return new PhotoViewController(this);
+    private void hideActionBar() {
+
+    }
+
+    boolean isEnterAnimationFinished() {
+        return mEnterAnimationFinished;
+    }
+
+    boolean isScaleAnimationEnabled() {
+        return mScaleAnimationEnabled;
+    }
+
+    private void loadImages() {
+        ThreadUtils.postOnBackgroundThread(() -> {
+            List<ImageInfo> imageInfos = PhotoManager.collectImageInfos(mDirectory);
+            ThreadUtils.postOnUiThread(() -> {
+                mAdapter.switchDatas(imageInfos);
+            });
+        });
+    }
+
+    private void postEnterFullScreenRunnableWithDelay() {
+
+    }
+
+    private void setFullScreen(boolean fullScreen, boolean setDelayedRunnable) {
+        if (getPhotoManager().isTouchExplorationEnabled()) {
+            fullScreen = false;
+            setDelayedRunnable = false;
+        }
+        boolean fullScreenChanged = (fullScreen != mFullScreen);
+        mFullScreen = fullScreen;
+        if (mFullScreen) {
+            setImmersiveMode(true);
+        } else {
+            setImmersiveMode(false);
+            if (setDelayedRunnable) {
+
+                postEnterFullScreenRunnableWithDelay();
+            }
+        }
+
+        if (fullScreenChanged) {
+
+        }
+    }
+
+    public void setImmersiveMode(boolean enabled) {
+        int flags = 0;
+        final int version = Build.VERSION.SDK_INT;
+        final boolean manuallyUpdateActionBar = version < Build.VERSION_CODES.JELLY_BEAN;
+        if (enabled &&
+                (!isScaleAnimationEnabled() || isEnterAnimationFinished())) {
+            // Turning on immersive mode causes an animation. If the scale animation is enabled and
+            // the enter animation isn't yet complete, then an immersive mode animation should not
+            // occur, since two concurrent animations are very janky.
+
+            // Disable immersive mode for seconary users to prevent b/12015090 (freezing crash)
+            // This is fixed in KK_MR2 but there is no way to differentiate between  KK and KK_MR2.
+            if (version > Build.VERSION_CODES.KITKAT ||
+                    version == Build.VERSION_CODES.KITKAT && !mPhotoManager.kitkatIsSecondaryUser()) {
+                flags = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE;
+            } else if (version >= Build.VERSION_CODES.JELLY_BEAN) {
+                // Clients that use the scale animation should set the following system UI flags to
+                // prevent janky animations on exit when the status bar is hidden:
+                //     View.SYSTEM_UI_FLAG_VISIBLE | View.SYSTEM_UI_FLAG_STABLE
+                // As well, client should ensure `android:fitsSystemWindows` is set on the root
+                // content view.
+                flags = View.SYSTEM_UI_FLAG_LOW_PROFILE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN;
+            } else if (version >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                flags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
+            } else if (version >= Build.VERSION_CODES.HONEYCOMB) {
+                flags = View.STATUS_BAR_HIDDEN;
+            }
+
+            if (manuallyUpdateActionBar) {
+                hideActionBar();
+            }
+        } else {
+            if (version >= Build.VERSION_CODES.KITKAT) {
+                flags = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            } else if (version >= Build.VERSION_CODES.JELLY_BEAN) {
+                flags = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            } else if (version >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                flags = View.SYSTEM_UI_FLAG_VISIBLE;
+            } else if (version >= Build.VERSION_CODES.HONEYCOMB) {
+                flags = View.STATUS_BAR_VISIBLE;
+            }
+
+            if (manuallyUpdateActionBar) {
+                showActionBar();
+            }
+        }
+
+        if (version >= Build.VERSION_CODES.HONEYCOMB) {
+            mLastFlags = flags;
+            getRootView().setSystemUiVisibility(flags);
+        }
+    }
+
+    private void showActionBar() {
     }
 
     @Override
-    public PhotoViewController getController() {
-        return mController;
+    public void addScreenListener(int position, OnScreenListener listener) {
+
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        mController.onStart();
+    public PhotoPagerAdapter getAdapter() {
+        return mAdapter;
+    }
+
+    @Override
+    public ImageLoader getImageLoader() {
+        if (mImageLoader == null) {
+            mImageLoader = new ImageLoader(this, getPhotoManager().getMaxPhotoSize());
+        }
+        return mImageLoader;
+    }
+
+    @Override
+    public PhotoManager getPhotoManager() {
+        if (mPhotoManager == null) {
+            mPhotoManager = new PhotoManager(this);
+        }
+        return mPhotoManager;
+    }
+
+    @Override
+    protected void initialize() {
+
+        setContentView(R.layout.photo_activity_view);
+
+        Intent intent = getIntent();
+        if (intent.hasExtra(PhotoManager.EXTRA_PHOTOS_URI)) {
+            mPhotosUri = intent.getStringExtra(PhotoManager.EXTRA_PHOTOS_URI);
+            mDirectory = new File(mPhotosUri).getParentFile();
+        } else {
+            mDirectory = PhotoManager.getCameraDirectory();
+
+
+        }
+
+        mRootView = findViewById(R.id.photo_activity_root_view);
+
+        mAdapter = new PhotoPagerAdapter(this, getSupportFragmentManager(), 1);
+
+        mBackground = findViewById(R.id.photo_activity_background);
+
+        mViewPager = findViewById(R.id.photo_view_pager);
+        mViewPager.setAdapter(mAdapter);
+        mViewPager.setOnPageChangeListener(this);
+        mViewPager.setOnInterceptTouchListener(this);
+        mViewPager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.photo_page_margin));
+
+        if (!mScaleAnimationEnabled || mEnterAnimationFinished) {
+            loadImages();
+            if (mBackground != null) {
+                mBackground.setVisibility(View.VISIBLE);
+            }
+        } else {
+            mViewPager.setVisibility(View.GONE);
+            loadImages();
+        }
+
+    }
+
+    @Override
+    protected String[] needsPermissions() {
+        return new String[0];
+    }
+
+    @Override
+    public void onNewPhotoLoaded(int position) {
+
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mController.onResume();
+        setFullScreen(mFullScreen, true);
+        mIsPause = false;
+
+
     }
 
     @Override
-    protected void onPause() {
-        mController.onPause();
-        super.onPause();
+    public InterceptType onTouchIntercept(float origX, float origY) {
+        return null;
     }
 
     @Override
-    protected void onStop() {
-        mController.onStop();
-        super.onStop();
-    }
+    public void toggleFullScreen() {
+        setFullScreen(!mFullScreen, false);
 
-    @Override
-    protected void onDestroy() {
-        mController.onDestroy();
-        super.onDestroy();
     }
-
-    @Override
-    public void onBackPressed() {
-        if (!mController.onBackPressed()) {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mController.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return mController.onCreateOptionsMenu(menu) || super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        return mController.onPrepareOptionsMenu(menu) || super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return mController.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        mController.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    public Context getContext() {
-        return this;
-    }
-
-    @Override
-    public ActionBarInterface getActionBarInterface() {
-        if (mActionBar == null) {
-            mActionBar = new ActionBarWrapper(getSupportActionBar());
-        }
-        return mActionBar;
-    }
-
 }

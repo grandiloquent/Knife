@@ -48,7 +48,8 @@ public class BottomSheet {
                     Pair.create(R.drawable.ic_action_photo, "Picture"),
                     Pair.create(R.drawable.ic_create_new_folder_blue_24px,
                             mContext.getString(R.string.menu_create_new_directory)),
-                    Pair.create(R.drawable.ic_file_download_blue_24px, mContext.getString(R.string.menu_download_tools))
+                    Pair.create(R.drawable.ic_file_download_blue_24px, mContext.getString(R.string.menu_download_tools)),
+                    Pair.create(R.drawable.ic_phonelink_blue_24px, mContext.getString(R.string.menu_connect_pc))
             });
             mRecyclerView.setAdapter(mBottomSheetAdapter);
 

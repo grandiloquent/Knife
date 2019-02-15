@@ -310,13 +310,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 mToolbar.hideOverflowMenu();
 
                 List<DocumentInfo> documentInfos = mSelectionDelegate.getSelectedItemsAsList();
-                DocumentUtils.buildDeleteDialog(getActivity(), new DocumentUtils.Consumer<Boolean>() {
-
-                    @Override
-                    public void accept(Boolean aBoolean) {
-                        clearSelections();
-                        updateRecyclerView(false);
-                    }
+                DocumentUtils.buildDeleteDialog(getActivity(), aBoolean -> {
+                    clearSelections();
+                    updateRecyclerView(false);
                 }, documentInfos.toArray(new DocumentInfo[0]));
 
                 break;
@@ -337,7 +333,13 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 break;
             case R.id.selection_mode_cut_menu_id:
 
-                OperationManager.instance().setSource(mSelectionDelegate.getSelectedItemsAsList());
+                OperationManager.instance().setSource(mSelectionDelegate.getSelectedItemsAsList(), false);
+                mSelectionDelegate.clearSelection();
+
+                break;
+            case R.id.selection_mode_copy_menu_id:
+
+                OperationManager.instance().setSource(mSelectionDelegate.getSelectedItemsAsList(), true);
                 mSelectionDelegate.clearSelection();
 
                 break;

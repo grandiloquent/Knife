@@ -18,6 +18,8 @@ public class OperationManager {
     private List<DocumentInfo> mSource;
     private DirectoryFragment mFragment;
     private Listener mListener;
+    private boolean mIsCopy = false;
+
 
     private OperationManager() {
 
@@ -43,6 +45,18 @@ public class OperationManager {
     }
 
     private void onPaste(View view) {
+        if (mIsCopy) {
+            copy();
+        } else {
+            cut();
+        }
+    }
+
+    private void copy() {
+
+    }
+
+    private void cut() {
         if (mSource.size() == 0) {
             hideActionButtons();
             return;
@@ -59,7 +73,8 @@ public class OperationManager {
         if (mListener != null) mListener.onFinished(true);
     }
 
-    public void setSource(List<DocumentInfo> source) {
+    public void setSource(List<DocumentInfo> source, boolean isCopy) {
+        mIsCopy = isCopy;
         mSource.clear();
         mSource.addAll(source);
         showActionButtons();

@@ -110,7 +110,7 @@ public class DocumentUtils {
                 .setNegativeButton(android.R.string.cancel, (dialog1, which) -> dialog1.dismiss())
                 .create();
 
-        dialog.getWindow().setSoftInputMode(Window.FEATURE_SWIPE_TO_DISMISS);
+        dialog.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         dialog.show();
     }
 
