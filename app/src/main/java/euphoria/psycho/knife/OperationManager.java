@@ -11,7 +11,10 @@ import java.util.List;
 
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
+import euphoria.psycho.share.task.MoveFilesTask;
+import euphoria.psycho.share.task.MoveFilesTask.Listener;
 import euphoria.psycho.share.util.StorageUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 
 public class OperationManager {
     private FloatingActionButton mPaste;
@@ -80,12 +83,27 @@ public class OperationManager {
         File targetDirectory = mFragment.getDirectory();
         Context context = mFragment.getContext();
 
+        List<File> files = new ArrayList<>();
         for (DocumentInfo documentInfo : mSource) {
-            File srcFile = new File(documentInfo.getPath());
-            if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;
-            FileUtils.moveFile(context, srcFile, targetDirectory);
+            files.add(new File(documentInfo.getPath()));
         }
-        if (mListener != null) mListener.onFinished(true);
+
+        MoveFilesTask moveFilesTask = new MoveFilesTask(context,
+                files.toArray(new File[0]),
+                targetDirectory,
+                DocumentUtils.getTreeUri(),
+                failedFiles -> {
+                    ThreadUtils.postOnUiThread(() -> {
+                        if (mListener != null) mListener.onFinished(true);
+                    });
+                });
+        ThreadUtils.postOnBackgroundThread(moveFilesTask);
+//        for (DocumentInfo documentInfo : mSource) {
+//            File srcFile = new File(documentInfo.getPath());
+//            if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;
+//            FileUtils.moveFile(context, srcFile, targetDirectory);
+//        }
+//        if (mListener != null) mListener.onFinished(true);
     }
 
     public void setSource(List<DocumentInfo> source, boolean isCopy) {

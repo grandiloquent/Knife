@@ -161,6 +161,8 @@ public class MoveFilesTask implements Runnable {
                 } else {
                     if (!storageToSDCard(srcFile)) {
                         mFailedFiles.add(srcFile);
+                    } else {
+                        srcFile.delete();
                     }
                 }
 
@@ -171,6 +173,14 @@ public class MoveFilesTask implements Runnable {
                 if (mIsSDCard && StorageUtils.isSDCardFile(srcFile)) {
                     if (!sdCardToStorage(srcFile)) {
                         mFailedFiles.add(srcFile);
+                    }else {
+                        try {
+                            DocumentsContract.deleteDocument(mContentResolver,
+                                    StorageUtils.getDocumentUri(srcFile,mTreeUri));
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 } else {
                     if (!storageToStorage(srcFile)) {
