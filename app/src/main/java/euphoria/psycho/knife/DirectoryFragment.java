@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,6 +34,8 @@ import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.NetUtils;
+import euphoria.psycho.share.util.DialogUtils.DialogListener;
+import euphoria.psycho.share.util.StorageUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -120,7 +125,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             mSelectionDelegate.clearSelection();
             return true;
         }
-
+        if (mToolbar.isSearching()) {
+            mToolbar.hideSearchView();
+        }
         File parent = mDirectory.getParentFile();
         if (parent != null) {
             mDirectory = parent;
@@ -152,9 +159,22 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 startActivity(downloadIntent);
                 break;
             case R.drawable.ic_create_new_folder_blue_24px:
-                DocumentUtils.buildNewDirectoryDialog(getContext(), mDirectory, aBoolean -> {
-                    if (aBoolean)
-                        updateRecyclerView(false);
+                DocumentUtils.buildNewDirectoryDialog(getContext(), new DialogListener<CharSequence>() {
+                    @Override
+                    public void ok(CharSequence charSequence) {
+                        if (charSequence == null) return;
+                        String name = euphoria.psycho.share.util.FileUtils.getValidFilName(charSequence.toString(), ' ');
+                        if (StorageUtils.createDirectory(getContext(),
+                                mDirectory, name, DocumentUtils.getTreeUri())) {
+                            updateRecyclerView(false);
+                        }
+
+                    }
+
+                    @Override
+                    public void cancel() {
+
+                    }
                 });
                 break;
         }
@@ -187,7 +207,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     private void updateRecyclerView(boolean isScrollTo) {
         ThreadUtils.postOnBackgroundThread(() -> {
-            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy);
+            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, null);
             ThreadUtils.postOnUiThread(() -> {
                 mAdapter.switchDataSet(infos);
                 mToolbar.setTitle(mDirectory.getName());
@@ -245,7 +265,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void onClicked(DocumentInfo documentInfo) {
 
-        Log.e("TAG/DirectoryFragment", "onClicked: " + documentInfo.getType());
 
         switch (documentInfo.getType()) {
             case C.TYPE_VIDEO:
@@ -292,7 +311,27 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void onEndSearch() {
 
+        Log.e("TAG/DirectoryFragment", "onEndSearch: ");
+
     }
+
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+
+
+            String search = (String) msg.obj;
+            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, search != null ? (dir, name) -> {
+                if (name.contains(search)) return true;
+                return false;
+            } : null);
+
+
+            mAdapter.switchDataSet(infos);
+
+        }
+    };
+
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
@@ -333,6 +372,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             case R.id.action_select_same_type:
                 DocumentUtils.selectSameTypes(mSelectionDelegate, mAdapter);
                 break;
+            case R.id.action_select_all:
+                DocumentUtils.selectAll(mSelectionDelegate, mAdapter);
+                break;
             case R.id.selection_mode_cut_menu_id:
 
                 OperationManager.instance().setSource(mSelectionDelegate.getSelectedItemsAsList(), false);
@@ -355,10 +397,15 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         savePreferences();
     }
 
+    private static final int MSG_SEARCH = 0;
+
     @Override
     public void onSearchTextChanged(String query) {
 
+        mHandler.removeMessages(MSG_SEARCH);
+        mHandler.obtainMessage(MSG_SEARCH, query).sendToTarget();
     }
+
 
     @Override
     public void onSelectionStateChange(List<DocumentInfo> selectedItems) {

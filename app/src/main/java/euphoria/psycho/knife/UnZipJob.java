@@ -32,7 +32,7 @@ public class UnZipJob {
                 outputDirectory.mkdir();
         }
         FileInputStream inputStream = new FileInputStream(srcFile);
-        byte[] data = FileUtils.toByteArray(inputStream);
+        byte[] data = euphoria.psycho.share.util.FileUtils.toByteArray(inputStream);
         FileUtils.closeSilently(inputStream);
 
         ByteArrayInputStream bai = new ByteArrayInputStream(data);
@@ -40,7 +40,7 @@ public class UnZipJob {
         TarArchiveInputStream tai = new TarArchiveInputStream(gci);
 
         try {
-            byte[] buffer = new byte[FileUtils.DEFAULT_BUFFER_SIZE];
+            byte[] buffer = new byte[euphoria.psycho.share.util.FileUtils.DEFAULT_BUFFER_SIZE];
             TarArchiveEntry entry = tai.getNextTarEntry();
             while (entry != null) {
                 if (entry.isDirectory()) {
@@ -127,7 +127,7 @@ public class UnZipJob {
     }
 
     private static void extractFile(ZipInputStream in, File outdir, String name) throws IOException {
-        byte[] buffer = new byte[FileUtils.DEFAULT_BUFFER_SIZE];
+        byte[] buffer = new byte[euphoria.psycho.share.util.FileUtils.DEFAULT_BUFFER_SIZE];
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outdir, name)));
         int count = -1;
         while ((count = in.read(buffer)) != -1)

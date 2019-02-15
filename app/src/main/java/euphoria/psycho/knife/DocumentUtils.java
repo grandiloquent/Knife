@@ -9,6 +9,7 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,6 +23,10 @@ import androidx.appcompat.content.res.AppCompatResources;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.NetUtils;
+import euphoria.psycho.share.util.CollectionUtils;
+import euphoria.psycho.share.util.ContextUtils;
+import euphoria.psycho.share.util.DialogUtils;
+import euphoria.psycho.share.util.DialogUtils.DialogListener;
 import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.Job;
@@ -34,6 +39,15 @@ public class DocumentUtils {
 
     static {
         System.loadLibrary("native-lib");
+    }
+
+    private static String mTreeUri;
+
+    public static String getTreeUri() {
+        if (mTreeUri == null) {
+            mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
+        }
+        return mTreeUri;
     }
 
     static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
@@ -93,33 +107,62 @@ public class DocumentUtils {
         dlg.show();
     }
 
-    static void buildNewDirectoryDialog(Context context, File parentFile, Consumer<Boolean> operationCallback) {
+    static void buildNewDirectoryDialog(Context context, DialogListener<CharSequence> listener) {
+
         EditText editText = new EditText(context);
+        editText.setMaxLines(1);
+        editText.setHint(context.getString(euphoria.psycho.share.R.string.hint_new_folder_hint));
+        editText.requestFocus();
 
-        AlertDialog dialog = new AlertDialog.Builder(context)
+        AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                .setTitle(euphoria.psycho.share.R.string.dialog_title_new_folder)
                 .setView(editText)
-                .setPositiveButton(android.R.string.ok, ((dialog1, which) -> {
-                    dialog1.dismiss();
-                    CharSequence newName = editText.getText();
-                    if (newName == null) return;
-
-                    String fileName = FileUtils.getValidFilName(newName.toString(), ' ');
-                    operationCallback.accept(FileUtils.createDirectory(context, parentFile, fileName));
+                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
+                    dialog.dismiss();
+                    if (listener != null) {
+                        listener.ok(editText.getText());
+                    }
                 }))
-                .setNegativeButton(android.R.string.cancel, (dialog1, which) -> dialog1.dismiss())
-                .create();
-
-        dialog.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+                    dialog.dismiss();
+                    if (listener != null) listener.cancel();
+                });
+        AlertDialog dialog = builder.create();
+        DialogUtils.showKeyboard(dialog);
         dialog.show();
+
+
+//        EditText editText = new EditText(context);
+//
+//        AlertDialog dialog = new AlertDialog.Builder(context)
+//                .setView(editText)
+//                .setPositiveButton(android.R.string.ok, ((dialog1, which) -> {
+//                    dialog1.dismiss();
+//                    CharSequence newName = editText.getText();
+//                    if (newName == null) return;
+//
+//                    String fileName = FileUtils.getValidFilName(newName.toString(), ' ');
+//                    operationCallback.accept(FileUtils.createDirectory(context, parentFile, fileName));
+//                }))
+//                .setNegativeButton(android.R.string.cancel, (dialog1, which) -> dialog1.dismiss())
+//                .create();
+//
+//        dialog.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+//        dialog.show();
     }
 
     public static native long calculateDirectory(String dir);
 
     public static native int deleteDirectories(String[] directories);
 
-    static List<DocumentInfo> getDocumentInfos(File dir, int sortBy) {
+    static List<DocumentInfo> getDocumentInfos(File dir, int sortBy, FilenameFilter filter) {
 
-        File[] files = dir.listFiles();
+        File[] files;
+        if (filter == null)
+            files = dir.listFiles();
+        else {
+            files = dir.listFiles(filter);
+        }
         if (files == null || files.length == 0) return null;
 
         List<DocumentInfo> infos = new ArrayList<>();
@@ -203,10 +246,25 @@ public class DocumentUtils {
                     boolean b2 = o2.getType() == C.TYPE_DIRECTORY;
 
                     if (b1 == b2) {
-                        if (isAscending)
-                            return o1.getLastModified() >= o2.getLastModified() ? 1 : -1;
-                        else
-                            return o1.getLastModified() <= o2.getLastModified() ? 1 : -1;
+                        long diffDate = o1.getLastModified() - o2.getLastModified();
+
+                        if (isAscending) {
+                            if (diffDate > 0) {
+                                return 1;
+                            } else if (diffDate < 0) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        } else {
+                            if (diffDate > 0) {
+                                return -1;
+                            } else if (diffDate < 0) {
+                                return 1;
+                            } else {
+                                return 0;
+                            }
+                        }
 
                     } else if (b1) {
                         if (isAscending) {
@@ -300,6 +358,7 @@ public class DocumentUtils {
     public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
         List<Item> items = new ArrayList<>();
 
+        items.add(new Item(context, R.string.rename, true));
         items.add(new Item(context, R.string.delete, true));
         items.add(new Item(context, R.string.share, true));
         items.add(new Item(context, R.string.properties, true));
@@ -394,6 +453,11 @@ public class DocumentUtils {
             }
         }
         delegate.setSelectedItems(documentInfoSet);
+    }
+
+    static void selectAll(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
+
+        delegate.setSelectedItems(CollectionUtils.toHashSet(adapter.getInfos()));
     }
 
     interface Consumer<T> {

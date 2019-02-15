@@ -1,4 +1,7 @@
 <resources>
+
+    <string name="menu_select_all">Select All</string>
+    <string name="menu_select_same_type">Select Same Type</string>
     <string name="accessibility_cancel_selection">Cancel selection</string>
     <string name="accessibility_drawer_toggle_btn_close">Close navigation drawer</string>
     <string name="accessibility_drawer_toggle_btn_open">Open navigation drawer</string>

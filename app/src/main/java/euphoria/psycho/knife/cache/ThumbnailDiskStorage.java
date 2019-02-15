@@ -24,7 +24,6 @@ import androidx.core.util.AtomicFile;
 import androidx.core.util.Pair;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ConversionUtils;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.annotations.VisibleForTesting;
@@ -391,7 +390,7 @@ public class ThumbnailDiskStorage implements ThumbnailGeneratorCallback {
         } catch (IOException e) {
             Log.e(TAG, "Error while reading from disk.", e);
         } finally {
-            FileUtils.closeQuietly(fis);
+            euphoria.psycho.share.util.FileUtils.closeQuietly(fis);
         }
 
         return bitmap;

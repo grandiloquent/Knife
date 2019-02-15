@@ -2,6 +2,5 @@
     <string name="app_name">share</string>
     <string name="share">Share</string>
     <string name="delete">Delete</string>
-    <string name="dialog_title_new_folder">New Folder</string>
-    <string name="hint_new_folder_hint">Type new folder name here</string>
+    <string name="hint_new_folder_hint">这里输入新建文件夹名称</string>
 </resources>

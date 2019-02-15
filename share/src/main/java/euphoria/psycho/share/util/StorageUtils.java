@@ -4,16 +4,49 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
+import android.os.Environment;
 import android.provider.DocumentsContract;
+import android.provider.DocumentsContract.Document;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 public class StorageUtils {
+
+    private static String mSDCard;
+    private static String mStorage;
+
+    public static String getExternalStoragePath() {
+        if (mStorage == null) {
+            mStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
+        }
+        return mStorage;
+    }
+
+    public static String getSDCardPath() {
+        if (mSDCard == null) {
+            File[] directories = new File("/storage").listFiles();
+            if (directories != null || directories.length > 1) {
+                for (File dir : directories) {
+                    if (!dir.equals(getExternalStoragePath())) {
+                        mSDCard = dir.getAbsolutePath();
+                        break;
+                    }
+                }
+            }
+        }
+        return mSDCard;
+    }
+
+    public static boolean isSDCardFile(File file) {
+
+        return file.getAbsolutePath().startsWith(getSDCardPath());
+    }
 
     public static Uri getDocumentUri(File file, String treeUri) {
         String lastPath = StringUtils.substringAfterLast(treeUri, "/");
@@ -30,6 +63,34 @@ public class StorageUtils {
             subPath = "";
         }
         return Uri.parse(baseURI + subPath);
+    }
+
+    public static boolean createDirectory(Context context, File parentFile, String directoryName, String treeUri) {
+
+        File dir = new File(parentFile, directoryName);
+        if (dir.isDirectory()) return true;
+        boolean b = dir.mkdirs();
+        if (!b) {
+
+
+            if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+                Uri parentUri = getDocumentUri(parentFile, treeUri);
+
+
+                try {
+                    Uri result = DocumentsContract.createDocument(
+                            context.getContentResolver(),
+                            parentUri,
+                            Document.MIME_TYPE_DIR,
+                            directoryName
+                    );
+                    return result != null;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return b;
     }
 
     public static boolean copyFile(Context context, File srcFile, File targetDirectory, String treeUri) {
