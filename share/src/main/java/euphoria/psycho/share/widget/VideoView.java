@@ -1,5 +1,6 @@
-package euphoria.psycho.common.widget;
+package euphoria.psycho.share.widget;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.Resources;
 import android.media.AudioAttributes;
@@ -9,14 +10,13 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
 import java.util.Map;
 
-import androidx.appcompat.app.AlertDialog;
-import euphoria.psycho.common.Log;
 
 public class VideoView extends SurfaceView {
     private static final int STATE_ERROR = -1;

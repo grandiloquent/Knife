@@ -38,17 +38,14 @@ public class PhotoPagerAdapter extends BaseFragmentPagerAdapter {
     public Fragment getItem(int position) {
 
 
-
         Intent intent = new Intent();
 
         boolean onlyShowSpinner = false;
+        ImageInfo imageInfo = mImageInfos.get(position);
 
-        Intent bundle = new Intent();
-        bundle.putExtra(PhotoManager.EXTRA_PHOTO_URI, mImageInfos.get(position).getPath());
-        intent.putExtra(PhotoViewFragment.ARG_INTENT, intent);
-        intent.putExtra(PhotoViewFragment.ARG_POSITION, position);
-        intent.putExtra(PhotoViewFragment.ARG_SHOW_SPINNER, onlyShowSpinner);
+        intent.putExtra(PhotoManager.EXTRA_PHOTO_URI, imageInfo.getPath());
 
-        return PhotoViewFragment.newInstance(intent, position, onlyShowSpinner);
+
+        return PhotoViewFragment.newInstance(intent, imageInfo.getId(), position, onlyShowSpinner);
     }
 }

@@ -1,4 +1,4 @@
-package euphoria.psycho.common;
+package euphoria.psycho.share.util;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -10,8 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
-import euphoria.psycho.common.annotations.CalledByNative;
-import euphoria.psycho.common.annotations.VisibleForTesting;
 
 
 /**
@@ -81,7 +79,7 @@ public class ThreadUtils {
      * @param tid Thread id.
      * @return true for THREAD_PRIORITY_AUDIO and false otherwise.
      */
-    @CalledByNative
+   
     private static boolean isThreadPriorityAudio(int tid) {
         return Process.getThreadPriority(tid) == Process.THREAD_PRIORITY_AUDIO;
     }
@@ -121,7 +119,7 @@ public class ThreadUtils {
      * @param task The Runnable to run
      * @param delayMillis The delay in milliseconds until the Runnable will be run
      */
-    @VisibleForTesting
+    
     public static void postOnUiThreadDelayed(Runnable task, long delayMillis) {
         getUiThreadHandler().postDelayed(task, delayMillis);
     }
@@ -212,7 +210,7 @@ public class ThreadUtils {
      * @param c The Callable to run
      * @return The result of the callable
      */
-    @VisibleForTesting
+    
     public static <T> T runOnUiThreadBlockingNoException(Callable<T> c) {
         try {
             return runOnUiThreadBlocking(c);
@@ -242,7 +240,7 @@ public class ThreadUtils {
     /**
      * Set thread priority to audio.
      */
-    @CalledByNative
+    
     public static void setThreadPriorityAudio(int tid) {
         Process.setThreadPriority(tid, Process.THREAD_PRIORITY_AUDIO);
     }

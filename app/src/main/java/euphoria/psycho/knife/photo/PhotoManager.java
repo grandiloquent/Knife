@@ -32,6 +32,7 @@ public class PhotoManager {
     public static final String EXTRA_MAX_INITIAL_SCALE = "max_initial_scale";
     public static final String EXTRA_PHOTOS_URI = "photos_uri";
     public static final String EXTRA_PHOTO_URI = "photo_uri";
+    public static final String EXTRA_PHOTO_ID = "photo_id";
 
     private final static long MIN_NORMAL_CLASS = 32;
     private final static long MIN_SMALL_CLASS = 24;

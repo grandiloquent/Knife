@@ -12,7 +12,7 @@ import android.widget.TextView;
 import java.io.File;
 
 import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.Job;
 
 public class DeleteFileJob extends Job {

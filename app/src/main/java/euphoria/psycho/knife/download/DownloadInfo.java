@@ -4,7 +4,7 @@ import android.content.Context;
 
 import java.io.File;
 
-import euphoria.psycho.common.StringUtils;
+import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.knife.R;
 
 public class DownloadInfo {

@@ -1,4 +1,4 @@
-package euphoria.psycho.common;
+package euphoria.psycho.share.util;
 
 import java.io.IOException;
 import java.net.DatagramSocket;

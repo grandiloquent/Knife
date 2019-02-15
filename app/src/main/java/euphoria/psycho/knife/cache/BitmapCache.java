@@ -11,7 +11,7 @@ import java.util.Map;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
-import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.annotations.VisibleForTesting;
 import euphoria.psycho.common.pool.DiscardableReferencePool;
 

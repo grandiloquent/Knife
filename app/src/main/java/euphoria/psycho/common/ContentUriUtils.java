@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.annotations.CalledByNative;
+import euphoria.psycho.share.util.ContextUtils;
 
 /**
  * This class provides methods to access content URI schemes.

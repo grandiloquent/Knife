@@ -2,8 +2,8 @@ package euphoria.psycho.knife;
 
 import android.provider.ContactsContract.Directory;
 
-import euphoria.psycho.common.ContextUtils;
-import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.share.util.ContextUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseApp;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.pool.BytesBufferPool;

@@ -1,4 +1,4 @@
-package euphoria.psycho.common.widget;
+package euphoria.psycho.share.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;

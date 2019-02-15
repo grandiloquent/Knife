@@ -6,7 +6,6 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -15,7 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.common.StringUtils;
+import euphoria.psycho.share.util.StringUtils;
 
 public class UnZipJob {
 

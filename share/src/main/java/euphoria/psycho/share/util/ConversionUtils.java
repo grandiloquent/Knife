@@ -1,4 +1,4 @@
-package euphoria.psycho.common;
+package euphoria.psycho.share.util;
 
 /**
  * A class containing some utility static methods for common conversions.

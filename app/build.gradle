@@ -57,6 +57,7 @@ dependencies {
     implementation "com.google.protobuf:protobuf-lite:3.0.1"
     implementation "org.apache.commons:commons-compress:1.18"
     implementation "org.apache.ftpserver:ftpserver-core:1.1.1"
+    implementation project(":share")
     // protobuf files("ext/")
 }
 

@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import euphoria.psycho.common.ContextUtils;
+import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.knife.App;

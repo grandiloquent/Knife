@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.ContextUtils;
 
 public class ViewUtils {
 

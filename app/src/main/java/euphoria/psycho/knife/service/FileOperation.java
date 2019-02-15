@@ -6,7 +6,7 @@ import android.os.Parcelable;
 
 import java.util.List;
 
-import euphoria.psycho.common.CollectionUtils;
+import euphoria.psycho.share.util.CollectionUtils;
 import euphoria.psycho.knife.service.FileOperationService.OpType;
 
 import static euphoria.psycho.knife.service.FileOperationService.OPERATION_COMPRESS;

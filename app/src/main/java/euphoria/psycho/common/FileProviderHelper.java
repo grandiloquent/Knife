@@ -6,6 +6,7 @@ import android.net.Uri;
 import java.io.File;
 
 import androidx.core.content.FileProvider;
+import euphoria.psycho.share.util.ContextUtils;
 
 /**
  * Utilities for translating a file into content URI.

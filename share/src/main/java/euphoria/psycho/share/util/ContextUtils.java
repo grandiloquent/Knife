@@ -1,4 +1,4 @@
-package euphoria.psycho.common;
+package euphoria.psycho.share.util;
 
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -7,8 +7,6 @@ import android.content.res.AssetManager;
 import android.os.Process;
 import android.preference.PreferenceManager;
 
-import androidx.annotation.VisibleForTesting;
-import euphoria.psycho.common.annotations.MainDex;
 
 
 /**
@@ -52,7 +50,6 @@ public class ContextUtils {
      *
      * @param appContext The application context.
      */
-    @MainDex // TODO(agrieve): Could add to whole class if not for ApplicationStatus.initialize().
     public static void initApplicationContext(Context appContext) {
         // Conceding that occasionally in tests, native is loaded before the browser process is
         // started, in which case the browser process re-sets the application context.
@@ -89,7 +86,6 @@ public class ContextUtils {
      *
      * @param appContext The new application context.
      */
-    @VisibleForTesting
     public static void initApplicationContextForTests(Context appContext) {
         initJavaSideApplicationContext(appContext);
         Holder.sSharedPreferences = fetchAppSharedPreferences();

@@ -10,8 +10,8 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
-import euphoria.psycho.common.ConversionUtils;
-import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.share.util.ConversionUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.pool.DiscardableReferencePool;
 
 /**

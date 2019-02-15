@@ -1,42 +1,21 @@
 package euphoria.psycho.knife.photo;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.Process;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewPropertyAnimator;
-import android.view.accessibility.AccessibilityManager;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.ScaleAnimation;
-import android.widget.ImageView;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
-import euphoria.psycho.common.Log;
-import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.download.DownloadManager;
 import euphoria.psycho.knife.photo.PhotoViewPager.InterceptType;
 import euphoria.psycho.knife.photo.PhotoViewPager.OnInterceptTouchListener;
-
-import static android.os.Environment.DIRECTORY_DCIM;
+import euphoria.psycho.share.util.MenuItemUtils;
 
 public class PhotoViewActivity extends BaseActivity implements
         OnPageChangeListener,
@@ -63,6 +42,12 @@ public class PhotoViewActivity extends BaseActivity implements
     }
 
     private void hideActionBar() {
+
+    }
+
+    private void initializeToolbar() {
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
 
@@ -217,6 +202,7 @@ public class PhotoViewActivity extends BaseActivity implements
 
         }
 
+        initializeToolbar();
         mRootView = findViewById(R.id.photo_activity_root_view);
 
         mAdapter = new PhotoPagerAdapter(this, getSupportFragmentManager(), 1);
@@ -242,8 +228,26 @@ public class PhotoViewActivity extends BaseActivity implements
     }
 
     @Override
+    public boolean isFragmentActive(PhotoViewFragment fragment) {
+        return false;
+    }
+
+    @Override
     protected String[] needsPermissions() {
         return new String[0];
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuItemUtils.addShareMenuItem(menu);
+
+        return super.onCreateOptionsMenu(menu);
+
+    }
+
+    @Override
+    public void onFragmentVisible(PhotoViewFragment fragment) {
+
     }
 
     @Override
@@ -278,6 +282,11 @@ public class PhotoViewActivity extends BaseActivity implements
     @Override
     public InterceptType onTouchIntercept(float origX, float origY) {
         return null;
+    }
+
+    @Override
+    public void removeScreenListener(int position) {
+
     }
 
     @Override

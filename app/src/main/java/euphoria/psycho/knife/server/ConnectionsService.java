@@ -7,19 +7,10 @@ import android.os.IBinder;
 import org.apache.ftpserver.ConnectionConfigFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
-import org.apache.ftpserver.ftplet.Authority;
-import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.listener.ListenerFactory;
-import org.apache.ftpserver.usermanager.impl.BaseUser;
-import org.apache.ftpserver.usermanager.impl.ConcurrentLoginPermission;
-import org.apache.ftpserver.usermanager.impl.TransferRatePermission;
-import org.apache.ftpserver.usermanager.impl.WritePermission;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.Nullable;
-import euphoria.psycho.common.ConnectionUtils;
+import euphoria.psycho.share.util.ConnectionUtils;
 
 public class ConnectionsService extends Service {
     private FtpServer mFtpServer;

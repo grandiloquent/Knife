@@ -1,4 +1,4 @@
-package euphoria.psycho.common.widget;
+package euphoria.psycho.share.widget;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -11,6 +11,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
@@ -18,8 +19,6 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
 
-import androidx.core.view.GestureDetectorCompat;
-import androidx.core.view.ScaleGestureDetectorCompat;
 
 // com.android.ex.photo
 
@@ -152,7 +151,7 @@ public class PhotoView extends View implements OnGestureListener,
     /**
      * Gesture detector
      */
-    private GestureDetectorCompat mGestureDetector;
+    private GestureDetector mGestureDetector;
     /**
      * Gesture detector that detects pinch gestures
      */
@@ -1104,9 +1103,9 @@ public class PhotoView extends View implements OnGestureListener,
             sTouchSlopSquare = touchSlop * touchSlop;
         }
 
-        mGestureDetector = new GestureDetectorCompat(context, this, null);
+        mGestureDetector = new GestureDetector(context, this, null);
         mScaleGetureDetector = new ScaleGestureDetector(context, this);
-        mQuickScaleEnabled = ScaleGestureDetectorCompat.isQuickScaleEnabled(mScaleGetureDetector);
+        mQuickScaleEnabled = mScaleGetureDetector.isQuickScaleEnabled();
         mScaleRunnable = new ScaleRunnable(this);
         mTranslateRunnable = new TranslateRunnable(this);
         mSnapRunnable = new SnapRunnable(this);

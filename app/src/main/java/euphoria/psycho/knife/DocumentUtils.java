@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.Uri;
-import android.view.Window;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
 
@@ -23,8 +22,8 @@ import androidx.appcompat.content.res.AppCompatResources;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.NetUtils;
-import euphoria.psycho.common.StringUtils;
-import euphoria.psycho.common.ThreadUtils;
+import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.common.widget.ListMenuButton.Item;

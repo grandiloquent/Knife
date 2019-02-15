@@ -1,25 +1,21 @@
 package euphoria.psycho.knife.photo;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
-import android.os.Process;
 
-import java.util.concurrent.Executor;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import euphoria.psycho.common.Log;
+import euphoria.psycho.common.Utils;
 
 public class ImageLoader {
 
     private ExecutorService mService;
     private Context mContext;
     private final int mMaxSize;
-    private Handler mHandler = new Handler();
+    private Map<String, ImageLoaderJob> mJobs = new HashMap<>();
 
 
     public ImageLoader(Context context, int maxSize) {
@@ -28,25 +24,21 @@ public class ImageLoader {
         mMaxSize = maxSize;
     }
 
-    public void loadImage(String path, ImageLoaderObserver loaderObserver) {
+    public void loadImage(String path, String id, ImageLoaderObserver loaderObserver) {
         if (path == null) {
             loaderObserver.onLoadFinished(null);
             return;
         }
-        mService.submit(() -> {
 
-            Log.e("TAG/ImageLoader", "loadImage: " + path);
 
-            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-            Bitmap bitmap = BitmapFactory.decodeFile(path);
-            Drawable drawable = null;
-            if (bitmap != null) {
-                drawable = new BitmapDrawable(mContext.getResources(), bitmap);
-            }
-            final Drawable finalDrawable = drawable;
-            mHandler.post(() -> {
-                loaderObserver.onLoadFinished(finalDrawable);
-            });
-        });
+
+            ImageLoaderJob job = new ImageLoaderJob(mContext, id, path, mMaxSize, loaderObserver);
+
+            mService.submit(job);
+
+    }
+
+    public void removeJob(String id) {
+
     }
 }

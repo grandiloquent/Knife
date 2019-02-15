@@ -1,4 +1,4 @@
-package euphoria.psycho.common;
+package euphoria.psycho.share.util;
 
 /**
  * Contains various math utilities used throughout Chrome Mobile.

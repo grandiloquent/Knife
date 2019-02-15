@@ -5,7 +5,7 @@ import android.content.Context;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import euphoria.psycho.common.StringUtils;
+import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.common.Utils;
 import euphoria.psycho.common.cache.BlobCache;
 import euphoria.psycho.common.cache.BlobCache.LookupRequest;

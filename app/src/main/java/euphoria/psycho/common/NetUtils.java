@@ -4,6 +4,8 @@ import android.webkit.MimeTypeMap;
 
 import java.net.URL;
 
+import euphoria.psycho.share.util.StringUtils;
+
 public class NetUtils {
 
     public static boolean isURL(String url) {

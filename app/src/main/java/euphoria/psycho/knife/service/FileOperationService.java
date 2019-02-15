@@ -22,7 +22,7 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.Log;
-import euphoria.psycho.common.ManagerUtils;
+import euphoria.psycho.share.util.ManagerUtils;
 import euphoria.psycho.knife.R;
 
 import static euphoria.psycho.common.C.DEBUG;

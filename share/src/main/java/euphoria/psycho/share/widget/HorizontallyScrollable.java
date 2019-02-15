@@ -1,4 +1,4 @@
-package euphoria.psycho.common.widget;
+package euphoria.psycho.share.widget;
 
 public interface HorizontallyScrollable {
     /**

@@ -1,12 +1,11 @@
-package euphoria.psycho.common;
+package euphoria.psycho.share.util;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
 
-import androidx.appcompat.app.AlertDialog;
-import euphoria.psycho.knife.R;
 
 public class DialogUtils {
 

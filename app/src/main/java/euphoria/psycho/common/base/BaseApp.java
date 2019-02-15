@@ -3,7 +3,7 @@ package euphoria.psycho.common.base;
 import android.app.Application;
 import android.os.StrictMode;
 
-import euphoria.psycho.common.ContextUtils;
+import euphoria.psycho.share.util.ContextUtils;
 
 public abstract class BaseApp extends Application {
     @Override
