@@ -3,12 +3,14 @@ package euphoria.psycho.knife;
 import android.app.Activity;
 import android.content.Context;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.appcompat.app.AlertDialog;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
 import euphoria.psycho.share.task.MoveFilesTask;
@@ -88,6 +90,10 @@ public class OperationManager {
             files.add(new File(documentInfo.getPath()));
         }
 
+        final TextView message = new TextView(mFragment.getContext());
+        final AlertDialog dialog = new AlertDialog.Builder(mFragment.getContext())
+                .setView(message).show();
+
         MoveFilesTask moveFilesTask = new MoveFilesTask(context,
                 files.toArray(new File[0]),
                 targetDirectory,
@@ -96,6 +102,7 @@ public class OperationManager {
                     @Override
                     public void onFinished(List<File> failedFiles) {
                         ThreadUtils.postOnUiThread(() -> {
+                            dialog.dismiss();
                             if (mListener != null) mListener.onFinished(true);
                         });
                     }
@@ -103,7 +110,7 @@ public class OperationManager {
                     @Override
                     public void onUpdateProgress(File srcFile) {
                         ThreadUtils.postOnUiThread(() -> {
-                           Toast.makeText(context,srcFile.getName(),Toast.LENGTH_SHORT).show();
+                            message.setText(srcFile.getName());
                         });
                     }
                 });

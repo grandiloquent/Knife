@@ -72,9 +72,9 @@ public class MoveFilesTask implements Runnable {
     }
 
     @SuppressLint("NewApi")
-    private void sdCardToStorage(File srcFile) {
+    private void sdCardToStorage(File srcFile, File dstDir) {
         if (mListener != null) mListener.onUpdateProgress(srcFile);
-        File dstFile = new File(mDstDir, srcFile.getName());
+        File dstFile = new File(dstDir, srcFile.getName());
         if (srcFile.isFile()) {
             boolean result = StorageUtils.sdCardDocumentToStorageFile(mContentResolver,
                     srcFile,
@@ -87,13 +87,15 @@ public class MoveFilesTask implements Runnable {
                 StorageUtils.deleteDocument(mContentResolver, srcFile, mTreeUri);
             }
         } else {
-            if (dstFile.mkdirs()) {
-                File[] files = dstFile.listFiles();
+            dstFile.mkdirs();
+            if (dstFile.isDirectory()) {
+                File[] files = srcFile.listFiles();
                 if (files != null) {
                     for (File src : files) {
-                        sdCardToStorage(src);
+                        sdCardToStorage(src, dstFile);
                     }
                 }
+                srcFile.delete();
             } else {
                 mFailedFiles.add(srcFile);
             }
@@ -172,7 +174,7 @@ public class MoveFilesTask implements Runnable {
                 if (mListener != null) mListener.onUpdateProgress(srcFile);
 
                 if (mIsSDCard && StorageUtils.isSDCardFile(srcFile)) {
-                    sdCardToStorage(srcFile);
+                    sdCardToStorage(srcFile, mDstDir);
                 } else {
                     if (!storageToStorage(srcFile)) {
                         mFailedFiles.add(srcFile);
