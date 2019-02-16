@@ -2,6 +2,7 @@ package euphoria.psycho.knife;
 
 import android.app.Activity;
 import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -90,9 +91,13 @@ public class OperationManager {
             files.add(new File(documentInfo.getPath()));
         }
 
-        final TextView message = new TextView(mFragment.getContext());
+        View view = LayoutInflater.from(mFragment.getContext())
+                .inflate(R.layout.dialog_move_progress, null);
+
+        final TextView message = view.findViewById(R.id.line1);
+
         final AlertDialog dialog = new AlertDialog.Builder(mFragment.getContext())
-                .setView(message).show();
+                .setView(view).show();
 
         MoveFilesTask moveFilesTask = new MoveFilesTask(context,
                 files.toArray(new File[0]),

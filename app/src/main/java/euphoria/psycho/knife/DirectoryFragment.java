@@ -166,7 +166,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                         if (charSequence == null) return;
                         String name = euphoria.psycho.share.util.FileUtils.getValidFilName(charSequence.toString(), ' ');
                         if (StorageUtils.createDirectory(getContext(),
-                                mDirectory, name, DocumentUtils.getTreeUri())) {
+                                mDirectory, name.trim(), DocumentUtils.getTreeUri())) {
                             updateRecyclerView(false);
                         }
 
