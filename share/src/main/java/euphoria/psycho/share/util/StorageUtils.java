@@ -1,5 +1,7 @@
 package euphoria.psycho.share.util;
 
+import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build.VERSION;
@@ -21,77 +23,6 @@ public class StorageUtils {
     private static String mSDCard;
     private static String mStorage;
 
-    public static String getExternalStoragePath() {
-        if (mStorage == null) {
-            mStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
-        }
-        return mStorage;
-    }
-
-    public static String getSDCardPath() {
-        if (mSDCard == null) {
-            File[] directories = new File("/storage").listFiles();
-            if (directories != null || directories.length > 1) {
-                for (File dir : directories) {
-                    if (!dir.equals(getExternalStoragePath())) {
-                        mSDCard = dir.getAbsolutePath();
-                        break;
-                    }
-                }
-            }
-        }
-        return mSDCard;
-    }
-
-    public static boolean isSDCardFile(File file) {
-
-        return file.getAbsolutePath().startsWith(getSDCardPath());
-    }
-
-    public static Uri getDocumentUri(File file, String treeUri) {
-        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
-
-        String baseURI = treeUri + "/document/" + lastPath;
-        String splited = StringUtils.substringBeforeLast(lastPath, "%");
-
-
-        String subPath = StringUtils.substringAfter(file.getAbsolutePath(), splited + "/");
-
-        if (subPath != null) {
-            subPath = Uri.encode(subPath);
-        } else {
-            subPath = "";
-        }
-        return Uri.parse(baseURI + subPath);
-    }
-
-    public static boolean createDirectory(Context context, File parentFile, String directoryName, String treeUri) {
-
-        File dir = new File(parentFile, directoryName);
-        if (dir.isDirectory()) return true;
-        boolean b = dir.mkdirs();
-        if (!b) {
-
-
-            if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-                Uri parentUri = getDocumentUri(parentFile, treeUri);
-
-
-                try {
-                    Uri result = DocumentsContract.createDocument(
-                            context.getContentResolver(),
-                            parentUri,
-                            Document.MIME_TYPE_DIR,
-                            directoryName
-                    );
-                    return result != null;
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return b;
-    }
 
     public static boolean copyFile(Context context, File srcFile, File targetDirectory, String treeUri) {
         boolean success = false;
@@ -155,4 +86,88 @@ public class StorageUtils {
 
         return success;
     }
+
+    @SuppressLint("NewApi")
+    public static boolean deleteDocument(ContentResolver contentResolver, File srcFile, String treeUri) {
+        try {
+            return DocumentsContract.deleteDocument(contentResolver,
+                    StorageUtils.getDocumentUri(srcFile, treeUri));
+        } catch (FileNotFoundException ignored) {
+
+        }
+        return false;
+    }
+
+    public static boolean createDirectory(Context context, File parentFile, String directoryName, String treeUri) {
+
+        File dir = new File(parentFile, directoryName);
+        if (dir.isDirectory()) return true;
+        boolean b = dir.mkdirs();
+        if (!b) {
+
+
+            if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+                Uri parentUri = getDocumentUri(parentFile, treeUri);
+
+
+                try {
+                    Uri result = DocumentsContract.createDocument(
+                            context.getContentResolver(),
+                            parentUri,
+                            Document.MIME_TYPE_DIR,
+                            directoryName
+                    );
+                    return result != null;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return b;
+    }
+
+    public static Uri getDocumentUri(File file, String treeUri) {
+        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
+
+        String baseURI = treeUri + "/document/" + lastPath;
+        String splited = StringUtils.substringBeforeLast(lastPath, "%");
+
+
+        String subPath = StringUtils.substringAfter(file.getAbsolutePath(), splited + "/");
+
+        if (subPath != null) {
+            subPath = Uri.encode(subPath);
+        } else {
+            subPath = "";
+        }
+        return Uri.parse(baseURI + subPath);
+    }
+
+    public static String getExternalStoragePath() {
+        if (mStorage == null) {
+            mStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
+        }
+        return mStorage;
+    }
+
+    public static String getSDCardPath() {
+        if (mSDCard == null) {
+            File[] directories = new File("/storage").listFiles();
+            if (directories != null || directories.length > 1) {
+                for (File dir : directories) {
+                    if (!dir.equals(getExternalStoragePath())) {
+                        mSDCard = dir.getAbsolutePath();
+                        break;
+                    }
+                }
+            }
+        }
+        return mSDCard;
+    }
+
+    public static boolean isSDCardFile(File file) {
+
+        return file.getAbsolutePath().startsWith(getSDCardPath());
+    }
+
 }

@@ -92,10 +92,20 @@ public class OperationManager {
                 files.toArray(new File[0]),
                 targetDirectory,
                 DocumentUtils.getTreeUri(),
-                failedFiles -> {
-                    ThreadUtils.postOnUiThread(() -> {
-                        if (mListener != null) mListener.onFinished(true);
-                    });
+                new MoveFilesTask.Listener() {
+                    @Override
+                    public void onFinished(List<File> failedFiles) {
+                        ThreadUtils.postOnUiThread(() -> {
+                            if (mListener != null) mListener.onFinished(true);
+                        });
+                    }
+
+                    @Override
+                    public void onUpdateProgress(File srcFile) {
+                        ThreadUtils.postOnUiThread(() -> {
+                           Toast.makeText(context,srcFile.getName(),Toast.LENGTH_SHORT).show();
+                        });
+                    }
                 });
         ThreadUtils.postOnBackgroundThread(moveFilesTask);
 //        for (DocumentInfo documentInfo : mSource) {

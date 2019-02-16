@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import euphoria.psycho.share.util.FileUtils;
+import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StorageUtils;
+import euphoria.psycho.share.util.StringUtils;
 
 public class MoveFilesTask implements Runnable {
 
@@ -35,7 +37,11 @@ public class MoveFilesTask implements Runnable {
     private List<File> mFailedFiles;
     private Uri mDestinationDirectoryUri;
 
-    public MoveFilesTask(Context context, File[] srcFiles, File destinationDirectory, String treeUri, Listener listener) {
+    public MoveFilesTask(Context context,
+                         File[] srcFiles,
+                         File destinationDirectory,
+                         String treeUri,
+                         Listener listener) {
         mIsSDCard = VERSION.SDK_INT >= VERSION_CODES.N && treeUri != null;
         if (mIsSDCard)
             mContentResolver = context.getContentResolver();
@@ -112,7 +118,7 @@ public class MoveFilesTask implements Runnable {
         OutputStream os;
         try {
             Uri targetUri = DocumentsContract.createDocument(mContentResolver, mDestinationDirectoryUri,
-                    MimeTypeMap.getSingleton().getMimeTypeFromExtension(""),
+                    MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(srcFile.getName(), ".")),
                     srcFile.getName());
             os = mContentResolver.openOutputStream(targetUri);
         } catch (FileNotFoundException e) {
@@ -154,6 +160,7 @@ public class MoveFilesTask implements Runnable {
 
             mDestinationDirectoryUri = StorageUtils.getDocumentUri(mDestinationDirectory, mTreeUri);
             for (File srcFile : mSrcFiles) {
+                if (mListener != null) mListener.onUpdateProgress(srcFile);
                 if (StorageUtils.isSDCardFile(srcFile)) {
                     if (!sdCardToSDCard(srcFile)) {
                         mFailedFiles.add(srcFile);
@@ -169,18 +176,13 @@ public class MoveFilesTask implements Runnable {
             }
         } else {
             for (File srcFile : mSrcFiles) {
+                if (mListener != null) mListener.onUpdateProgress(srcFile);
 
                 if (mIsSDCard && StorageUtils.isSDCardFile(srcFile)) {
                     if (!sdCardToStorage(srcFile)) {
                         mFailedFiles.add(srcFile);
-                    }else {
-                        try {
-                            DocumentsContract.deleteDocument(mContentResolver,
-                                    StorageUtils.getDocumentUri(srcFile,mTreeUri));
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
-
+                    } else {
+                        StorageUtils.deleteDocument(mContentResolver, srcFile, mTreeUri);
                     }
                 } else {
                     if (!storageToStorage(srcFile)) {
@@ -196,6 +198,8 @@ public class MoveFilesTask implements Runnable {
     public interface Listener {
 
         void onFinished(List<File> failedFiles);
+
+        void onUpdateProgress(File srcFile);
     }
 
 }
