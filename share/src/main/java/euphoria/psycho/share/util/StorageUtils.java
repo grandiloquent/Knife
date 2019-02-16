@@ -16,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 public class StorageUtils {
@@ -85,6 +86,47 @@ public class StorageUtils {
         }
 
         return success;
+    }
+
+    public static boolean sdCardDocumentToStorageFile(ContentResolver contentResolver,
+                                                      File srcFile,
+                                                      File dstFile,
+                                                      String treeUri,
+                                                      boolean overwrite) {
+
+        if (dstFile.exists()) {
+            if (overwrite && !dstFile.delete()) {
+                return false;
+            } else {
+                return false;
+            }
+        }
+        InputStream is;
+        OutputStream os;
+        try {
+            os = new FileOutputStream(dstFile);
+        } catch (FileNotFoundException e) {
+            return false;
+        }
+
+        try {
+
+            is = contentResolver.openInputStream(StorageUtils.getDocumentUri(srcFile, treeUri));
+        } catch (FileNotFoundException e) {
+            FileUtils.closeQuietly(os);
+            return false;
+        }
+
+        try {
+            FileUtils.copy(is, os);
+            return true;
+        } catch (IOException ignored) {
+
+        } finally {
+            FileUtils.closeQuietly(is);
+            FileUtils.closeQuietly(os);
+        }
+        return false;
     }
 
     @SuppressLint("NewApi")
@@ -169,5 +211,6 @@ public class StorageUtils {
 
         return file.getAbsolutePath().startsWith(getSDCardPath());
     }
+
 
 }

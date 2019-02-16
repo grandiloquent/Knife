@@ -10,6 +10,7 @@ import android.os.Build.VERSION_CODES;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.text.TextUtils;
+import android.webkit.MimeTypeMap;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -27,6 +28,7 @@ import java.util.zip.ZipFile;
 import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.share.util.ContextUtils;
+import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
@@ -523,7 +525,7 @@ public class FileUtils {
                     Uri newDocument = DocumentsContract.createDocument(
                             context.getContentResolver(),
                             getDocumentUriFromTreeUri(destinationDirectory),
-                            NetUtils.getMimeType(src.getName()),
+                            MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(src.getName(),".")),
                             src.getName());
                     if (newDocument != null) {
                         OutputStream outputStream = context.getContentResolver().openOutputStream(newDocument);

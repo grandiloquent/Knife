@@ -21,12 +21,11 @@ import java.util.Set;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.share.util.CollectionUtils;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.DialogUtils;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
+import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.Job;
@@ -421,7 +420,7 @@ public class DocumentUtils {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
-                NetUtils.getMimeType(documentInfo.getFileName()));
+                MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(documentInfo.getFileName(),".")));
 
         if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
             context.startActivity(Intent.createChooser(intent, "打开"));

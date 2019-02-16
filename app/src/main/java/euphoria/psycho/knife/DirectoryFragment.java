@@ -33,9 +33,10 @@ import euphoria.psycho.knife.photo.PhotoViewActivity;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
-import euphoria.psycho.common.NetUtils;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
+import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StorageUtils;
+import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -486,7 +487,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void share(DocumentInfo documentInfo) {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
-        shareIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), NetUtils.getMimeType(documentInfo.getFileName()));
+        shareIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
+                MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(documentInfo.getFileName(), ".")));
         startActivity(Intent.createChooser(shareIntent, getString(R.string.share_link_title)));
     }
 

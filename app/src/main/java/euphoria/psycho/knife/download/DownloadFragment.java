@@ -20,7 +20,7 @@ import androidx.appcompat.widget.Toolbar.OnMenuItemClickListener;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.ContentUtils;
-import euphoria.psycho.common.NetUtils;
+import euphoria.psycho.share.util.HttpUtils;
 import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseFragment;
@@ -55,7 +55,7 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
     private void insertTaskFromClipboard() {
         String url = ContentUtils.getTextFormClipboard(mClipboardManager);
         if (url == null) return;
-        if (!NetUtils.isURL(url)) return;
+        if (!HttpUtils.isValidURL(url)) return;
         String fileName = StringUtils.substringAfterLast(url, "/");
         if (fileName.indexOf('?') != -1)
             fileName = StringUtils.substringBefore(fileName, "?");

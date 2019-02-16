@@ -202,6 +202,25 @@ public class FileUtils {
         }
     }
 
+    public static String getExtension(String path) {
+        if (path == null)
+            return null;
+
+        int length = path.length();
+        for (int i = length; --i >= 0; ) {
+            char ch = path.charAt(i);
+            if (ch == '.') {
+                if (i != length - 1)
+                    return path.substring(i + 1, length - i);
+                else
+                    return "";
+            }
+            if (ch == File.separatorChar)
+                break;
+        }
+        return "";
+    }
+
     public static byte[] toByteArray(final InputStream input) throws IOException {
         try (final ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             copy(input, output);

@@ -4,17 +4,14 @@ import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Process;
 import android.provider.DocumentsContract;
-import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,14 +25,14 @@ import euphoria.psycho.share.util.StringUtils;
 
 public class MoveFilesTask implements Runnable {
 
-    private final File mDestinationDirectory;
+    private final File mDstDir;
     private final boolean mIsSDCard;
     private final Listener mListener;
     private final File[] mSrcFiles;
     private ContentResolver mContentResolver;
     private String mTreeUri;
     private List<File> mFailedFiles;
-    private Uri mDestinationDirectoryUri;
+    private Uri mDstDirUri;
 
     public MoveFilesTask(Context context,
                          File[] srcFiles,
@@ -50,14 +47,14 @@ public class MoveFilesTask implements Runnable {
 
         mFailedFiles = new ArrayList<>();
         mSrcFiles = srcFiles;
-        mDestinationDirectory = destinationDirectory;
+        mDstDir = destinationDirectory;
         mTreeUri = treeUri;
         mListener = listener;
     }
 
     @SuppressLint("NewApi")
     private boolean sdCardToSDCard(File srcFile) {
-        File targetFile = new File(mDestinationDirectory, srcFile.getName());
+        File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
             return false;
         }
@@ -66,7 +63,7 @@ public class MoveFilesTask implements Runnable {
             return DocumentsContract.moveDocument(mContentResolver,
                     StorageUtils.getDocumentUri(srcFile, mTreeUri),
                     StorageUtils.getDocumentUri(srcFile.getParentFile(), mTreeUri),
-                    mDestinationDirectoryUri) != null;
+                    mDstDirUri) != null;
         } catch (FileNotFoundException e) {
 
         }
@@ -75,49 +72,45 @@ public class MoveFilesTask implements Runnable {
     }
 
     @SuppressLint("NewApi")
-    private boolean sdCardToStorage(File srcFile) {
-        File targetFile = new File(mDestinationDirectory, srcFile.getName());
-        if (targetFile.exists()) {
-            return false;
-        }
-        InputStream is;
-        OutputStream os;
-        try {
-            os = new FileOutputStream(targetFile);
-        } catch (FileNotFoundException e) {
-            return false;
+    private void sdCardToStorage(File srcFile) {
+        if (mListener != null) mListener.onUpdateProgress(srcFile);
+        File dstFile = new File(mDstDir, srcFile.getName());
+        if (srcFile.isFile()) {
+            boolean result = StorageUtils.sdCardDocumentToStorageFile(mContentResolver,
+                    srcFile,
+                    dstFile,
+                    mTreeUri,
+                    false);
+            if (!result) {
+                mFailedFiles.add(srcFile);
+            } else {
+                StorageUtils.deleteDocument(mContentResolver, srcFile, mTreeUri);
+            }
+        } else {
+            if (dstFile.mkdirs()) {
+                File[] files = dstFile.listFiles();
+                if (files != null) {
+                    for (File src : files) {
+                        sdCardToStorage(src);
+                    }
+                }
+            } else {
+                mFailedFiles.add(srcFile);
+            }
         }
 
-        try {
-
-            is = mContentResolver.openInputStream(StorageUtils.getDocumentUri(srcFile, mTreeUri));
-        } catch (FileNotFoundException e) {
-            FileUtils.closeQuietly(os);
-            return false;
-        }
-
-        try {
-            FileUtils.copy(is, os);
-            return true;
-        } catch (IOException e) {
-
-        } finally {
-            FileUtils.closeQuietly(is);
-            FileUtils.closeQuietly(os);
-        }
-        return false;
     }
 
     @SuppressLint("NewApi")
     private boolean storageToSDCard(File srcFile) {
-        File targetFile = new File(mDestinationDirectory, srcFile.getName());
+        File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
             return false;
         }
         InputStream is;
         OutputStream os;
         try {
-            Uri targetUri = DocumentsContract.createDocument(mContentResolver, mDestinationDirectoryUri,
+            Uri targetUri = DocumentsContract.createDocument(mContentResolver, mDstDirUri,
                     MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(srcFile.getName(), ".")),
                     srcFile.getName());
             os = mContentResolver.openOutputStream(targetUri);
@@ -146,7 +139,7 @@ public class MoveFilesTask implements Runnable {
 
     @SuppressLint("NewApi")
     private boolean storageToStorage(File srcFile) {
-        File targetFile = new File(mDestinationDirectory, srcFile.getName());
+        File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
             return false;
         }
@@ -156,9 +149,9 @@ public class MoveFilesTask implements Runnable {
     @Override
     public void run() {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-        if (StorageUtils.isSDCardFile(mDestinationDirectory) && mIsSDCard) {
+        if (StorageUtils.isSDCardFile(mDstDir) && mIsSDCard) {
 
-            mDestinationDirectoryUri = StorageUtils.getDocumentUri(mDestinationDirectory, mTreeUri);
+            mDstDirUri = StorageUtils.getDocumentUri(mDstDir, mTreeUri);
             for (File srcFile : mSrcFiles) {
                 if (mListener != null) mListener.onUpdateProgress(srcFile);
                 if (StorageUtils.isSDCardFile(srcFile)) {
@@ -179,11 +172,7 @@ public class MoveFilesTask implements Runnable {
                 if (mListener != null) mListener.onUpdateProgress(srcFile);
 
                 if (mIsSDCard && StorageUtils.isSDCardFile(srcFile)) {
-                    if (!sdCardToStorage(srcFile)) {
-                        mFailedFiles.add(srcFile);
-                    } else {
-                        StorageUtils.deleteDocument(mContentResolver, srcFile, mTreeUri);
-                    }
+                    sdCardToStorage(srcFile);
                 } else {
                     if (!storageToStorage(srcFile)) {
                         mFailedFiles.add(srcFile);
