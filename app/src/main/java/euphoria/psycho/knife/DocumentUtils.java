@@ -154,6 +154,22 @@ public class DocumentUtils {
 
     public static native int deleteDirectories(String[] directories);
 
+    static DocumentInfo buildDocumentInfo(File file) {
+        DocumentInfo.Builder builder = new DocumentInfo.Builder()
+                .setFileName(file.getName())
+                .setLastModified(file.lastModified())
+                .setPath(file.getAbsolutePath())
+                .setType(getType(file));
+
+        if (file.isDirectory()) {
+            File[] fs = file.listFiles();
+            builder.setSize(fs == null ? 0 : fs.length);
+        } else {
+            builder.setSize(file.length());
+        }
+        return builder.build();
+    }
+
     static List<DocumentInfo> getDocumentInfos(File dir, int sortBy, FilenameFilter filter) {
 
         File[] files;
@@ -168,21 +184,9 @@ public class DocumentUtils {
         boolean isAscending = false;
 
         for (File file : files) {
-            DocumentInfo.Builder builder = new DocumentInfo.Builder()
-                    .setFileName(file.getName())
-                    .setLastModified(file.lastModified())
-                    .setPath(file.getAbsolutePath())
-                    .setType(getType(file));
-
-            if (file.isDirectory()) {
-                File[] fs = file.listFiles();
-                builder.setSize(fs == null ? 0 : fs.length);
-            } else {
-                builder.setSize(file.length());
-            }
 
 
-            infos.add(builder.build());
+            infos.add(buildDocumentInfo(file));
         }
 
         switch (sortBy) {
@@ -420,7 +424,7 @@ public class DocumentUtils {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
-                MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(documentInfo.getFileName(),".")));
+                MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(documentInfo.getFileName(), ".")));
 
         if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
             context.startActivity(Intent.createChooser(intent, "打开"));

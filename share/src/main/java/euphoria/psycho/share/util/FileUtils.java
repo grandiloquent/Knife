@@ -4,12 +4,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.text.Collator;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.Locale;
 
 public class FileUtils {
     public static final int DEFAULT_BUFFER_SIZE = 4096;
@@ -71,6 +78,25 @@ public class FileUtils {
         }
     }
 
+    public static void sortByName(File[] files, boolean isAscending) {
+
+        Collator collator = Collator.getInstance(Locale.CHINA);
+        Arrays.sort(files, new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                boolean b1 = o1.isDirectory();
+                boolean b2 = o2.isDirectory();
+                if (b1 == b2) {
+                    return collator.compare(o1.getName(), o2.getName());
+                } else if (b1) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        });
+    }
+
     public static long copyLarge(final InputStream input, final OutputStream output, final byte[] buffer)
             throws IOException {
         long count = 0;
@@ -111,6 +137,25 @@ public class FileUtils {
             }
         }
         return totalRead;
+    }
+
+    public static String getExtension(String path) {
+        if (path == null)
+            return null;
+
+        int length = path.length();
+        for (int i = length; --i >= 0; ) {
+            char ch = path.charAt(i);
+            if (ch == '.') {
+                if (i != length - 1)
+                    return path.substring(i + 1, length - i);
+                else
+                    return "";
+            }
+            if (ch == File.separatorChar)
+                break;
+        }
+        return "";
     }
 
     public static String getValidFilName(String fileName, char replaceChar) {
@@ -202,29 +247,34 @@ public class FileUtils {
         }
     }
 
-    public static String getExtension(String path) {
-        if (path == null)
-            return null;
-
-        int length = path.length();
-        for (int i = length; --i >= 0; ) {
-            char ch = path.charAt(i);
-            if (ch == '.') {
-                if (i != length - 1)
-                    return path.substring(i + 1, length - i);
-                else
-                    return "";
-            }
-            if (ch == File.separatorChar)
-                break;
-        }
-        return "";
-    }
-
     public static byte[] toByteArray(final InputStream input) throws IOException {
         try (final ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             copy(input, output);
             return output.toByteArray();
+        }
+    }
+
+    public static Collection<File> getFiles(File directory, final FileFilter filter, boolean includeSubDirectories) {
+        final Collection<File> files = new LinkedList<>();
+        innerListFiles(files, directory,
+                filter, includeSubDirectories);
+        return files;
+    }
+
+    private static void innerListFiles(final Collection<File> files, final File directory,
+                                       final FileFilter filter, final boolean includeSubDirectories) {
+        final File[] found = directory.listFiles(filter);
+        if (found != null) {
+            for (final File file : found) {
+                if (file.isDirectory()) {
+                    if (includeSubDirectories) {
+                        files.add(file);
+                    }
+                    innerListFiles(files, file, filter, includeSubDirectories);
+                } else {
+                    files.add(file);
+                }
+            }
         }
     }
 }

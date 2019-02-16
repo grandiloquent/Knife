@@ -10,6 +10,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
 import euphoria.psycho.share.cache.BlobCache;
+import euphoria.psycho.share.util.KeyUtils;
+import euphoria.psycho.share.util.Utils;
 
 public class Bookmarker {
     private static final String TAG = "Bookmarker";
@@ -28,7 +30,7 @@ public class Bookmarker {
         mContext = context;
     }
 
-    public void setBookmark(Uri uri, int bookmark, int duration) {
+    public void setBookmark(String path, int bookmark/*, int duration*/) {
         try {
             BlobCache cache = CacheManager.getCache(mContext,
                     BOOKMARK_CACHE_FILE, BOOKMARK_CACHE_MAX_ENTRIES,
@@ -36,41 +38,41 @@ public class Bookmarker {
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(bos);
-            dos.writeUTF(uri.toString());
+            dos.writeUTF(path);
             dos.writeInt(bookmark);
-            dos.writeInt(duration);
+            //dos.writeInt(duration);
             dos.flush();
-            cache.insert(uri.hashCode(), bos.toByteArray());
+            cache.insert(Utils.crc64Long(path), bos.toByteArray());
         } catch (Throwable t) {
             Log.w(TAG, "setBookmark failed", t);
         }
     }
 
-    public Integer getBookmark(Uri uri) {
+    public Integer getBookmark(String path) {
         try {
             BlobCache cache = CacheManager.getCache(mContext,
                     BOOKMARK_CACHE_FILE, BOOKMARK_CACHE_MAX_ENTRIES,
                     BOOKMARK_CACHE_MAX_BYTES, BOOKMARK_CACHE_VERSION);
 
-            byte[] data = cache.lookup(uri.hashCode());
-            if (data == null) return null;
+            byte[] data = cache.lookup(Utils.crc64Long(path));
+            if (data == null) return 0;
 
             DataInputStream dis = new DataInputStream(
                     new ByteArrayInputStream(data));
 
             String uriString = DataInputStream.readUTF(dis);
             int bookmark = dis.readInt();
-            int duration = dis.readInt();
+            //int duration = dis.readInt();
 
-            if (!uriString.equals(uri.toString())) {
-                return null;
+            if (!uriString.equals(path)) {
+                return 0;
             }
 
-            if ((bookmark < HALF_MINUTE) || (duration < TWO_MINUTES)
-                    || (bookmark > (duration - HALF_MINUTE))) {
-                return null;
-            }
-            return Integer.valueOf(bookmark);
+//            if ((bookmark < HALF_MINUTE) || (duration < TWO_MINUTES)
+//                    || (bookmark > (duration - HALF_MINUTE))) {
+//                return null;
+//            }
+            return bookmark;
         } catch (Throwable t) {
             Log.w(TAG, "getBookmark failed", t);
         }

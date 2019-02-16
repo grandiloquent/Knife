@@ -53,9 +53,9 @@ import euphoria.psycho.knife.R;
 public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
 
-    private static final String EXTRA_NEXT = "next";
     private static final String DEFAULT_DIRECTORY_NAME = "Videos";
     private static final int DELAY_IN_MILLIS_UPDATE_PROGRESS = 1000;
+    private static final String EXTRA_NEXT = "next";
     private static final long HIDE_CONTROLLER_DELAY_IN_MILLIS = 5000;
     private static final String TAG = "TAG/" + VideoFragment.class.getSimpleName();
     private static final int TOUCH_IGNORE = 1;
@@ -93,6 +93,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private View mDecorView;
     private Runnable mVisibilityChecker = this::hide;
     private View mRootLayout;
+    private Bookmarker mBookmarker;
 
     private void actionDeleteVideo() {
         mHandler.removeCallbacks(null);
@@ -256,6 +257,8 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
             }
 
         });
+
+        mBookmarker = new Bookmarker(getContext());
     }
 
     @SuppressLint("NewApi")
@@ -313,6 +316,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
     private void onNext(View view) {
         if (mCurrentPlaying + 1 < mPlayList.size()) {
+            mBookmarker.setBookmark(mPlayList.get(mCurrentPlaying), mVideoView.getCurrentPosition());
             mVideoView.setVideoPath(mPlayList.get(++mCurrentPlaying));
         }
     }
@@ -320,6 +324,7 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private void onPlay(View view) {
         if (mVideoView.isPlaying()) {
             mHandler.removeCallbacksAndMessages(null);
+            mBookmarker.setBookmark(mPlayList.get(mCurrentPlaying), mVideoView.getCurrentPosition());
             mVideoView.pause();
             mPlay.setImageResource(R.drawable.ic_play_arrow_white_48px);
 
@@ -334,11 +339,21 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     private void onPrepared(MediaPlayer mp) {
         mVideoView.start();
         loadSubtitle();
+        int seekTo = mBookmarker.getBookmark(mPlayList.get(mCurrentPlaying));
+        if (seekTo > 0) {
+            mVideoView.seekTo(seekTo);
+        }
         mSeekbar.setDuration(mVideoView.getDuration());
         mDuration.setText(DateUtils.getStringForTime(mStringBuilder, mFormatter, mVideoView.getDuration()));
         mToolbar.setTitle(StringUtils.substringAfterLast(mPlayList.get(mCurrentPlaying), "/"));
         updateProgress();
         mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
+    }
+
+    @Override
+    public void onPause() {
+        mBookmarker.setBookmark(mPlayList.get(mCurrentPlaying), mVideoView.getCurrentPosition());
+        super.onPause();
     }
 
     private void onPrevious(View view) {
@@ -445,7 +460,6 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
             mHandler.removeCallbacksAndMessages(null);
             //SystemUtils.showSystemUI(mDecorView);
-
 
 
             if (mBackToWhere == 0) {

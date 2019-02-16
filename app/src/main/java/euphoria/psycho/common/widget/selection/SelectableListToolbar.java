@@ -223,6 +223,9 @@ public class SelectableListToolbar<E>
         }
     }
 
+    public EditText getSearchEditText() {
+        return mSearchEditText;
+    }
 
     /**
      * Inflates and initializes the search view.

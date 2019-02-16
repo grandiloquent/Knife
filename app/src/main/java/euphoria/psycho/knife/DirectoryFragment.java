@@ -9,15 +9,21 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Pair;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,15 +59,15 @@ import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
 
 public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,
         DocumentActionDelegate,
-        Toolbar.OnMenuItemClickListener,
+
         SelectableListToolbar.SearchDelegate {
+    private static final int MSG_SEARCH = 0;
     private DocumentsAdapter mAdapter;
     private SelectableListLayout mContainer;
     private File mDirectory;
     private int mLastVisiblePosition;
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
-    private BottomSheet mBottomSheet;
     //    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
 //        @Override
 //        public void onGlobalLayout() {
@@ -75,9 +81,26 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 //    };
     private SelectionDelegate mSelectionDelegate;
     private int mSortBy = C.SORT_BY_UNSPECIFIED;
-    private DirectoryToolbar mToolbar;
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
 
-    private boolean clearSelections() {
+
+            String search = (String) msg.obj;
+            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, search != null ? (dir, name) -> {
+                if (name.contains(search)) return true;
+                return false;
+            } : null);
+
+
+            mAdapter.switchDataSet(infos);
+
+        }
+    };
+    private DirectoryToolbar mToolbar;
+    ThumbnailProvider mThumbnailProvider;
+
+    public boolean clearSelections() {
         if (mSelectionDelegate.getSelectedItems().size() > 0) {
             mSelectionDelegate.clearSelection();
             return true;
@@ -89,11 +112,36 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         return mDirectory;
     }
 
-    private void initializeBottomSheet() {
-        if (mBottomSheet == null) {
-            mBottomSheet = new BottomSheet(getActivity());
-            mBottomSheet.setOnClickListener(this::onBottomSheetClicked);
-        }
+    public DocumentsAdapter getDocumentsAdapter() {
+        return mAdapter;
+    }
+
+    public SelectableListLayout getSelectableListLayout() {
+        return mContainer;
+    }
+
+    public SelectionDelegate getSelectionDelegate() {
+        return mSelectionDelegate;
+    }
+
+    public DirectoryToolbar getToolbar() {
+        return mToolbar;
+    }
+
+    private void initializeToolbar() {
+        MenuDelegate menuDelegate = new MenuDelegate(this);
+
+        mToolbar = (DirectoryToolbar) mContainer.initializeToolbar(
+                R.layout.directory_toolbar, mSelectionDelegate,
+                R.string.app_name, null,
+                R.id.normal_menu_group, R.id.selection_mode_menu_group,
+                menuDelegate,
+                true,
+                true);
+        mToolbar.getMenu().setGroupVisible(R.id.normal_menu_group, true);
+        mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
+
+        mToolbar.getSearchEditText().setOnKeyListener(this::onSearch);
     }
 
     private void loadPreferences() {
@@ -162,6 +210,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             case R.drawable.ic_create_new_folder_blue_24px:
                 DocumentUtils.buildNewDirectoryDialog(getContext(), new DialogListener<CharSequence>() {
                     @Override
+                    public void cancel() {
+
+                    }
+
+                    @Override
                     public void ok(CharSequence charSequence) {
                         if (charSequence == null) return;
                         String name = euphoria.psycho.share.util.FileUtils.getValidFilName(charSequence.toString(), ' ');
@@ -171,15 +224,61 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                         }
 
                     }
-
-                    @Override
-                    public void cancel() {
-
-                    }
                 });
                 break;
         }
         updateRecyclerView(false);
+    }
+
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+
+
+            case R.id.action_sort_by_date:
+
+                sortBy(C.SORT_BY_DATE_MODIFIED);
+                break;
+            case R.id.action_sort_by_name:
+                mToolbar.hideOverflowMenu();
+
+                sortBy(C.SORT_BY_NAME);
+                break;
+            case R.id.action_sort_by_size:
+                sortBy(C.SORT_BY_SIZE);
+                break;
+
+
+        }
+        return true;
+    }
+
+    public boolean onSearch(View v, int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_UP) {
+            ThreadUtils.postOnBackgroundThread(() -> {
+                String value = mToolbar.getSearchEditText().getText().toString();
+                Pattern pattern = Pattern.compile(value);
+                Collection<File> collection = euphoria.psycho.share.util.FileUtils.getFiles(mDirectory, pathname -> {
+                    if (pathname.isDirectory() || pattern.matcher(pathname.getName()).find()) {
+                        return true;
+                    }
+                    return false;
+                }, true);
+                List<DocumentInfo> documentInfos = new ArrayList<>();
+                File[] files = collection.toArray(new File[0]);
+                euphoria.psycho.share.util.FileUtils.sortByName(files, true);
+                for (File file : files) {
+
+                    documentInfos.add(DocumentUtils.buildDocumentInfo(file));
+
+
+                }
+                ThreadUtils.postOnUiThread(() -> {
+                    mAdapter.switchDataSet(documentInfos);
+                });
+            });
+
+        }
+        return false;
     }
 
     private void savePreferences() {
@@ -188,11 +287,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         preferences.edit().putInt(C.KEY_SCROLL_Y, mLastVisiblePosition)
                 .putString(C.KEY_DIRECTORY, mDirectory.getAbsolutePath())
                 .putInt(C.KEY_SORT_BY, mSortBy).apply();
-    }
-
-
-    private void showBottomSheet() {
-        mBottomSheet.showDialog();
     }
 
     private void sortBy(int sortBy) {
@@ -206,7 +300,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mLastVisiblePosition = mLayoutManager.findLastVisibleItemPosition();
     }
 
-    private void updateRecyclerView(boolean isScrollTo) {
+    public void updateRecyclerView(boolean isScrollTo) {
         ThreadUtils.postOnBackgroundThread(() -> {
             List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, null);
             ThreadUtils.postOnUiThread(() -> {
@@ -257,10 +351,18 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public ThumbnailProvider getThumbnailProvider() {
+        if (mThumbnailProvider == null) {
+            mThumbnailProvider = new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
+        }
+        return mThumbnailProvider;
+    }
+
+    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ((BaseActivity) Objects.requireNonNull(getActivity())).setOnBackPressedListener(this::onBackPressed);
-        initializeBottomSheet();
+
     }
 
     @Override
@@ -316,89 +418,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-
-
-            String search = (String) msg.obj;
-            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, search != null ? (dir, name) -> {
-                if (name.contains(search)) return true;
-                return false;
-            } : null);
-
-
-            mAdapter.switchDataSet(infos);
-
-        }
-    };
-
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.close_menu_id:
-                mToolbar.hideOverflowMenu();
-
-                showBottomSheet();
-                return true;
-            case R.id.search_menu_id:
-                mToolbar.hideOverflowMenu();
-
-                mToolbar.showSearchView();
-                mContainer.onStartSearch();
-                return true;
-            case R.id.selection_mode_delete_menu_id:
-                mToolbar.hideOverflowMenu();
-
-                List<DocumentInfo> documentInfos = mSelectionDelegate.getSelectedItemsAsList();
-                DocumentUtils.buildDeleteDialog(getActivity(), aBoolean -> {
-                    clearSelections();
-                    updateRecyclerView(false);
-                }, documentInfos.toArray(new DocumentInfo[0]));
-
-                break;
-            case R.id.action_sort_by_date:
-
-                sortBy(C.SORT_BY_DATE_MODIFIED);
-                break;
-            case R.id.action_sort_by_name:
-                mToolbar.hideOverflowMenu();
-
-                sortBy(C.SORT_BY_NAME);
-                break;
-            case R.id.action_sort_by_size:
-                sortBy(C.SORT_BY_SIZE);
-                break;
-            case R.id.action_select_same_type:
-                DocumentUtils.selectSameTypes(mSelectionDelegate, mAdapter);
-                break;
-            case R.id.action_select_all:
-                DocumentUtils.selectAll(mSelectionDelegate, mAdapter);
-                break;
-            case R.id.selection_mode_cut_menu_id:
-
-                OperationManager.instance().setSource(mSelectionDelegate.getSelectedItemsAsList(), false);
-                mSelectionDelegate.clearSelection();
-
-                break;
-            case R.id.selection_mode_copy_menu_id:
-
-                OperationManager.instance().setSource(mSelectionDelegate.getSelectedItemsAsList(), true);
-                mSelectionDelegate.clearSelection();
-
-                break;
-        }
-        return true;
-    }
-
     @Override
     public void onPause() {
         super.onPause();
         savePreferences();
     }
-
-    private static final int MSG_SEARCH = 0;
 
     @Override
     public void onSearchTextChanged(String query) {
@@ -407,12 +431,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mHandler.obtainMessage(MSG_SEARCH, query).sendToTarget();
     }
 
-
     @Override
     public void onSelectionStateChange(List<DocumentInfo> selectedItems) {
 
     }
-
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -438,16 +460,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
 
         //
-        mToolbar = (DirectoryToolbar) mContainer.initializeToolbar(
-                R.layout.directory_toolbar, mSelectionDelegate,
-                R.string.app_name, null,
-                R.id.normal_menu_group, R.id.selection_mode_menu_group,
-                this,
-                true,
-                true);
-        mToolbar.getMenu().setGroupVisible(R.id.normal_menu_group, true);
-        mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
 
+        initializeToolbar();
 
         loadPreferences();
         updateRecyclerView(true);
@@ -473,16 +487,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 });
     }
 
-    ThumbnailProvider mThumbnailProvider;
-
-    @Override
-    public ThumbnailProvider getThumbnailProvider() {
-        if (mThumbnailProvider == null) {
-            mThumbnailProvider = new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
-        }
-        return mThumbnailProvider;
-    }
-
     @Override
     public void share(DocumentInfo documentInfo) {
         Intent shareIntent = new Intent();
@@ -494,11 +498,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void trimVideo(DocumentInfo documentInfo) {
-
-    }
-
-    @Override
-    public void updateItem(DocumentInfo documentInfo) {
 
     }
 
@@ -516,5 +515,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             });
             job.unzip(documentInfo.getPath());
         });
+    }
+
+    @Override
+    public void updateItem(DocumentInfo documentInfo) {
+
     }
 }
