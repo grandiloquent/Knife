@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory.Options;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Process;
+import android.util.Log;
 
 import euphoria.psycho.share.util.BitmapUtils;
 
@@ -49,9 +50,18 @@ public class ImageLoaderJob implements Runnable {
         }
 
         int[] size = BitmapUtils.getBitmapSize(mImagePath);
+
+
         BitmapFactory.Options options = new Options();
         options.inSampleSize = BitmapUtils.computeSampleSize(size[0], size[1], BitmapUtils.UNCONSTRAINED, mMaxNumPixels);
-        Bitmap bitmap = BitmapFactory.decodeFile(mImagePath);
+        Bitmap bitmap = BitmapFactory.decodeFile(mImagePath, options);
+
+
+        Log.e("TAG/ImageLoaderJob", "run: "
+                + "\n size = " + size[0] + "x" + size[1] + " " + (size[0] * size[1])
+                + "\n Max Pixels Number = " + mMaxNumPixels
+                + "\n SampleSize = " + BitmapUtils.computeSampleSize(size[0], size[1], BitmapUtils.UNCONSTRAINED, mMaxNumPixels));
+
         if (bitmap == null) {
             if (mObserver != null) mObserver.onLoadFinished(null);
         }

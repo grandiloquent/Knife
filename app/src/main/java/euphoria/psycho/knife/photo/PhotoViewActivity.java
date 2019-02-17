@@ -45,7 +45,7 @@ public class PhotoViewActivity extends BaseActivity implements
     private File mDirectory;
     private ImageLoader mImageLoader;
     private String mPhotosUri;
-    private int mCurrentPhotoIndex;
+    private int mCurrentPhotoIndex = -1;
     String mActionBarTitle;
     String mActionBarSubtitle;
     private int mLastAnnouncedTitle;
@@ -104,6 +104,8 @@ public class PhotoViewActivity extends BaseActivity implements
             ThreadUtils.postOnUiThread(() -> {
                 mAdapter.switchDatas(imageInfos);
                 mViewPager.setVisibility(View.VISIBLE);
+                if (mCurrentPhotoIndex < 0)
+                    mCurrentPhotoIndex = 0;
                 setViewActivated(mCurrentPhotoIndex);
             });
         });
@@ -113,6 +115,12 @@ public class PhotoViewActivity extends BaseActivity implements
         if (mIsTimerLightsOutEnabled) {
             mHandler.postDelayed(mEnterFullScreenRunnable, mEnterFullScreenDelayTime);
         }
+    }
+
+    protected final void setActionBarTitles() {
+
+        getSupportActionBar().setTitle(getInputOrEmpty(mActionBarTitle));
+        getSupportActionBar().setSubtitle(getInputOrEmpty(mActionBarSubtitle));
     }
 
     private void setFullScreen(boolean fullScreen, boolean setDelayedRunnable) {
@@ -233,22 +241,24 @@ public class PhotoViewActivity extends BaseActivity implements
     }
 
     public void updateActionBar() {
-        final int position = mViewPager.getCurrentItem() + 1;
-        final boolean hasAlbumCount = mAlbumCount >= 0;
+        final int position = mViewPager.getCurrentItem();
 
-        if (mAdapter.getImageInfo(position) == null) return;
+
 
         mActionBarTitle = mAdapter.getImageInfo(position).getTitle();
 
-        if (mIsEmpty || !hasAlbumCount || position <= 0) {
-            mActionBarSubtitle = null;
-        } else {
-            mActionBarSubtitle = getResources().getString(
-                    R.string.photo_view_count, position, mAlbumCount);
-        }
+        mActionBarSubtitle = getResources().getString(
+                R.string.photo_view_count, position + 1, mAlbumCount);
 
-        getSupportActionBar().setTitle(mActionBarTitle);
-        getSupportActionBar().setSubtitle(mActionBarSubtitle);
+
+        setActionBarTitles();
+    }
+
+    private static final String getInputOrEmpty(String in) {
+        if (in == null) {
+            return "";
+        }
+        return in;
     }
 
     @Override
@@ -287,7 +297,7 @@ public class PhotoViewActivity extends BaseActivity implements
             mPhotosUri = intent.getStringExtra(PhotoManager.EXTRA_PHOTOS_URI);
             mDirectory = new File(mPhotosUri).getParentFile();
         } else {
-            mDirectory = SystemUtils.getCameraDirectory();
+            mDirectory = SystemUtils.getDCIMDirectory();
 
 
         }
@@ -324,12 +334,6 @@ public class PhotoViewActivity extends BaseActivity implements
         //setImmersiveMode(false);
     }
 
-    public void onEnterAnimationComplete() {
-        mEnterAnimationFinished = true;
-        mViewPager.setVisibility(View.VISIBLE);
-        setImmersiveMode(mFullScreen);
-    }
-
     @Override
     public boolean isFragmentActive(PhotoViewFragment fragment) {
         if (mViewPager == null || mAdapter == null) {
@@ -349,6 +353,12 @@ public class PhotoViewActivity extends BaseActivity implements
         MenuItemUtils.addShareMenuItem(menu);
         return super.onCreateOptionsMenu(menu);
 
+    }
+
+    public void onEnterAnimationComplete() {
+        mEnterAnimationFinished = true;
+        mViewPager.setVisibility(View.VISIBLE);
+        setImmersiveMode(mFullScreen);
     }
 
     @Override
