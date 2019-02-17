@@ -39,6 +39,12 @@
             app:iconTint="@color/dark_mode_tint"
             app:showAsAction="ifRoom" />
         <item
+            android:id="@+id/bookmark_menu_id"
+            android:icon="@drawable/ic_bookmark_24px"
+            android:title="@string/bookmark"
+            app:iconTint="@color/dark_mode_tint"
+            app:showAsAction="ifRoom" />
+        <item
             android:id="@+id/sort_menu_id"
             android:icon="@drawable/ic_menu_sortby"
             android:title="@string/menu_sort"

@@ -52,7 +52,6 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
     }
 
 
-
     @Nullable
     @Override
     public String getContentId() {
@@ -100,7 +99,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
     public void onItemSelected(ListMenuButton.Item item) {
         switch (item.getTextId()) {
             case R.string.share:
-                mDelegate.share(getItem());
+                mDelegate.getListMenuDelegate().shareDocumentInfo(getItem());
                 break;
             case R.string.delete:
                 mDelegate.delete(getItem());
@@ -116,6 +115,9 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
                 break;
             case R.string.extract:
                 mDelegate.unzip(getItem());
+                break;
+            case R.string.add_bookmark:
+                mDelegate.getListMenuDelegate().addToBookmark(getItem());
                 break;
         }
     }

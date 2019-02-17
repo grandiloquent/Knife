@@ -2,7 +2,6 @@ package euphoria.psycho.knife;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -13,12 +12,9 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnKeyListener;
 import android.view.ViewGroup;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,7 +23,6 @@ import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -40,16 +35,13 @@ import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
-import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StorageUtils;
-import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.UnZipJob.UnZipListener;
-import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
 import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.knife.download.DownloadActivity;
@@ -97,8 +89,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
         }
     };
+    private ListMenuDelegate mListMenuDelegate;
     private DirectoryToolbar mToolbar;
     ThumbnailProvider mThumbnailProvider;
+    private Bookmark mBookmark;
 
     public boolean clearSelections() {
         if (mSelectionDelegate.getSelectedItems().size() > 0) {
@@ -106,6 +100,13 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             return true;
         }
         return false;
+    }
+
+    public Bookmark getBookmark() {
+        if (mBookmark == null) {
+            mBookmark = new Bookmark(getContext());
+        }
+        return mBookmark;
     }
 
     public File getDirectory() {
@@ -312,6 +313,18 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         });
     }
 
+    public void updateRecyclerView(String path) {
+        ThreadUtils.postOnBackgroundThread(() -> {
+            mDirectory = new File(path);
+            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, null);
+            ThreadUtils.postOnUiThread(() -> {
+                mAdapter.switchDataSet(infos);
+                mToolbar.setTitle(mDirectory.getName());
+
+            });
+        });
+    }
+
     public static void show(FragmentManager manager) {
         show(manager, null);
     }
@@ -346,8 +359,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
-    public void getProperties(DocumentInfo documentInfo) {
+    public ListMenuDelegate getListMenuDelegate() {
 
+        if (mListMenuDelegate == null) {
+            mListMenuDelegate = new ListMenuDelegate(this);
+        }
+        return mListMenuDelegate;
+    }
+
+    @Override
+    public void getProperties(DocumentInfo documentInfo) {
+        DocumentUtils.showDocumentProperties(getContext(), documentInfo);
     }
 
     @Override
@@ -413,8 +435,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void onEndSearch() {
-
-        Log.e("TAG/DirectoryFragment", "onEndSearch: ");
 
     }
 
@@ -485,15 +505,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                             new File(src.getParentFile(), newFileName));
                     if (renameResult) updateRecyclerView(false);
                 });
-    }
-
-    @Override
-    public void share(DocumentInfo documentInfo) {
-        Intent shareIntent = new Intent();
-        shareIntent.setAction(Intent.ACTION_SEND);
-        shareIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
-                MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(documentInfo.getFileName(), ".")));
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_link_title)));
     }
 
     @Override

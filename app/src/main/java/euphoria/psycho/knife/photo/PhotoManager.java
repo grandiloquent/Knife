@@ -53,41 +53,44 @@ public class PhotoManager {
 
     public int getMaxPhotoSize() {
 
-        if (mMaxPhotoSize == 0) {
-            final DisplayMetrics metrics = new DisplayMetrics();
-            final WindowManager wm = (WindowManager)
-                    mContext.getSystemService(Context.WINDOW_SERVICE);
-            final ImageSize imageSize;
-            if (Build.VERSION.SDK_INT >= 11) {
-                imageSize = ImageSize.NORMAL;
-            } else {
-                if (getMemoryClass() >= MIN_NORMAL_CLASS) {
-                    // We have plenty of memory; use full sized photos
-                    imageSize = ImageSize.NORMAL;
-                } else if (getMemoryClass() >= MIN_SMALL_CLASS) {
-                    // We have slight less memory; use smaller sized photos
-                    imageSize = ImageSize.SMALL;
-                } else {
-                    // We have little memory; use very small sized photos
-                    imageSize = ImageSize.EXTRA_SMALL;
-                }
-            }
-            wm.getDefaultDisplay().getMetrics(metrics);
-            switch (imageSize) {
-                case EXTRA_SMALL:
-                    // Use a photo that's 80% of the "small" size
-                    mMaxPhotoSize = (Math.min(metrics.heightPixels, metrics.widthPixels) * 800) / 1000;
-                    break;
-                case SMALL:
-                    // Fall through.
-                case NORMAL:
-                    // Fall through.
-                default:
-                    mMaxPhotoSize = Math.min(metrics.heightPixels, metrics.widthPixels);
-                    break;
-            }
-
-        }
+        if (mMaxPhotoSize == 0)
+            mMaxPhotoSize = mContext.getResources().getDisplayMetrics().widthPixels *
+                    mContext.getResources().getDisplayMetrics().heightPixels;
+//        if (mMaxPhotoSize == 0) {
+//            final DisplayMetrics metrics = new DisplayMetrics();
+//            final WindowManager wm = (WindowManager)
+//                    mContext.getSystemService(Context.WINDOW_SERVICE);
+//            final ImageSize imageSize;
+//            if (Build.VERSION.SDK_INT >= 11) {
+//                imageSize = ImageSize.NORMAL;
+//            } else {
+//                if (getMemoryClass() >= MIN_NORMAL_CLASS) {
+//                    // We have plenty of memory; use full sized photos
+//                    imageSize = ImageSize.NORMAL;
+//                } else if (getMemoryClass() >= MIN_SMALL_CLASS) {
+//                    // We have slight less memory; use smaller sized photos
+//                    imageSize = ImageSize.SMALL;
+//                } else {
+//                    // We have little memory; use very small sized photos
+//                    imageSize = ImageSize.EXTRA_SMALL;
+//                }
+//            }
+//            wm.getDefaultDisplay().getMetrics(metrics);
+//            switch (imageSize) {
+//                case EXTRA_SMALL:
+//                    // Use a photo that's 80% of the "small" size
+//                    mMaxPhotoSize = (Math.min(metrics.heightPixels, metrics.widthPixels) * 800) / 1000;
+//                    break;
+//                case SMALL:
+//                    // Fall through.
+//                case NORMAL:
+//                    // Fall through.
+//                default:
+//                    mMaxPhotoSize = Math.min(metrics.heightPixels, metrics.widthPixels);
+//                    break;
+//            }
+//
+//        }
 
         return mMaxPhotoSize;
     }
@@ -110,7 +113,6 @@ public class PhotoManager {
 
 
     }
-
 
 
     public boolean kitkatIsSecondaryUser() {

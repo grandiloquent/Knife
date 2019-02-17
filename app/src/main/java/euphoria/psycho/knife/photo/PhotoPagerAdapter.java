@@ -23,7 +23,10 @@ public class PhotoPagerAdapter extends BaseFragmentPagerAdapter {
     }
 
     public ImageInfo getImageInfo(int position) {
-        return mImageInfos.get(position);
+        if (position < mImageInfos.size())
+            return mImageInfos.get(position);
+        else
+            return null;
     }
 
 

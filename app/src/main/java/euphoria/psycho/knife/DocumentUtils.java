@@ -2,10 +2,13 @@ package euphoria.psycho.knife;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.view.WindowManager.LayoutParams;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 
 import java.io.File;
@@ -13,6 +16,7 @@ import java.io.FilenameFilter;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -21,10 +25,12 @@ import java.util.Set;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
 import euphoria.psycho.common.C;
+import euphoria.psycho.share.util.ClipboardUtils;
 import euphoria.psycho.share.util.CollectionUtils;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.DialogUtils;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
+import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
@@ -36,17 +42,10 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 
 public class DocumentUtils {
 
-    static {
-        System.loadLibrary("native-lib");
-    }
-
     private static String mTreeUri;
 
-    public static String getTreeUri() {
-        if (mTreeUri == null) {
-            mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
-        }
-        return mTreeUri;
+    static {
+        System.loadLibrary("native-lib");
     }
 
     static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
@@ -83,27 +82,20 @@ public class DocumentUtils {
         dlg.show();
     }
 
-    static void buildRenameDialog(Context context, String originalFileName, Consumer<CharSequence> callback) {
-        EditText editText = new EditText(context);
-        if (originalFileName != null) {
-            editText.setText(originalFileName);
-            int dotIndex = originalFileName.lastIndexOf('.');
-            if (dotIndex != -1) {
-                editText.setSelection(0, dotIndex);
-            }
-        }
+    static DocumentInfo buildDocumentInfo(File file) {
+        DocumentInfo.Builder builder = new DocumentInfo.Builder()
+                .setFileName(file.getName())
+                .setLastModified(file.lastModified())
+                .setPath(file.getAbsolutePath())
+                .setType(getType(file));
 
-        AlertDialog dlg = new AlertDialog.Builder(context)
-                .setView(editText)
-                .setTitle(R.string.dialog_rename_title)
-                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
-                    dialog.dismiss();
-                    callback.accept(editText.getText());
-                }))
-                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
-        editText.requestFocus();
-        dlg.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        dlg.show();
+        if (file.isDirectory()) {
+            File[] fs = file.listFiles();
+            builder.setSize(fs == null ? 0 : fs.length);
+        } else {
+            builder.setSize(file.length());
+        }
+        return builder.build();
     }
 
     static void buildNewDirectoryDialog(Context context, DialogListener<CharSequence> listener) {
@@ -150,24 +142,78 @@ public class DocumentUtils {
 //        dialog.show();
     }
 
+    static void buildRenameDialog(Context context, String originalFileName, Consumer<CharSequence> callback) {
+        EditText editText = new EditText(context);
+        if (originalFileName != null) {
+            editText.setText(originalFileName);
+            int dotIndex = originalFileName.lastIndexOf('.');
+            if (dotIndex != -1) {
+                editText.setSelection(0, dotIndex);
+            }
+        }
+
+        AlertDialog dlg = new AlertDialog.Builder(context)
+                .setView(editText)
+                .setTitle(R.string.dialog_rename_title)
+                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
+                    dialog.dismiss();
+                    callback.accept(editText.getText());
+                }))
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
+        editText.requestFocus();
+        dlg.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        dlg.show();
+    }
+
     public static native long calculateDirectory(String dir);
 
     public static native int deleteDirectories(String[] directories);
 
-    static DocumentInfo buildDocumentInfo(File file) {
-        DocumentInfo.Builder builder = new DocumentInfo.Builder()
-                .setFileName(file.getName())
-                .setLastModified(file.lastModified())
-                .setPath(file.getAbsolutePath())
-                .setType(getType(file));
+    public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
+        List<Item> items = new ArrayList<>();
 
-        if (file.isDirectory()) {
-            File[] fs = file.listFiles();
-            builder.setSize(fs == null ? 0 : fs.length);
-        } else {
-            builder.setSize(file.length());
+        items.add(new Item(context, R.string.rename, true));
+        items.add(new Item(context, R.string.delete, true));
+        items.add(new Item(context, R.string.share, true));
+        items.add(new Item(context, R.string.properties, true));
+
+        switch (documentInfo.getType()) {
+            case C.TYPE_APK: {
+                break;
+            }
+            case C.TYPE_AUDIO: {
+                break;
+            }
+            case C.TYPE_DIRECTORY: {
+                items.add(new Item(context, R.string.add_bookmark, true));
+                break;
+            }
+            case C.TYPE_EXCEL: {
+                break;
+            }
+            case C.TYPE_OTHER: {
+                break;
+            }
+            case C.TYPE_PDF: {
+                break;
+            }
+            case C.TYPE_TEXT: {
+                break;
+            }
+            case C.TYPE_VIDEO: {
+                items.add(new Item(context, R.string.trim_video, true));
+                break;
+            }
+            case C.TYPE_WORD: {
+                break;
+            }
+            case C.TYPE_ZIP: {
+                items.add(new Item(context, R.string.extract, true));
+                break;
+            }
         }
-        return builder.build();
+
+        return items.toArray(new Item[0]);
     }
 
     static List<DocumentInfo> getDocumentInfos(File dir, int sortBy, FilenameFilter filter) {
@@ -293,6 +339,13 @@ public class DocumentUtils {
         return AppCompatResources.getColorStateList(context, R.color.white_mode_tint);
     }
 
+    public static String getTreeUri() {
+        if (mTreeUri == null) {
+            mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
+        }
+        return mTreeUri;
+    }
+
     private static int getType(File file) {
         if (file.isDirectory()) return C.TYPE_DIRECTORY;
 
@@ -358,52 +411,6 @@ public class DocumentUtils {
                 .build(), backWhere);
     }
 
-    public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
-        List<Item> items = new ArrayList<>();
-
-        items.add(new Item(context, R.string.rename, true));
-        items.add(new Item(context, R.string.delete, true));
-        items.add(new Item(context, R.string.share, true));
-        items.add(new Item(context, R.string.properties, true));
-
-        switch (documentInfo.getType()) {
-            case C.TYPE_APK: {
-                break;
-            }
-            case C.TYPE_AUDIO: {
-                break;
-            }
-            case C.TYPE_DIRECTORY: {
-                break;
-            }
-            case C.TYPE_EXCEL: {
-                break;
-            }
-            case C.TYPE_OTHER: {
-                break;
-            }
-            case C.TYPE_PDF: {
-                break;
-            }
-            case C.TYPE_TEXT: {
-                break;
-            }
-            case C.TYPE_VIDEO: {
-                items.add(new Item(context, R.string.trim_video, true));
-                break;
-            }
-            case C.TYPE_WORD: {
-                break;
-            }
-            case C.TYPE_ZIP: {
-                items.add(new Item(context, R.string.extract, true));
-                break;
-            }
-        }
-
-        return items.toArray(new Item[0]);
-    }
-
     public static void openContent(Context context, DocumentInfo documentInfo, int backWhere) {
         if (documentInfo.getType() == C.TYPE_VIDEO) {
 
@@ -438,6 +445,11 @@ public class DocumentUtils {
         }
     }
 
+    static void selectAll(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
+
+        delegate.setSelectedItems(CollectionUtils.toHashSet(adapter.getInfos()));
+    }
+
     static void selectSameTypes(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
 
 
@@ -458,9 +470,41 @@ public class DocumentUtils {
         delegate.setSelectedItems(documentInfoSet);
     }
 
-    static void selectAll(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
+    static void shareDocument(Context context, DocumentInfo documentInfo) {
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        String extension = FileUtils.getExtension(documentInfo.getFileName());
+        shareIntent.setType(MimeUtils.guessMimeTypeFromExtension(extension));
+        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(documentInfo.getPath())));
+        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_link_title)));
+    }
 
-        delegate.setSelectedItems(CollectionUtils.toHashSet(adapter.getInfos()));
+    static void showDocumentProperties(Context context,
+                                       DocumentInfo info) {
+        ThreadUtils.postOnBackgroundThread(() -> {
+            final List<String> properties = new ArrayList<>();
+
+            properties.add(context.getString(R.string.dialog_properties_path));
+            properties.add(info.getPath());
+            properties.add(context.getString(R.string.dialog_properties_size));
+            if (info.getType() == C.TYPE_DIRECTORY) {
+                properties.add(android.text.format.Formatter.formatFileSize(context, calculateDirectory(info.getPath())));
+            } else {
+                properties.add(android.text.format.Formatter.formatFileSize(context, info.getSize()));
+            }
+
+            ThreadUtils.postOnUiThread(() -> {
+                new AlertDialog.Builder(context)
+                        .setTitle(R.string.dialog_properties_title)
+                        .setAdapter(new ArrayAdapter<>(context, R.layout.dialog_properties, R.id.line1, properties),
+                                (dialog, which) -> {
+                                    ClipboardUtils.writeToClipboard(context, properties.get(which));
+                                }).show();
+
+            });
+        });
+
+
     }
 
     interface Consumer<T> {

@@ -3,9 +3,12 @@ package euphoria.psycho.knife.photo;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Process;
+
+import euphoria.psycho.share.util.BitmapUtils;
 
 public class ImageLoaderJob implements Runnable {
 
@@ -14,14 +17,14 @@ public class ImageLoaderJob implements Runnable {
     private final ImageLoaderObserver mObserver;
     private volatile boolean mIsStop;
     private final Context mContext;
-    private final int mMaxSize;
+    private final int mMaxNumPixels;
 
-    public ImageLoaderJob(Context context, String id, String imagePath, int maxSize, ImageLoaderObserver observer) {
+    public ImageLoaderJob(Context context, String id, String imagePath, int maxNumPixels, ImageLoaderObserver observer) {
         mImagePath = imagePath;
         mId = id;
         mObserver = observer;
         mContext = context;
-        mMaxSize = maxSize;
+        mMaxNumPixels = maxNumPixels;
     }
 
     public String getId() {
@@ -45,6 +48,9 @@ public class ImageLoaderJob implements Runnable {
             return;
         }
 
+        int[] size = BitmapUtils.getBitmapSize(mImagePath);
+        BitmapFactory.Options options = new Options();
+        options.inSampleSize = BitmapUtils.computeSampleSize(size[0], size[1], BitmapUtils.UNCONSTRAINED, mMaxNumPixels);
         Bitmap bitmap = BitmapFactory.decodeFile(mImagePath);
         if (bitmap == null) {
             if (mObserver != null) mObserver.onLoadFinished(null);

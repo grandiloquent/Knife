@@ -1,9 +1,15 @@
 package euphoria.psycho.knife;
 
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.util.Log;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 
@@ -53,7 +59,7 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
                 DocumentUtils.selectSameTypes(mFragment.getSelectionDelegate(), mFragment.getDocumentsAdapter());
                 break;
             case R.id.action_select_all:
-                DocumentUtils.selectAll(mFragment.getSelectionDelegate(),mFragment.getDocumentsAdapter());
+                DocumentUtils.selectAll(mFragment.getSelectionDelegate(), mFragment.getDocumentsAdapter());
                 break;
             case R.id.selection_mode_cut_menu_id:
 
@@ -61,8 +67,29 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
                 mFragment.getSelectionDelegate().clearSelection();
 
                 break;
+            case R.id.bookmark_menu_id:
+                showBookmark();
+                break;
         }
-        return false;
+        return true;
+    }
+
+    private void showBookmark() {
+        List<String> bookmarks = mFragment.getBookmark().fetchBookmarks();
+
+        Log.e("TAG/MenuDelegate", "showBookmark: " + bookmarks.size());
+
+        new AlertDialog.Builder(mFragment.getContext())
+                .setTitle(R.string.bookmark)
+                .setAdapter(new ArrayAdapter<>(mFragment.getContext(),
+                        R.layout.dialog_bookmark,
+                        R.id.line1, bookmarks), (dialog, which) -> {
+                    dialog.dismiss();
+                    mFragment.updateRecyclerView(bookmarks.get(which));
+                })
+                .setNegativeButton(android.R.string.cancel, ((dialog, which) -> dialog.dismiss()))
+                .setCancelable(false)
+                .show();
     }
 
     private void showBottomSheet() {

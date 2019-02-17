@@ -3,8 +3,9 @@
 buildscript {
     
     repositories {
-        google()
+        // 放在前面,避免防火墙导致无法下载依赖项
         jcenter()
+        google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
@@ -17,8 +18,9 @@ buildscript {
 
 allprojects {
     repositories {
-        google()
         jcenter()
+        google()
+
     }
 }
 

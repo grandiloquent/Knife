@@ -12,7 +12,6 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
 
     void unzip(DocumentInfo documentInfo);
 
-    void share(DocumentInfo documentInfo);
 
     void delete(DocumentInfo documentInfo);
 
@@ -21,6 +20,8 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
     void getProperties(DocumentInfo documentInfo);
 
     void rename(DocumentInfo documentInfo);
+
+    ListMenuDelegate getListMenuDelegate();
 
     ThumbnailProvider getThumbnailProvider();
 }

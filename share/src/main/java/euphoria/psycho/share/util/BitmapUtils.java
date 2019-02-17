@@ -3,13 +3,17 @@ package euphoria.psycho.share.util;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.os.Build;
 import android.util.Log;
+import android.util.Pair;
+import android.util.Size;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -263,5 +267,13 @@ public class BitmapUtils {
         if (mimeType == null) return false;
         mimeType = mimeType.toLowerCase();
         return mimeType.equals("image/jpeg");
+    }
+
+    public static int[] getBitmapSize(String path) {
+        BitmapFactory.Options options = new Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, options);
+        return new int[]{options.outWidth, options.outHeight};
+
     }
 }

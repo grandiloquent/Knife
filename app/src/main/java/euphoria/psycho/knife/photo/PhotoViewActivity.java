@@ -236,6 +236,7 @@ public class PhotoViewActivity extends BaseActivity implements
         final int position = mViewPager.getCurrentItem() + 1;
         final boolean hasAlbumCount = mAlbumCount >= 0;
 
+        if (mAdapter.getImageInfo(position) == null) return;
 
         mActionBarTitle = mAdapter.getImageInfo(position).getTitle();
 
@@ -322,11 +323,13 @@ public class PhotoViewActivity extends BaseActivity implements
         }
         //setImmersiveMode(false);
     }
+
     public void onEnterAnimationComplete() {
         mEnterAnimationFinished = true;
         mViewPager.setVisibility(View.VISIBLE);
         setImmersiveMode(mFullScreen);
     }
+
     @Override
     public boolean isFragmentActive(PhotoViewFragment fragment) {
         if (mViewPager == null || mAdapter == null) {

@@ -148,7 +148,7 @@ public class FileUtils {
             char ch = path.charAt(i);
             if (ch == '.') {
                 if (i != length - 1)
-                    return path.substring(i + 1, length - i);
+                    return path.substring(i + 1);
                 else
                     return "";
             }
