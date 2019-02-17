@@ -2,6 +2,7 @@ package euphoria.psycho.knife;
 
 import euphoria.psycho.common.base.BaseActionDelegate;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
+import euphoria.psycho.knife.delegate.ListMenuDelegate;
 
 public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo> {
 

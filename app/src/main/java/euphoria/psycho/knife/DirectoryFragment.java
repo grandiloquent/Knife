@@ -1,13 +1,11 @@
 package euphoria.psycho.knife;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -30,12 +28,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.C;
-import euphoria.psycho.knife.photo.PhotoViewActivity;
+import euphoria.psycho.knife.bottomsheet.BottomSheet;
+import euphoria.psycho.knife.delegate.BottomSheetDelegate;
+import euphoria.psycho.knife.delegate.ListMenuDelegate;
+import euphoria.psycho.knife.delegate.MenuDelegate;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
-import euphoria.psycho.share.util.DialogUtils.DialogListener;
-import euphoria.psycho.share.util.StorageUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -44,7 +43,6 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.UnZipJob.UnZipListener;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
 import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
-import euphoria.psycho.knife.download.DownloadActivity;
 import euphoria.psycho.knife.video.VideoFragment;
 
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
@@ -60,6 +58,12 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private int mLastVisiblePosition;
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
+    private BottomSheet mBottomSheet;
+
+    public BottomSheet getBottomSheet() {
+        return mBottomSheet;
+    }
+
     //    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
 //        @Override
 //        public void onGlobalLayout() {
@@ -189,47 +193,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
-    public void onBottomSheetClicked(Pair<Integer, String> item) {
-        switch (item.first) {
-            case R.drawable.ic_action_storage:
-                mDirectory = Environment.getExternalStorageDirectory();
-                break;
-            case R.drawable.ic_action_sd_card:
-                mDirectory = new File(FileUtils.getSDCardPath());
-                break;
-            case R.drawable.ic_action_file_download:
-                mDirectory = new File(Environment.getExternalStorageDirectory(), "Download");
-                break;
-            case R.drawable.ic_action_photo:
-                Intent pictureIntent = new Intent(getContext(), PhotoViewActivity.class);
-                startActivity(pictureIntent);
-                break;
-            case R.drawable.ic_file_download_blue_24px:
-                Intent downloadIntent = new Intent(getContext(), DownloadActivity.class);
-                startActivity(downloadIntent);
-                break;
-            case R.drawable.ic_create_new_folder_blue_24px:
-                DocumentUtils.buildNewDirectoryDialog(getContext(), new DialogListener<CharSequence>() {
-                    @Override
-                    public void cancel() {
 
-                    }
-
-                    @Override
-                    public void ok(CharSequence charSequence) {
-                        if (charSequence == null) return;
-                        String name = euphoria.psycho.share.util.FileUtils.getValidFilName(charSequence.toString(), ' ');
-                        if (StorageUtils.createDirectory(getContext(),
-                                mDirectory, name.trim(), DocumentUtils.getTreeUri())) {
-                            updateRecyclerView(false);
-                        }
-
-                    }
-                });
-                break;
-        }
-        updateRecyclerView(false);
-    }
 
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
@@ -313,9 +277,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         });
     }
 
-    public void updateRecyclerView(String path) {
+    public void updateRecyclerView(File dir) {
         ThreadUtils.postOnBackgroundThread(() -> {
-            mDirectory = new File(path);
+            mDirectory = dir;
             List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, null);
             ThreadUtils.postOnUiThread(() -> {
                 mAdapter.switchDataSet(infos);
@@ -482,6 +446,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         //
 
         initializeToolbar();
+        initializeBottomSheet();
 
         loadPreferences();
         updateRecyclerView(true);
@@ -490,6 +455,13 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             updateRecyclerView(false);
             OperationManager.instance().hideActionButtons();
         });
+    }
+
+    private void initializeBottomSheet() {
+        if (mBottomSheet == null) {
+            mBottomSheet = new BottomSheet(getActivity());
+            new BottomSheetDelegate(this);
+        }
     }
 
     @Override

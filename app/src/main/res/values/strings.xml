@@ -16,6 +16,7 @@
     <string name="app_name">Knife</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
     <string name="ask">Ask</string>
+    <string name="bookmark_no_exists">Can\'t find the directory marked by the bookmark</string>
     <string name="bookmark_action_bar_close">Close dialog</string>
     <string name="channel_name_directory">Files</string>
     <string name="delete">Delete</string>

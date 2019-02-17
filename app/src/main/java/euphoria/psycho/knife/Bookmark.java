@@ -39,6 +39,12 @@ public class Bookmark extends SQLiteOpenHelper {
         getWritableDatabase().insertWithOnConflict("bookmarks", null, values, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
+    public void delete(String bookmark) {
+        getWritableDatabase().delete("bookmarks", "bookmark=?", new String[]{
+                bookmark
+        });
+    }
+
     public List<String> fetchBookmarks() {
         try (Cursor cursor = getReadableDatabase().rawQuery("SELECT bookmark FROM bookmarks", null)) {
             List<String> bookmarks = new ArrayList<>();

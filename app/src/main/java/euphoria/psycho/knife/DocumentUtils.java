@@ -48,7 +48,7 @@ public class DocumentUtils {
         System.loadLibrary("native-lib");
     }
 
-    static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
+    public static void buildDeleteDialog(Context context, Consumer<Boolean> callback, DocumentInfo... documentInfos) {
 
 
         String description = documentInfos[0].getFileName();
@@ -98,7 +98,7 @@ public class DocumentUtils {
         return builder.build();
     }
 
-    static void buildNewDirectoryDialog(Context context, DialogListener<CharSequence> listener) {
+    public static void buildNewDirectoryDialog(Context context, DialogListener<CharSequence> listener) {
 
         EditText editText = new EditText(context);
         editText.setMaxLines(1);
@@ -445,12 +445,12 @@ public class DocumentUtils {
         }
     }
 
-    static void selectAll(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
+    public static void selectAll(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
 
         delegate.setSelectedItems(CollectionUtils.toHashSet(adapter.getInfos()));
     }
 
-    static void selectSameTypes(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
+    public static void selectSameTypes(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
 
 
         List<DocumentInfo> infos = delegate.getSelectedItemsAsList();
@@ -470,7 +470,7 @@ public class DocumentUtils {
         delegate.setSelectedItems(documentInfoSet);
     }
 
-    static void shareDocument(Context context, DocumentInfo documentInfo) {
+    public static void shareDocument(Context context, DocumentInfo documentInfo) {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
         String extension = FileUtils.getExtension(documentInfo.getFileName());
@@ -507,7 +507,7 @@ public class DocumentUtils {
 
     }
 
-    interface Consumer<T> {
+    public interface Consumer<T> {
         void accept(T t);
     }
 }

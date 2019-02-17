@@ -1,6 +1,10 @@
-package euphoria.psycho.knife;
+package euphoria.psycho.knife.delegate;
 
 import android.content.Context;
+
+import euphoria.psycho.knife.DirectoryFragment;
+import euphoria.psycho.knife.DocumentInfo;
+import euphoria.psycho.knife.DocumentUtils;
 
 public class ListMenuDelegate {
 

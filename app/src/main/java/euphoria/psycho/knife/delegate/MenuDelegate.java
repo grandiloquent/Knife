@@ -1,4 +1,4 @@
-package euphoria.psycho.knife;
+package euphoria.psycho.knife.delegate;
 
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -14,6 +14,11 @@ import java.util.List;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.widget.Toolbar;
+import euphoria.psycho.knife.DirectoryFragment;
+import euphoria.psycho.knife.DocumentInfo;
+import euphoria.psycho.knife.DocumentUtils;
+import euphoria.psycho.knife.OperationManager;
+import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 
 public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
