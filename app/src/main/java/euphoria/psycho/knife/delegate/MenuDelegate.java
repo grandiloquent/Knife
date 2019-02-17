@@ -5,29 +5,25 @@ import android.content.DialogInterface.OnClickListener;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.widget.Toolbar;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 
 public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
     private final DirectoryFragment mFragment;
-    private BottomSheet mBottomSheet;
 
     public MenuDelegate(DirectoryFragment fragment) {
         mFragment = fragment;
-        initializeBottomSheet();
+
     }
 
-    private void initializeBottomSheet() {
-        if (mBottomSheet == null) {
-            mBottomSheet = new BottomSheet(mFragment.getActivity());
-            mBottomSheet.setOnClickListener(mFragment::onBottomSheetClicked);
-        }
-    }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
@@ -77,23 +73,29 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
     private void showBookmark() {
         List<String> bookmarks = mFragment.getBookmark().fetchBookmarks();
 
-        Log.e("TAG/MenuDelegate", "showBookmark: " + bookmarks.size());
 
-        new AlertDialog.Builder(mFragment.getContext())
+        new Builder(mFragment.getContext())
                 .setTitle(R.string.bookmark)
                 .setAdapter(new ArrayAdapter<>(mFragment.getContext(),
-                        R.layout.dialog_bookmark,
-                        R.id.line1, bookmarks), (dialog, which) -> {
-                    dialog.dismiss();
-                    mFragment.updateRecyclerView(bookmarks.get(which));
-                })
+                                R.layout.dialog_bookmark,
+                                R.id.line1, bookmarks), (dialog, which) -> {
+                            dialog.dismiss();
+                            File dir = new File(bookmarks.get(which));
+                            if (dir.isDirectory()) {
+                                mFragment.updateRecyclerView(dir);
+                            } else {
+                                mFragment.getBookmark().delete(dir.getAbsolutePath());
+                                Toast.makeText(mFragment.getContext(), mFragment.getText(R.string.bookmark_no_exists), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                )
                 .setNegativeButton(android.R.string.cancel, ((dialog, which) -> dialog.dismiss()))
                 .setCancelable(false)
                 .show();
     }
 
     private void showBottomSheet() {
-        mBottomSheet.showDialog();
+        mFragment.getBottomSheet().showDialog();
     }
 
 }
