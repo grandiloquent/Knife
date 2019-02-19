@@ -1,5 +1,6 @@
 package euphoria.psycho.knife.server;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import euphoria.psycho.share.util.MimeUtils;
+import euphoria.psycho.share.util.StorageUtils;
 import euphoria.psycho.share.util.StringUtils;
 
 import euphoria.psycho.share.util.FileUtils;
@@ -45,7 +47,12 @@ public class WebServer extends NanoHTTPD {
     private File mUploadDirectory;
     private NanoFileUpload mNanoFileUpload;
     private File mStartDirectory;
+    private String mTreeUri;
+    private Context mContext;
 
+    public void setContext(Context context) {
+        mContext = context;
+    }
 
     public WebServer(int port) {
         super(port);
@@ -184,7 +191,7 @@ public class WebServer extends NanoHTTPD {
 
         // Parse session
         if (mNanoFileUpload == null) {
-            mNanoFileUpload = new NanoFileUpload(new DiskFileItemFactory());
+            mNanoFileUpload = new NanoFileUpload(new DiskFileItemFactory(10240, mUploadDirectory));
         }
         try {
             Map<String, List<FileItem>> map = mNanoFileUpload.parseParameterMap(session);
@@ -205,12 +212,15 @@ public class WebServer extends NanoHTTPD {
                     String fileName = ServerUtils.getFileNameFromContentDisposition(disposition);
 
 
+                    Log.e("TAG/WebServer", "handleUploadFile: " + fileItem.getName());
+
                     if (fileName != null) {
                         File dstFile = new File(mUploadDirectory, fileName);
                         dstFile = FileUtils.getUniqueFile(dstFile);
 
                         // when the file has been read into memory
                         if (diskFileItem.isInMemory()) {
+
                             try (InputStream inputStream = diskFileItem.getInputStream()) {
                                 ServerUtils.copyToFile(inputStream, dstFile);
                                 results.put(dstFile.getName(), true);
@@ -218,6 +228,9 @@ public class WebServer extends NanoHTTPD {
                                 results.put(dstFile.getName(), false);
                             }
                         } else {
+
+                            Log.e("TAG/WebServer", "handleUploadFile: " + diskFileItem.getStoreLocation());
+
                             // 从临时文件复制到上传文件夹
                             boolean success = diskFileItem.getStoreLocation()
                                     .renameTo(dstFile);
@@ -304,7 +317,6 @@ public class WebServer extends NanoHTTPD {
     // 主要方法
     private Response respond(IHTTPSession input) {
 
-        Log.e("TAG/WebServer", "respond: " + input.getUri());
 
         Response response = null;
         String uri = input.getUri();
@@ -345,6 +357,10 @@ public class WebServer extends NanoHTTPD {
 
     void setStaticDirectory(File staticDirectory) {
         mStaticDirectory = staticDirectory;
+    }
+
+    public void setTreeUri(String treeUri) {
+        mTreeUri = treeUri;
     }
 
     void setUploadDirectory(File uploadDirectory) {

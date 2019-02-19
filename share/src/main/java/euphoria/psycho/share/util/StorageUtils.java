@@ -88,6 +88,13 @@ public class StorageUtils {
         return success;
     }
 
+    public static OutputStream getDocumentOutputStream(Context context, File dst, String treeUri) throws FileNotFoundException {
+
+        Uri uri = getDocumentUri(dst, treeUri);
+        return context.getContentResolver().openOutputStream(uri);
+    }
+
+
     public static boolean sdCardDocumentToStorageFile(ContentResolver contentResolver,
                                                       File srcFile,
                                                       File dstFile,

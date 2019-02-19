@@ -82,8 +82,8 @@ public class FileServer extends Service {
 
     private File createUploadDirectory() {
         File uploadDirectory;
-        mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
-        if (mTreeUri == null) {
+        // mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
+        if (mTreeUri != null) {
             uploadDirectory = new File(StorageUtils.getSDCardPath(), DEFAULT_UPLOAD_DIRECTORY);
             if (!uploadDirectory.isDirectory()) {
                 StorageUtils.createDirectory(this, new File(StorageUtils.getSDCardPath()),
