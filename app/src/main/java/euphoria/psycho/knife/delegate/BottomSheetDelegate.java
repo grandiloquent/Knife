@@ -14,6 +14,7 @@ import euphoria.psycho.knife.bottomsheet.BottomSheet.OnClickListener;
 import euphoria.psycho.knife.download.DownloadActivity;
 import euphoria.psycho.knife.photo.PhotoViewActivity;
 import euphoria.psycho.knife.server.FileServer;
+import euphoria.psycho.knife.server.FileServerActivity;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
 import euphoria.psycho.share.util.StorageUtils;
 
@@ -46,8 +47,8 @@ public class BottomSheetDelegate {
                 mFragment.getContext().startActivity(pictureIntent);
                 break;
             case R.drawable.ic_phonelink_blue_24px:
-                Intent serverIntent = new Intent(mFragment.getContext(), FileServer.class);
-                mFragment.getContext().startService(serverIntent);
+                Intent serverIntent = new Intent(mFragment.getContext(), FileServerActivity.class);
+                mFragment.getContext().startActivity(serverIntent);
                 break;
             case R.drawable.ic_file_download_blue_24px:
                 Intent downloadIntent = new Intent(mFragment.getContext(), DownloadActivity.class);

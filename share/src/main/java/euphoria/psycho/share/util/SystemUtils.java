@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -41,6 +42,9 @@ public class SystemUtils {
 
             return inetAddress.getHostAddress();
         } catch (Exception e) {
+
+            Log.e("TAG/SystemUtils", "getDeviceIP: " + e.getMessage());
+
             return null;
         }
     }

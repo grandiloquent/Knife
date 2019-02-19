@@ -6,9 +6,13 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
+
+import org.nanohttpd.protocols.http.NanoHTTPD;
+import org.nanohttpd.util.ServerRunner;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,12 +20,15 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import androidx.annotation.Nullable;
+import euphoria.psycho.common.C;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.HttpUtils;
 import euphoria.psycho.share.util.NotificationUtils;
 import euphoria.psycho.share.util.StorageUtils;
 import euphoria.psycho.share.util.SystemUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.share.util.ZipUtils;
 
 public class FileServer extends Service {
@@ -33,35 +40,67 @@ public class FileServer extends Service {
     private NotificationManager mManager;
     private static final int FOREGROUND_ID = 1;
     WebServer mWebServer;
+    LocalBinder mLocalBinder = new LocalBinder();
 
-    public String getServerURL() {
-        return mWebServer.getURL();
-    }
 
     private void startServer() {
         if (mWebServer != null) return;
-        mWebServer = new WebServer(SystemUtils.getDeviceIP(this), DEFAULT_PORT);
+
+//        Log.e("TAG/FileServer", "startServer: " + SystemUtils.getDeviceIP(this));
+//        ThreadUtils.postOnBackgroundThread(() -> {
+//            String localIp = ServerUtils.getLocalIp();
+//
+//            Log.e("TAG/FileServer", "run: " + localIp);
+//
+//        });
+        String ip = SystemUtils.getDeviceIP(this);
+        if (ip == null) {
+            ip = ServerUtils.getLocalIp();
+        }
+        mWebServer = new WebServer(ip, DEFAULT_PORT);
         File staticDirectory = new File(Environment.getExternalStorageDirectory(), DEFAULT_STATIC_DIRECTORY);
-        File uploadDirectory = new File(StorageUtils.getSDCardPath(), DEFAULT_UPLOAD_DIRECTORY);
 
         if (!staticDirectory.isDirectory()) {
             staticDirectory.mkdirs();
         }
-        if (!uploadDirectory.isDirectory()) {
-            StorageUtils.createDirectory(this, new File(StorageUtils.getSDCardPath()),
-                    DEFAULT_UPLOAD_DIRECTORY, FileUtils.getTreeUri().toString());
-        }
+
         unpackAssets(staticDirectory);
         mWebServer.setStaticDirectory(staticDirectory);
-        mWebServer.setUploadDirectory(uploadDirectory);
+        mWebServer.setUploadDirectory(createUploadDirectory());
         mWebServer.setStartDirectory(Environment.getExternalStorageDirectory());
+        try {
+            mWebServer.start(NanoHTTPD.SOCKET_READ_TIMEOUT, true);
+        } catch (IOException e) {
 
+            Log.e("TAG/FileServer", "startServer: " + e.getMessage());
 
+        }
+
+    }
+
+    private String mTreeUri;
+
+    private File createUploadDirectory() {
+        File uploadDirectory;
+        mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
+        if (mTreeUri == null) {
+            uploadDirectory = new File(StorageUtils.getSDCardPath(), DEFAULT_UPLOAD_DIRECTORY);
+            if (!uploadDirectory.isDirectory()) {
+                StorageUtils.createDirectory(this, new File(StorageUtils.getSDCardPath()),
+                        DEFAULT_UPLOAD_DIRECTORY, FileUtils.getTreeUri().toString());
+            }
+        } else {
+            uploadDirectory = new File(Environment.getExternalStorageDirectory(), DEFAULT_UPLOAD_DIRECTORY);
+            if (!uploadDirectory.isDirectory()) {
+                uploadDirectory.mkdirs();
+            }
+        }
+
+        return uploadDirectory;
     }
 
     private void unpackAssets(File dir) {
 
-        Log.e("TAG/FileServer", "unpackAssets: ");
 
         AssetManager assetManager = getAssets();
         try (InputStream is = assetManager.open("static/static.zip")) {
@@ -78,7 +117,7 @@ public class FileServer extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mLocalBinder;
     }
 
     @Override
@@ -99,4 +138,14 @@ public class FileServer extends Service {
         startServer();
         return START_NOT_STICKY;
     }
+
+    public class LocalBinder extends Binder {
+        public String getServerURL() {
+            return mWebServer.getURL();
+        }
+
+
+    }
+
+
 }

@@ -23,9 +23,10 @@ public class ZipUtils {
                 File dstFile = new File(dstDir, entry.getName());
                 if (!dstFile.isFile()) {
                     byte[] buffer = new byte[1024 * 4];
+                    int count;
                     try (FileOutputStream os = new FileOutputStream(dstFile)) {
-                        while (zis.read(buffer) != -1) {
-                            os.write(buffer);
+                        while ((count = zis.read(buffer)) != -1) {
+                            os.write(buffer, 0, count);
                         }
                     }
 

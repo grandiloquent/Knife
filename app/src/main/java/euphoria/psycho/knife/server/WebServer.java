@@ -1,5 +1,7 @@
 package euphoria.psycho.knife.server;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -121,10 +123,6 @@ public class WebServer extends NanoHTTPD {
 
         return generateDirectoryPage(mStartDirectory, 1);
 
-    }
-
-    public void setStartDirectory(File startDirectory) {
-        mStartDirectory = startDirectory;
     }
 
     private Response handleQueryFile(Map<String, List<String>> parameters, Map<String, String> headers) {
@@ -306,6 +304,8 @@ public class WebServer extends NanoHTTPD {
     // 主要方法
     private Response respond(IHTTPSession input) {
 
+        Log.e("TAG/WebServer", "respond: " + input.getUri());
+
         Response response = null;
         String uri = input.getUri();
         Map<String, List<String>> parameters;
@@ -337,6 +337,10 @@ public class WebServer extends NanoHTTPD {
         response.addHeader(ServerUtils.HTTP_X_POWERED_BY, "Java/NanoHTTPD");
         response.addHeader(ServerUtils.HTTP_SERVER, "NanoHTTPD");
         return response;
+    }
+
+    public void setStartDirectory(File startDirectory) {
+        mStartDirectory = startDirectory;
     }
 
     void setStaticDirectory(File staticDirectory) {
