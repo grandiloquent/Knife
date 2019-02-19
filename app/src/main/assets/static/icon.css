@@ -1,0 +1,20 @@
+.icon {
+    position: relative;
+    display: inline-block;
+    background-repeat: no-repeat;
+    font-size: 0;
+    overflow: hidden;
+    -webkit-text-size-adjust: none;
+    vertical-align: middle;
+}
+
+.icon-mode-list {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-mode-list.svg);
+}
+.icon-mode-thumb {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-mode-thumb.svg);
+}

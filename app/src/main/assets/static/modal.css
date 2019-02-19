@@ -1,0 +1,93 @@
+.modal {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+.modal {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal::after {
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    width: 0;
+    height: 100%;
+}
+
+.modal-show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-mask {
+    position: fixed;
+    z-index: -1;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background-color: rgba(49, 52, 54, .7);
+}
+.modal-dialog {
+    display: inline-block;
+    vertical-align: middle;
+    text-align: left;
+    background-color: #fff;
+    border-radius: 2px;
+    border: 1px solid #c8ccd3;
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,.2);
+}
+
+
+.modal-dialog-pop {
+    width: 400px;
+}
+.modal-show .modal-dialog {
+    -webkit-animation: pop-appear .3s cubic-bezier(.8,.02,.45,.91) forwards;
+    animation: pop-appear .3s cubic-bezier(.8,.02,.45,.91) forwards;
+}
+
+.modal-dialog-hd {
+    position: relative;
+    z-index: 0;
+    padding: 13px 13px 13px 20px;
+    border-bottom: 1px solid #e9eaeb;
+}
+
+
+.modal-dialog-pop .modal-dialog-hd {
+    border-bottom: 0 none;
+}
+.modal-dialog-pop .modal-dialog-hd {
+    padding: 30px 13px 30px 20px;
+}
+
+/*
+<!-- <div class="modal modal-show"><b class="modal-mask"></b>
+        <div class="modal-dialog modal-dialog-pop">
+            <div class="modal-dialog-hd clearfix"><button aria-label="关闭弹窗" class="btn-icon icon icon-pop-close"></button></div>
+            <div class="modal-dialog-bd">
+                <div class="modal-bd-cont clearfix">
+                    <div class="modal-info">
+                        <div class="info-tit">
+                            <div class="info-tit-pic"><i class="icon icon-m icon-nor-m"></i></div>
+                            <div class="info-tit-con"><span class="tit">B003ODIZL6_EBOK.prc</span> <span class="txt">40.77
+                                    MB</span></div>
+                        </div>
+                        <div class="info-desc">
+                            <p class="txt">此文件类型无法预览，推荐下载后打开</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-dialog-ft clearfix btn-group"><button class="btn btn-active">下载</button></div>
+        </div>
+    </div> -->
+*/

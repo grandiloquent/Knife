@@ -6,6 +6,7 @@ import android.content.Intent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,12 +23,12 @@ import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 
 public class DownloadManager implements DownloadObserver {
 
-    private final List<DownloadObserver> mObservers = new ArrayList<>();
+    private final CopyOnWriteArrayList<DownloadObserver> mObservers = new CopyOnWriteArrayList<>();
     private Context mContext;
     private ExecutorService mExecutor;
     private AppCompatActivity mActivity;
     private DownloadDatabase mDatabase;
-    private List<TaskRecord> mTaskRecords = new ArrayList<>();
+    private CopyOnWriteArrayList<TaskRecord> mTaskRecords = new CopyOnWriteArrayList<>();
     private DownloadAdapter mAdapter;
 
     private DownloadManager(Context context) {
@@ -67,30 +68,29 @@ public class DownloadManager implements DownloadObserver {
     }
 
     void delete(DownloadInfo downloadInfo) {
-        synchronized (mTaskRecords) {
-            int index = lookupTask(downloadInfo._id);
-            if (index != -1) {
-                FileLogger.log("TAG/DownloadManager", "delete: " + "表中包含此任务的键");
 
-                DownloadThread thread = mTaskRecords.get(index).thread;
-                if (thread != null) {
-                    thread.stopDownload();
-                } else {
-                    FileLogger.log("TAG/DownloadManager", "delete: " +
-                            "表中包含此任务的键,但未找到对应的线程");
-                }
+        int index = lookupTask(downloadInfo._id);
+        if (index != -1) {
+            FileLogger.log("TAG/DownloadManager", "delete: " + "表中包含此任务的键");
 
+            DownloadThread thread = mTaskRecords.get(index).thread;
+            if (thread != null) {
+                thread.stopDownload();
+            } else {
+                FileLogger.log("TAG/DownloadManager", "delete: " +
+                        "表中包含此任务的键,但未找到对应的线程");
             }
-
-            mDatabase.delete(downloadInfo);
-            File downloadFile = new File(downloadInfo.filePath);
-            if (downloadFile.isFile()) downloadFile.delete();
-            for (DownloadObserver observer : mObservers) {
-                observer.deleted(downloadInfo);
-            }
-
 
         }
+
+        mDatabase.delete(downloadInfo);
+        File downloadFile = new File(downloadInfo.filePath);
+        if (downloadFile.isFile()) downloadFile.delete();
+        for (DownloadObserver observer : mObservers) {
+            observer.deleted(downloadInfo);
+        }
+
+
     }
 
     public DownloadDatabase getDatabase() {
@@ -106,15 +106,14 @@ public class DownloadManager implements DownloadObserver {
     }
 
     private void onFinished(DownloadInfo downloadInfo) {
-        synchronized (mTaskRecords) {
-            mDatabase.update(downloadInfo);
-            int index = lookupTask(downloadInfo._id);
 
-            if (index != -1) {
-                mTaskRecords.remove(index);
-            }
+        mDatabase.update(downloadInfo);
+        int index = lookupTask(downloadInfo._id);
 
+        if (index != -1) {
+            mTaskRecords.remove(index);
         }
+
 
     }
 
@@ -124,26 +123,24 @@ public class DownloadManager implements DownloadObserver {
     }
 
     void pause(DownloadInfo downloadInfo) {
-        synchronized (mTaskRecords) {
 
-            int index = lookupTask(downloadInfo._id);
 
-            if (index != -1) {
-                DownloadThread thread = mTaskRecords.get(index).thread;
-                if (thread != null) {
-                    thread.stopDownload();
-                    mDatabase.update(downloadInfo);
-                }
-            } else {
-                FileLogger.log("TAG/DownloadManager", "[异常] [pause]: "
-                        + "\n 停止任务列表中的指定任务"
-                        + "\n 目标任务的ID = " + downloadInfo._id
-                        + "\n 任务列表种包含的任务数 = " + mTaskRecords.size());
+        int index = lookupTask(downloadInfo._id);
 
+        if (index != -1) {
+            DownloadThread thread = mTaskRecords.get(index).thread;
+            if (thread != null) {
+                thread.stopDownload();
             }
-
+        } else {
+            FileLogger.log("TAG/DownloadManager", "[异常] [pause]: "
+                    + "\n 停止任务列表中的指定任务"
+                    + "\n 目标任务的ID = " + downloadInfo._id
+                    + "\n 任务列表种包含的任务数 = " + mTaskRecords.size());
 
         }
+
+
     }
 
     ThumbnailProvider provideThumbnailProvider() {
@@ -153,25 +150,24 @@ public class DownloadManager implements DownloadObserver {
 
     void resume(DownloadInfo downloadInfo) {
 
-        synchronized (mTaskRecords) {
-            int index = lookupTask(downloadInfo._id);
+        int index = lookupTask(downloadInfo._id);
 
-            if (index != -1) {
-                FileLogger.log("TAG/DownloadManager", "任务列表中已包含此任务 id = " + downloadInfo._id);
-                return;
-            }
-
-            DownloadThread thread = new DownloadThread(downloadInfo, this);
-            TaskRecord taskRecord = new TaskRecord();
-            taskRecord.id = downloadInfo._id;
-            taskRecord.thread = thread;
-            taskRecord.info = downloadInfo;
-            mTaskRecords.add(taskRecord);
-            mExecutor.submit(thread);
-            downloadInfo.status = DownloadStatus.PENDING;
-
-            broadcastProgress(downloadInfo);
+        if (index != -1) {
+            FileLogger.log("TAG/DownloadManager", "任务列表中已包含此任务 id = " + downloadInfo._id);
+            return;
         }
+
+        DownloadThread thread = new DownloadThread(downloadInfo, this);
+        TaskRecord taskRecord = new TaskRecord();
+        taskRecord.id = downloadInfo._id;
+        taskRecord.thread = thread;
+        taskRecord.info = downloadInfo;
+        mTaskRecords.add(taskRecord);
+        mExecutor.submit(thread);
+        downloadInfo.status = DownloadStatus.PENDING;
+
+        broadcastProgress(downloadInfo);
+
     }
 
     public void setActivity(AppCompatActivity activity) {
@@ -203,7 +199,6 @@ public class DownloadManager implements DownloadObserver {
 
     @Override
     public void updateProgress(DownloadInfo downloadInfo) {
-
 
 
         switch (downloadInfo.status) {
@@ -242,7 +237,7 @@ public class DownloadManager implements DownloadObserver {
         if (mTaskRecords.isEmpty()) return;
         for (TaskRecord taskRecord : mTaskRecords) {
 
-            
+
             Log.e("TAG/DownloadManager", "fullUpdate: ");
 
             mAdapter.fullUpdate(taskRecord.info);
@@ -250,12 +245,10 @@ public class DownloadManager implements DownloadObserver {
     }
 
     @Override
-    public synchronized void updateStatus(DownloadInfo downloadInfo) {
+    public void updateStatus(DownloadInfo downloadInfo) {
 
 
-        synchronized (mTaskRecords) {
-            mDatabase.update(downloadInfo);
-        }
+        mDatabase.update(downloadInfo);
 
     }
 

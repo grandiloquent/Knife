@@ -1,0 +1,39 @@
+.mod-list-group .list-group-tit {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-sizing: border-box;
+}
+
+.mod-list-group .list-group-hd .list-group-tit {
+    position: relative;
+    float: left;
+    cursor: pointer;
+    font-size: 13px;
+    z-index: 4;
+}
+
+.mod-list-group .list-group-hd .list-group-tit.dis,
+.mod-list-group .list-group-hd .list-group-tit.dis:hover {
+    cursor: text;
+    background: 0 0;
+}
+
+.mod-list-group .list-group-hd .list-group-tit.size {
+    width: 16.6666666666%;
+}
+
+.mod-list-group .list-group-tit .tit-con {
+    display: block;
+    height: 100%;
+    text-indent: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mod-list-group .list-group-tit.size .tit-con {
+    width: 85px;
+    text-align: right;
+}

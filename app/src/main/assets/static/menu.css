@@ -1,0 +1,135 @@
+.mod-bubble-menu {
+    position: absolute;
+    z-index: 100;
+    top: 80px;
+    left: 500px;
+    box-sizing: border-box;
+    width: 260px;
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px 0 rgba(15, 32, 65, .2);
+    padding: 6px 0;
+}
+
+.mod-bubble-dropdown,
+.mod-bubble-menu,
+.mod-upload .mod-bubble-dropdown,
+.mod-user .acct-bubble-dropdown {
+    -webkit-transform: translate3d(0, -10px, 0);
+    transform: translate3d(0, -10px, 0);
+}
+
+.mod-bubble-menu.with-border {
+    border: 1px solid #c8ccd3;
+}
+
+.mod-action-wrap .mod-bubble-menu.with-border {
+    left: auto;
+    right: 0;
+    top: 44px;
+    visibility: hidden;
+    opacity: 0;
+    max-height: 0;
+}
+
+.mod-action-wrap-create .mod-bubble-menu.with-border,
+.mod-action-wrap-upload .mod-bubble-menu.with-border {
+    left: 0;
+    right: auto;
+}
+
+.mod-action-wrap .action-item.act .mod-bubble-menu {
+    cursor: default;
+}
+
+.mod-action-wrap .action-item.act .mod-bubble-menu {
+    max-height: 420px;
+    opacity: 1;
+    visibility: visible;
+}
+
+.mod-bubble-menu .menu-item {
+    cursor: pointer;
+    position: relative;
+    z-index: 0;
+}
+
+
+.mod-bubble-menu .menu-item .txt {
+    display: block;
+    font-size: 14px;
+    color: #020202;
+    height: 36px;
+    line-height: 36px;
+    padding: 0 0 0 22px;
+    position: relative;
+}
+
+.mod-action-wrap .mod-bubble-menu .menu-item .txt {
+    height: 40px;
+    line-height: 40px;
+}
+
+.mod-bubble-menu .menu-item .menu-item:hover .menu-item .txt,
+.mod-bubble-menu .menu-item:hover .menu-item .txt {
+    background: #fff;
+}
+
+.mod-bubble-menu .menu-item .menu-item .menu-item:hover .txt,
+.mod-bubble-menu .menu-item .menu-item:hover .txt,
+.mod-bubble-menu .menu-item:hover .txt {
+    background-color: #f4f4f4;
+}
+
+.icon-doc-s {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-doc-s.svg);
+}
+
+.mod-bubble-menu .menu-item .icon {
+    margin: 0 16px 0 -4px;
+}
+
+.icon-file-s {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-file-s.svg);
+}
+
+.mod-bubble-menu .menu-item .spliter {
+    height: 1px;
+    margin: 6px 0;
+    background-color: #0f2042;
+    background-color: rgba(15, 32, 66, .06);
+}
+
+.mod-action-wrap .mod-bubble-menu .menu-item .spliter {
+    background-color: #eaeaea;
+}
+
+.icon-create-s {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-create-s.svg);
+}
+
+.mod-bubble-menu .menu-item-hd-tit {
+    font-size: 12px;
+    color: #9b9b9b;
+    padding: 0 0 0 22px;
+}
+
+.icon-tdoc-s {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-word-qq-s.svg);
+}.icon-txls-s {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-xls-qq-s.svg);
+}.icon-bt-s {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-bt-s.svg);
+}

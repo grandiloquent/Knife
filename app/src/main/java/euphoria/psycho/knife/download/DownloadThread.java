@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -38,7 +39,7 @@ public class DownloadThread extends Thread {
     private static final int MIN_PROGRESS_STEP = 65536;
     private static final long MIN_PROGRESS_TIME = 2000;
     private DownloadInfo mInfo;
-    private volatile boolean mIsStop = false;
+    private AtomicBoolean mIsStop = new AtomicBoolean();
     private long mLastUpdateBytes = 0;
     private long mLastUpdateTime = 0;
     private DownloadObserver mObserver;
@@ -114,7 +115,7 @@ public class DownloadThread extends Thread {
             HttpsURLConnection c = null;
 
             try {
-                if (mIsStop) {
+                if (mIsStop.get()) {
                     throw new DownloadRequestException(DownloadStatus.PAUSED, "User terminates current task");
                 }
                 c = (HttpsURLConnection) url.openConnection();
@@ -218,9 +219,8 @@ public class DownloadThread extends Thread {
     public void stopDownload() {
         mObserver.updateStatus(mInfo);
         FileLogger.log("TAG/DownloadThread", "stopDownload");
-        mIsStop = true;
-        mInfo.status = DownloadStatus.PAUSED;
-        mObserver.updateProgress(mInfo);
+        mIsStop.set(true);
+
     }
 
     private void transferData(HttpURLConnection c) throws DownloadRequestException {
@@ -247,7 +247,7 @@ public class DownloadThread extends Thread {
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE >> 1];
 
             while (true) {
-                if (mIsStop) {
+                if (mIsStop.get()) {
                     throw new DownloadRequestException(DownloadStatus.RETIRED, "Local halt requested; job probably timed out");
                 }
                 int len = -1;

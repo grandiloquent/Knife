@@ -26,7 +26,7 @@ public final class MimeUtils {
         // Note that this list is _not_ in alphabetical order and must not be sorted.
         // The "most popular" extension must come first, so that it's the one returned
         // by guessExtensionFromMimeType.
-
+        add("application/javascript","js");
         add("application/andrew-inset", "ez");
         add("application/dsptype", "tsp");
         add("application/epub+zip", "epub");

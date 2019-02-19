@@ -1,0 +1,13 @@
+.ui-dnd {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    filter: progid:DXImageTransform.Microsoft.Shadow(color=#AAAAAA, direction=90, strength=2) progid:DXImageTransform.Microsoft.Shadow(color=#AAAAAA, direction=180, strength=2);
+    _width: 99.82%;
+    *zoom: 1;
+}

@@ -1,6 +1,5 @@
 package euphoria.psycho.knife.server;
 
-import org.apache.ftpserver.FtpServer;
 
 import euphoria.psycho.common.base.BaseActivity;
 

@@ -24,7 +24,7 @@ public class DownloadDatabase extends SQLiteOpenHelper {
         getWritableDatabase().delete(TABLE_NAME, "_id=?", new String[]{Long.toString(downloadInfo._id)});
     }
 
-    public long insert(DownloadInfo downloadInfo) {
+    public synchronized long insert(DownloadInfo downloadInfo) {
         ContentValues contentValues = new ContentValues();
         contentValues.put("status", downloadInfo.status);
         contentValues.put("fileName", downloadInfo.fileName);
@@ -35,11 +35,11 @@ public class DownloadDatabase extends SQLiteOpenHelper {
         contentValues.put("speed", downloadInfo.speed);
         contentValues.put("message", downloadInfo.message);
 
-        return getWritableDatabase().insertWithOnConflict(TABLE_NAME, null, contentValues,SQLiteDatabase.CONFLICT_IGNORE);
+        return getWritableDatabase().insertWithOnConflict(TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
 
     }
 
-    public List<DownloadInfo> queryPendingTask() {
+    public synchronized List<DownloadInfo> queryPendingTask() {
         List<DownloadInfo> downloadInfos = new ArrayList<>();
         try (Cursor cursor = getReadableDatabase().rawQuery("SELECT  _id,status,fileName,filePath,bytesReceived,bytesTotal,url,message FROM infos WHERE status!=0", null)) {
 
@@ -47,8 +47,7 @@ public class DownloadDatabase extends SQLiteOpenHelper {
                 DownloadInfo downloadInfo = new DownloadInfo();
                 downloadInfo._id = cursor.getLong(0);
                 downloadInfo.status = cursor.getInt(1);
-                if (downloadInfo.status == DownloadStatus.IN_PROGRESS)
-                    downloadInfo.status = DownloadStatus.PAUSED;
+
                 downloadInfo.fileName = cursor.getString(2);
                 downloadInfo.filePath = cursor.getString(3);
                 downloadInfo.bytesReceived = cursor.getLong(4);

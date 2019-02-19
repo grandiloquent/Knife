@@ -1,0 +1,74 @@
+.layout-toolbar {
+    background-color: #fff;
+    border-bottom: 1px solid #dbdbdb;
+}
+
+.mod-nav {
+    position: relative;
+    z-index: 10;
+    height: 64px;
+}
+
+
+.layout-toolbar .mod-nav {
+    height: 64px;
+}
+
+.layout-toolbar .mod-nav {
+    margin-left: 50px;
+}
+
+
+
+.mod-nav .mod-action-wrap {
+    float: left;
+    margin: 14px 16px 0 0;
+}
+
+.mod-action-wrap-a .action-item {
+    background-color: #2980ff;
+    border: 1px solid #2980ff;
+    color: #fff;
+    border-radius: 2px;
+}
+
+
+
+.mod-action-wrap .action-item-con {
+    position: relative;
+    cursor: pointer;
+    height: 34px;
+    line-height: 34px;
+    padding: 0 20px;
+    border-right: 1px solid #dbdbdb;
+    background: #fff;
+}
+
+.mod-action-wrap-a .action-item-con {
+    padding: 0 4px;
+}
+
+.mod-action-wrap-create .action-item-con,
+.mod-action-wrap-upload .action-item-con {
+    padding: 0 20px;
+}
+
+.mod-action-wrap-a .action-item-con {
+    background-color: #2980ff;
+    border-color: #2980ff;
+    color: #fff;
+}
+
+
+.mod-action-wrap-a .action-item-con,
+.mod-action-wrap-b .action-item-con {
+    padding: 0 20px;
+}
+
+.mod-action-wrap .action-item:last-child .action-item-con {
+    border-right: 0 none;
+}
+
+.mod-action-wrap .action-item-con .icon {
+    top: -1px;
+}

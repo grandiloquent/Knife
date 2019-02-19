@@ -1,0 +1,127 @@
+.mod-act-panel {
+    position: relative;
+    height: 48px;
+    line-height: 48px;
+    z-index: 2;
+}
+
+.mod-act-panel .act-panel-inner {
+    padding: 0 60px 0 30px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.page-home .layout-main-hd .mod-act-panel .act-panel-inner {
+    padding: 0 60px 0 50px;
+}
+
+.mod-action-wrap {
+    border: 1px solid #dbdbdb;
+    border-radius: 2px;
+}
+
+.mod-action-wrap-d,
+.mod-action-wrap-d .action-item-con {
+    border: 0 none;
+}
+
+.mod-action-wrap-d .action-item-con {
+    padding: 0 6px;
+}
+
+.act .icon-mode-list {
+    width: 24px;
+    height: 24px;
+    background-image: url(/svg/icon-mode-list-act.svg);
+}
+
+.mod-action-wrap-c .action-item-con .act-txt {
+    position: absolute;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    top: 45px;
+    white-space: nowrap;
+    background-color: #4d4d4d;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 2px;
+    padding: 0 8px;
+    height: 22px;
+    line-height: 22px;
+    display: none;
+}
+.mod-action-wrap-c .action-item-con:hover .act-txt {
+    display: block;
+}
+.mod-action-wrap .action-item {
+    position: relative;
+    float: left;
+}
+
+.mod-action-wrap-d .action-item:hover {
+    background: 0 0;
+}
+
+.mod-act-panel .mod-action-wrap-mode {
+    float: right;
+    margin: 7px 0 0 0;
+    text-shadow: 0 0 #000;
+}
+
+.mod-act-panel .mod-breadcrumb,
+.mod-act-panel .mod-breadcrumb-tab {
+    overflow: hidden;
+    padding: 0 20px;
+}
+
+.page-home .layout-main-hd .mod-act-panel .mod-breadcrumb {
+    padding: 0;
+    position: relative;
+    left: -5px;
+}
+
+.mod-breadcrumb ul,
+.mod-breadcrumb-tab ul {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+}
+
+.mod-breadcrumb li,
+.mod-breadcrumb-tab li {
+    float: left\9;
+    -webkit-transition: -webkit-flex-shrink .3s, -webkit-flex-shrink .3s;
+    transition: -webkit-flex-shrink .3s, -webkit-flex-shrink .3s;
+    transition: flex-shrink .3s;
+    transition: flex-shrink .3s, -webkit-flex-shrink .3s, -webkit-flex-shrink .3s;
+    -webkit-flex-basis: auto;
+    flex-basis: auto;
+    -webkit-flex-shrink: 1;
+    flex-shrink: 1;
+    min-width: 41px;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    color: #777;
+}
+
+.mod-breadcrumb li.all,
+.mod-breadcrumb li.more,
+.mod-breadcrumb-tab li.all,
+.mod-breadcrumb-tab li.more {
+    min-width: 38px;
+}
+
+.mod-breadcrumb li a {
+    padding: 4px 5px;
+    color: #777;
+}
+
+.mod-breadcrumb .cur a {
+    color: #000;
+    font-weight: 700;
+    text-decoration: none;
+}

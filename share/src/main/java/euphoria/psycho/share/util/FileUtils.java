@@ -78,25 +78,6 @@ public class FileUtils {
         }
     }
 
-    public static void sortByName(File[] files, boolean isAscending) {
-
-        Collator collator = Collator.getInstance(Locale.CHINA);
-        Arrays.sort(files, new Comparator<File>() {
-            @Override
-            public int compare(File o1, File o2) {
-                boolean b1 = o1.isDirectory();
-                boolean b2 = o2.isDirectory();
-                if (b1 == b2) {
-                    return collator.compare(o1.getName(), o2.getName());
-                } else if (b1) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            }
-        });
-    }
-
     public static long copyLarge(final InputStream input, final OutputStream output, final byte[] buffer)
             throws IOException {
         long count = 0;
@@ -139,6 +120,42 @@ public class FileUtils {
         return totalRead;
     }
 
+    public static String formatFileSize(long number) {
+        float result = number;
+        String suffix = "";
+        if (result > 900) {
+            suffix = " KB";
+            result = result / 1024;
+        }
+        if (result > 900) {
+            suffix = " MB";
+            result = result / 1024;
+        }
+        if (result > 900) {
+            suffix = " GB";
+            result = result / 1024;
+        }
+        if (result > 900) {
+            suffix = " TB";
+            result = result / 1024;
+        }
+        if (result > 900) {
+            suffix = " PB";
+            result = result / 1024;
+        }
+        String value;
+        if (result < 1) {
+            value = String.format("%.2f", result);
+        } else if (result < 10) {
+            value = String.format("%.1f", result);
+        } else if (result < 100) {
+            value = String.format("%.0f", result);
+        } else {
+            value = String.format("%.0f", result);
+        }
+        return value + suffix;
+    }
+
     public static String getExtension(String path) {
         if (path == null)
             return null;
@@ -158,6 +175,37 @@ public class FileUtils {
         return "";
     }
 
+    public static Collection<File> getFiles(File directory, final FileFilter filter, boolean includeSubDirectories) {
+        final Collection<File> files = new LinkedList<>();
+        innerListFiles(files, directory,
+                filter, includeSubDirectories);
+        return files;
+    }
+
+    public static File getUniqueFile(File src) {
+        if (!src.isFile()) return src;
+        int dotIndex = src.getName().lastIndexOf('.');
+        String name = "";
+        String ext = "";
+        int count = 1;
+        if (dotIndex != -1) {
+            ext = src.getName().substring(dotIndex);
+            name = src.getName().substring(0, dotIndex);
+        } else {
+            name = src.getName();
+        }
+        File parentFile = src.getParentFile();
+        File dstFile = new File(parentFile, name + " (" + count + ")" + ext);
+        while (dstFile.isFile()) {
+            if (++count > 32) {
+                throw new IllegalStateException();
+            }
+            dstFile = new File(parentFile, name + " (" + count + ")" + ext);
+
+        }
+        return dstFile;
+    }
+
     public static String getValidFilName(String fileName, char replaceChar) {
         StringBuilder stringBuilder = new StringBuilder(fileName.length());
         for (int i = 0; i < fileName.length(); i++) {
@@ -169,6 +217,23 @@ public class FileUtils {
             }
         }
         return stringBuilder.toString();
+    }
+
+    private static void innerListFiles(final Collection<File> files, final File directory,
+                                       final FileFilter filter, final boolean includeSubDirectories) {
+        final File[] found = directory.listFiles(filter);
+        if (found != null) {
+            for (final File file : found) {
+                if (file.isDirectory()) {
+                    if (includeSubDirectories) {
+                        files.add(file);
+                    }
+                    innerListFiles(files, file, filter, includeSubDirectories);
+                } else {
+                    files.add(file);
+                }
+            }
+        }
     }
 
     private static boolean isValidFatFilenameChar(char c) {
@@ -247,34 +312,77 @@ public class FileUtils {
         }
     }
 
+    public static void sortByName(File[] files, boolean isAscending) {
+
+        Collator collator = Collator.getInstance(Locale.CHINA);
+        Arrays.sort(files, new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                boolean b1 = o1.isDirectory();
+                boolean b2 = o2.isDirectory();
+                if (b1 == b2) {
+                    return collator.compare(o1.getName(), o2.getName());
+                } else if (b1) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        });
+    }
+
+    public static void sortFiles(File[] files, int sortBy, boolean ascend) {
+        // 0 name
+        // 1 last modified
+        // 2 size
+
+        Collator collator = Collator.getInstance(Locale.CHINA);
+        Arrays.sort(files, (o1, o2) -> {
+            boolean b1 = o1.isDirectory();
+            boolean b2 = o2.isDirectory();
+            if (b1 == b2) {
+
+                switch (sortBy) {
+                    case 0:
+                        int compare = collator.compare(o1.getName(), o2.getName());
+                        return ascend ? compare :
+                                compare * -1;
+                    case 1:
+                        long difLastModified = o1.lastModified() - o2.lastModified();
+                        if (difLastModified > 0) {
+                            return ascend ? 1 : -1;
+                        } else if (difLastModified < 0) {
+                            return ascend ? -1 : 1;
+                        } else {
+                            return 0;
+                        }
+                    case 2:
+                        if (b1) return 0;
+                        long difSize = o1.length() - o2.length();
+                        if (difSize > 0) {
+                            return ascend ? 1 : -1;
+                        } else if (difSize < 0) {
+                            return ascend ? -1 : 1;
+                        } else {
+                            return 0;
+                        }
+                    default:
+                        return 0;
+                }
+
+            } else if (b1) {
+
+                return ascend ? -1 : 1;
+            } else {
+                return ascend ? 1 : -1;
+            }
+        });
+    }
+
     public static byte[] toByteArray(final InputStream input) throws IOException {
         try (final ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             copy(input, output);
             return output.toByteArray();
-        }
-    }
-
-    public static Collection<File> getFiles(File directory, final FileFilter filter, boolean includeSubDirectories) {
-        final Collection<File> files = new LinkedList<>();
-        innerListFiles(files, directory,
-                filter, includeSubDirectories);
-        return files;
-    }
-
-    private static void innerListFiles(final Collection<File> files, final File directory,
-                                       final FileFilter filter, final boolean includeSubDirectories) {
-        final File[] found = directory.listFiles(filter);
-        if (found != null) {
-            for (final File file : found) {
-                if (file.isDirectory()) {
-                    if (includeSubDirectories) {
-                        files.add(file);
-                    }
-                    innerListFiles(files, file, filter, includeSubDirectories);
-                } else {
-                    files.add(file);
-                }
-            }
         }
     }
 }
