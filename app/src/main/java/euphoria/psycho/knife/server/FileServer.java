@@ -11,14 +11,18 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import androidx.annotation.Nullable;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.share.util.HttpUtils;
 import euphoria.psycho.share.util.NotificationUtils;
 import euphoria.psycho.share.util.StorageUtils;
 import euphoria.psycho.share.util.SystemUtils;
+import euphoria.psycho.share.util.ZipUtils;
 
 public class FileServer extends Service {
     public static final String DEFAULT_CHANNEL_NAME = "File Server";
@@ -40,7 +44,14 @@ public class FileServer extends Service {
         File staticDirectory = new File(Environment.getExternalStorageDirectory(), DEFAULT_STATIC_DIRECTORY);
         File uploadDirectory = new File(StorageUtils.getSDCardPath(), DEFAULT_UPLOAD_DIRECTORY);
 
-        unpackAssets();
+        if (!staticDirectory.isDirectory()) {
+            staticDirectory.mkdirs();
+        }
+        if (!uploadDirectory.isDirectory()) {
+            StorageUtils.createDirectory(this, new File(StorageUtils.getSDCardPath()),
+                    DEFAULT_UPLOAD_DIRECTORY, FileUtils.getTreeUri().toString());
+        }
+        unpackAssets(staticDirectory);
         mWebServer.setStaticDirectory(staticDirectory);
         mWebServer.setUploadDirectory(uploadDirectory);
         mWebServer.setStartDirectory(Environment.getExternalStorageDirectory());
@@ -48,18 +59,18 @@ public class FileServer extends Service {
 
     }
 
-    private void unpackAssets() {
+    private void unpackAssets(File dir) {
+
+        Log.e("TAG/FileServer", "unpackAssets: ");
 
         AssetManager assetManager = getAssets();
-        try {
-            String[] files = assetManager.list("/static/");
-            for (String file : files) {
-
-                Log.e("TAG/FileServer", "unpackAssets: " + file);
-
-            }
-        } catch (IOException e) {
+        try (InputStream is = assetManager.open("static/static.zip")) {
+            ZipUtils.exactInputStream(is, dir);
+        } catch (Exception e) {
             e.printStackTrace();
+
+            Log.e("TAG/FileServer", "unpackAssets: " + e.getMessage());
+
         }
 
     }
