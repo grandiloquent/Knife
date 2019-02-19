@@ -2,8 +2,6 @@ package euphoria.psycho.knife;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.Uri;
@@ -16,7 +14,6 @@ import java.io.FilenameFilter;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -25,6 +22,10 @@ import java.util.Set;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.base.Job;
+import euphoria.psycho.common.base.Job.Listener;
+import euphoria.psycho.common.widget.ListMenuButton.Item;
+import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.share.util.ClipboardUtils;
 import euphoria.psycho.share.util.CollectionUtils;
 import euphoria.psycho.share.util.ContextUtils;
@@ -34,10 +35,6 @@ import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
-import euphoria.psycho.common.base.Job;
-import euphoria.psycho.common.base.Job.Listener;
-import euphoria.psycho.common.widget.ListMenuButton.Item;
-import euphoria.psycho.common.widget.selection.SelectionDelegate;
 
 
 public class DocumentUtils {

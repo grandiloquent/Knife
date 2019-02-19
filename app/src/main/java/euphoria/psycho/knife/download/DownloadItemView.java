@@ -16,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.view.MarginLayoutParamsCompat;
 import euphoria.psycho.common.ApiCompatibilityUtils;
-import euphoria.psycho.share.util.Utils;
 import euphoria.psycho.common.ViewUtils;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.widget.ListMenuButton;
@@ -25,6 +24,7 @@ import euphoria.psycho.common.widget.MaterialProgressBar;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
+import euphoria.psycho.share.util.Utils;
 
 public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ThumbnailProvider.ThumbnailRequest, ListMenuButton.Delegate {
     private final ColorStateList mCheckedIconForegroundColorList;

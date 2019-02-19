@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import androidx.annotation.IntDef;
 import androidx.annotation.MainThread;
 import androidx.annotation.WorkerThread;
-import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.annotations.DoNotInline;
+import euphoria.psycho.share.util.ThreadUtils;
 
 /**
  * A Chromium version of android.os.AsyncTask.

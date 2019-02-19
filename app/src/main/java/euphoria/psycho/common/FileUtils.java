@@ -10,7 +10,6 @@ import android.os.Build.VERSION_CODES;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.text.TextUtils;
-import android.webkit.MimeTypeMap;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;

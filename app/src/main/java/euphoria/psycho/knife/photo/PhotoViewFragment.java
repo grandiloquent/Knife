@@ -13,8 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import euphoria.psycho.common.Log;
-import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.ThreadUtils;
 
 import static euphoria.psycho.knife.photo.PhotoManager.EXTRA_MAX_INITIAL_SCALE;
 

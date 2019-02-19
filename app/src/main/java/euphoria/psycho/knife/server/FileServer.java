@@ -12,23 +12,17 @@ import android.os.IBinder;
 import android.util.Log;
 
 import org.nanohttpd.protocols.http.NanoHTTPD;
-import org.nanohttpd.util.ServerRunner;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import androidx.annotation.Nullable;
-import euphoria.psycho.common.C;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.share.util.ContextUtils;
-import euphoria.psycho.share.util.HttpUtils;
 import euphoria.psycho.share.util.NotificationUtils;
 import euphoria.psycho.share.util.StorageUtils;
 import euphoria.psycho.share.util.SystemUtils;
-import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.share.util.ZipUtils;
 
 public class FileServer extends Service {

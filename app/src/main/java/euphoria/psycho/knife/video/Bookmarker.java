@@ -1,7 +1,6 @@
 package euphoria.psycho.knife.video;
 
 import android.content.Context;
-import android.net.Uri;
 import android.util.Log;
 
 import java.io.ByteArrayInputStream;
@@ -10,7 +9,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
 import euphoria.psycho.share.cache.BlobCache;
-import euphoria.psycho.share.util.KeyUtils;
 import euphoria.psycho.share.util.Utils;
 
 public class Bookmarker {

@@ -3,28 +3,21 @@ package euphoria.psycho.knife;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 
-import java.io.ByteArrayOutputStream;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.ApiCompatibilityUtils;
-import euphoria.psycho.share.util.BitmapUtils;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.share.util.IconUtils;
-import euphoria.psycho.share.util.ThreadUtils;
-import euphoria.psycho.share.util.Utils;
-import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.widget.ListMenuButton;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
+import euphoria.psycho.share.util.Utils;
 
 public class DocumentView extends SelectableItemView<DocumentInfo> implements ListMenuButton.Delegate, ThumbnailProvider.ThumbnailRequest {
 

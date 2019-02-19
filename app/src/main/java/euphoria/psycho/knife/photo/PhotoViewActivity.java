@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.view.accessibility.AccessibilityManager;
 
 import java.io.File;
 import java.util.HashMap;
@@ -14,14 +13,14 @@ import java.util.List;
 import java.util.Map;
 
 import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
-import euphoria.psycho.share.util.AccessibilityUtils;
-import euphoria.psycho.share.util.SystemUtils;
-import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.photo.PhotoViewPager.InterceptType;
 import euphoria.psycho.knife.photo.PhotoViewPager.OnInterceptTouchListener;
+import euphoria.psycho.share.util.AccessibilityUtils;
 import euphoria.psycho.share.util.MenuItemUtils;
+import euphoria.psycho.share.util.SystemUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 
 public class PhotoViewActivity extends BaseActivity implements
         OnPageChangeListener,

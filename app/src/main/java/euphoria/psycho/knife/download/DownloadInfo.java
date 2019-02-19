@@ -4,8 +4,8 @@ import android.content.Context;
 
 import java.io.File;
 
-import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.StringUtils;
 
 public class DownloadInfo {
     public long _id;

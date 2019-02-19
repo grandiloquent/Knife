@@ -38,17 +38,17 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import euphoria.psycho.common.C;
-import euphoria.psycho.share.util.DateUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
-import euphoria.psycho.share.util.ManagerUtils;
-import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.ChromeImageButton;
 import euphoria.psycho.common.widget.SystemUtils;
-import euphoria.psycho.share.widget.TimeBar;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.DateUtils;
+import euphoria.psycho.share.util.ManagerUtils;
+import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.share.widget.TimeBar;
 
 public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 

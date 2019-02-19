@@ -35,13 +35,13 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import euphoria.psycho.common.ApiCompatibilityUtils;
-import euphoria.psycho.share.util.ColorUtils;
 import euphoria.psycho.common.annotations.VisibleForTesting;
 import euphoria.psycho.common.widget.KeyboardVisibilityDelegate;
 import euphoria.psycho.common.widget.NumberRollView;
 import euphoria.psycho.common.widget.TintedDrawable;
 import euphoria.psycho.common.widget.selection.SelectionDelegate.SelectionObserver;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.ColorUtils;
 
 
 public class SelectableListToolbar<E>

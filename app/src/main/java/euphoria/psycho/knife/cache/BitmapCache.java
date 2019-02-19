@@ -11,9 +11,9 @@ import java.util.Map;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
-import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.annotations.VisibleForTesting;
 import euphoria.psycho.common.pool.DiscardableReferencePool;
+import euphoria.psycho.share.util.ThreadUtils;
 
 /**
  * In-memory cache of Bitmap.

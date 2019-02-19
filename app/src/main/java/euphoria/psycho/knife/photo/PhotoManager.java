@@ -4,20 +4,14 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Process;
-import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -25,8 +19,6 @@ import androidx.annotation.Nullable;
 import androidx.core.view.accessibility.AccessibilityEventCompat;
 import androidx.core.view.accessibility.AccessibilityRecordCompat;
 import euphoria.psycho.common.FileUtils;
-
-import static android.os.Environment.DIRECTORY_DCIM;
 
 public class PhotoManager {
     public static final String EXTRA_MAX_INITIAL_SCALE = "max_initial_scale";

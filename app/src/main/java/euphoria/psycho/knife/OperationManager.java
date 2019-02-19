@@ -15,7 +15,6 @@ import androidx.appcompat.app.AlertDialog;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
 import euphoria.psycho.share.task.MoveFilesTask;
-import euphoria.psycho.share.task.MoveFilesTask.Listener;
 import euphoria.psycho.share.util.StorageUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 

@@ -2,14 +2,12 @@ package euphoria.psycho.knife.photo;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.ImageDecoder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import euphoria.psycho.common.Log;
 
 public class PhotoPagerAdapter extends BaseFragmentPagerAdapter {
     private final Context mContext;

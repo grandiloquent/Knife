@@ -20,14 +20,14 @@ import androidx.appcompat.widget.Toolbar.OnMenuItemClickListener;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.ContentUtils;
-import euphoria.psycho.share.util.HttpUtils;
-import euphoria.psycho.share.util.StringUtils;
-import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.common.widget.selection.SelectionDelegate.SelectionObserver;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.HttpUtils;
+import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.share.util.ThreadUtils;
 
 public class DownloadFragment extends BaseFragment implements OnMenuItemClickListener, SelectionObserver<DownloadInfo> {
 

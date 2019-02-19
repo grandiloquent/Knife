@@ -4,11 +4,11 @@ import android.content.Intent;
 
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.C;
-import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.share.util.ContextUtils;
 
 
 public class DownloadActivity extends BaseActivity {
