@@ -37,7 +37,7 @@
             android:layout_marginRight="16dp"
             android:layout_marginBottom="0dp"
             android:ellipsize="end"
-            android:maxLines="1"
+            android:maxLines="2"
             android:textAppearance="@style/BlackTitle1"
             app:layout_constraintBottom_toTopOf="@+id/description"
             app:layout_constraintEnd_toStartOf="@+id/more"

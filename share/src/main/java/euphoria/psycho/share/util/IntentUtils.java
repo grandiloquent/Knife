@@ -2,11 +2,15 @@ package euphoria.psycho.share.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 
 import java.io.File;
+import java.util.List;
 
 import euphoria.psycho.share.R;
 
@@ -47,5 +51,16 @@ public class IntentUtils {
         intent.setDataAndType(uri, MimeTypeUtils.getMimeTypeForIntent(path));
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         context.startActivity(Intent.createChooser(intent, context.getResources().getText(R.string.share)));
+    }
+
+    public static boolean isPackageInstalled(Context context, String packageName) {
+
+        PackageManager packageManager = context.getPackageManager();
+
+        List<ApplicationInfo> applicationInfos = packageManager.getInstalledApplications(0);
+        for (ApplicationInfo app : applicationInfos) {
+            if (app.packageName.equals(packageName)) return true;
+        }
+        return false;
     }
 }

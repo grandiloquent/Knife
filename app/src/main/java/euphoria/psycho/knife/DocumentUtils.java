@@ -32,6 +32,7 @@ import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.DialogUtils;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
 import euphoria.psycho.share.util.FileUtils;
+import euphoria.psycho.share.util.IntentUtils;
 import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
@@ -381,6 +382,7 @@ public class DocumentUtils {
             case "xml":
             case "htm":
             case "srt":
+            case "mht":
                 return C.TYPE_TEXT;
             case "pdf":
                 return C.TYPE_PDF;
@@ -424,6 +426,19 @@ public class DocumentUtils {
             textIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), "multipart/related");
             context.startActivity(textIntent);
             return;
+        } else if (documentInfo.getFileName().toLowerCase().endsWith(".epub")) {
+            //if (IntentUtils.isPackageInstalled(context, "")) {
+            try {
+                Intent epubIntent = new Intent();
+                epubIntent.setAction(Intent.ACTION_VIEW);
+                epubIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), "application/epub+zip");
+                epubIntent.setClassName("com.duokan.reader","com.duokan.reader.DkReaderActivity");
+                context.startActivity(epubIntent);
+                return;
+            } catch (Exception ignored) {
+
+            }
+            //}
         }
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);

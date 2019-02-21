@@ -9,6 +9,7 @@ import java.util.List;
 
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.widget.Toolbar;
+import euphoria.psycho.common.C;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.DocumentInfo;
 import euphoria.psycho.knife.DocumentUtils;
@@ -30,6 +31,7 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
             case R.id.close_menu_id:
                 showBottomSheet();
                 return true;
+
             case R.id.selection_mode_delete_menu_id:
 
                 List<DocumentInfo> documentInfos = mFragment.getSelectionDelegate().getSelectedItemsAsList();
@@ -64,6 +66,17 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
                 break;
             case R.id.bookmark_menu_id:
                 showBookmark();
+                break;
+            case R.id.action_sort_by_date:
+
+                mFragment.sortBy(C.SORT_BY_DATE_MODIFIED);
+                break;
+            case R.id.action_sort_by_name:
+
+                mFragment.sortBy(C.SORT_BY_NAME);
+                break;
+            case R.id.action_sort_by_size:
+                mFragment.sortBy(C.SORT_BY_SIZE);
                 break;
         }
         return true;

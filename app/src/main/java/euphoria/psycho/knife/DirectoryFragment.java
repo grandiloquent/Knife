@@ -59,11 +59,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private LinearLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private BottomSheet mBottomSheet;
-
-    public BottomSheet getBottomSheet() {
-        return mBottomSheet;
-    }
-
     //    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
 //        @Override
 //        public void onGlobalLayout() {
@@ -113,6 +108,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         return mBookmark;
     }
 
+    public BottomSheet getBottomSheet() {
+        return mBottomSheet;
+    }
+
     public File getDirectory() {
         return mDirectory;
     }
@@ -131,6 +130,13 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     public DirectoryToolbar getToolbar() {
         return mToolbar;
+    }
+
+    private void initializeBottomSheet() {
+        if (mBottomSheet == null) {
+            mBottomSheet = new BottomSheet(getActivity());
+            new BottomSheetDelegate(this);
+        }
     }
 
     private void initializeToolbar() {
@@ -181,6 +187,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         }
         if (mToolbar.isSearching()) {
             mToolbar.hideSearchView();
+            updateRecyclerView(true);
+            return true;
         }
         File parent = mDirectory.getParentFile();
         if (parent != null) {
@@ -191,30 +199,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
         return false;
 
-    }
-
-
-
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-
-
-            case R.id.action_sort_by_date:
-
-                sortBy(C.SORT_BY_DATE_MODIFIED);
-                break;
-            case R.id.action_sort_by_name:
-                mToolbar.hideOverflowMenu();
-
-                sortBy(C.SORT_BY_NAME);
-                break;
-            case R.id.action_sort_by_size:
-                sortBy(C.SORT_BY_SIZE);
-                break;
-
-
-        }
-        return true;
     }
 
     public boolean onSearch(View v, int keyCode, KeyEvent event) {
@@ -254,7 +238,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 .putInt(C.KEY_SORT_BY, mSortBy).apply();
     }
 
-    private void sortBy(int sortBy) {
+    public void sortBy(int sortBy) {
         mToolbar.hideOverflowMenu();
         mSortBy = sortBy;
         updateRecyclerView(false);
@@ -399,7 +383,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void onEndSearch() {
-
+        updateRecyclerView(false);
     }
 
     @Override
@@ -455,13 +439,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             updateRecyclerView(false);
             OperationManager.instance().hideActionButtons();
         });
-    }
-
-    private void initializeBottomSheet() {
-        if (mBottomSheet == null) {
-            mBottomSheet = new BottomSheet(getActivity());
-            new BottomSheetDelegate(this);
-        }
     }
 
     @Override
