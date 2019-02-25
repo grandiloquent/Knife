@@ -28,6 +28,7 @@ public class DownloadManager implements DownloadObserver {
     private DownloadDatabase mDatabase;
     private CopyOnWriteArrayList<TaskRecord> mTaskRecords = new CopyOnWriteArrayList<>();
     private DownloadAdapter mAdapter;
+    private boolean mIsInitialize;
 
     private DownloadManager(Context context) {
         int numThreads = 3;
@@ -37,13 +38,16 @@ public class DownloadManager implements DownloadObserver {
         startService();
     }
 
-    public void setAdapter(DownloadAdapter adapter) {
-        mAdapter = adapter;
-    }
-
     public void addObserver(DownloadObserver observer) {
         if (mObservers.indexOf(observer) == -1)
             mObservers.add(observer);
+    }
+
+    public void removeObserver(DownloadObserver observer) {
+        int index = mObservers.indexOf(observer);
+        if (index != -1) {
+            mObservers.remove(index);
+        }
     }
 
     private void broadcastProgress(DownloadInfo downloadInfo) {
@@ -89,6 +93,18 @@ public class DownloadManager implements DownloadObserver {
         }
 
 
+    }
+
+    public void fullUpdate() {
+        if (mTaskRecords.isEmpty()) return;
+        for (TaskRecord taskRecord : mTaskRecords) {
+
+
+            Log.e("TAG/DownloadManager", "fullUpdate: ");
+
+            if (mAdapter != null)
+                mAdapter.fullUpdate(taskRecord.info);
+        }
     }
 
     public DownloadDatabase getDatabase() {
@@ -174,6 +190,19 @@ public class DownloadManager implements DownloadObserver {
         mActivity = activity;
     }
 
+    public void setAdapter(DownloadAdapter adapter) {
+        mAdapter = adapter;
+    }
+
+    public boolean isInitialize() {
+        return mIsInitialize;
+    }
+
+    public void setInitialize(boolean initialize) {
+
+        mIsInitialize = initialize;
+    }
+
     private void startService() {
         Intent downloadService = new Intent(mContext, DownloadService.class);
 
@@ -229,17 +258,6 @@ public class DownloadManager implements DownloadObserver {
         }
         broadcastProgress(downloadInfo);
 
-    }
-
-    public void fullUpdate() {
-        if (mTaskRecords.isEmpty()) return;
-        for (TaskRecord taskRecord : mTaskRecords) {
-
-
-            Log.e("TAG/DownloadManager", "fullUpdate: ");
-
-            mAdapter.fullUpdate(taskRecord.info);
-        }
     }
 
     @Override

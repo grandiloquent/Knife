@@ -83,15 +83,6 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         mClipboardManager.addPrimaryClipChangedListener(mPrimaryClipChangedListener);
     }
 
-    @Override
-    public void onDestroy() {
-        if (mClipboardManager != null) {
-            mClipboardManager.removePrimaryClipChangedListener(mPrimaryClipChangedListener);
-        }
-        super.onDestroy();
-
-    }
-
     private void updateRecyclerView() {
 
         ThreadUtils.postOnBackgroundThread(() -> {
@@ -139,9 +130,26 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
                         activity.getResources(), R.drawable.downloads_big, activity.getTheme()),
                 R.string.download_manager_ui_empty, R.string.download_manager_ui_empty);
         listenClipboard();
-        DownloadManager.instance().addObserver(new DownloadObserverImpl(mAdapter));
+        mDownloadObserver = new DownloadObserverImpl(mAdapter);
+        DownloadManager.instance().addObserver(mDownloadObserver);
         DownloadManager.instance().setAdapter(mAdapter);
-        updateRecyclerView();
+
+        if (DownloadManager.instance().isInitialize())
+            updateRecyclerView();
+        else {
+
+            ThreadUtils.postOnBackgroundThread(() -> {
+                List<DownloadInfo> downloadInfos = DownloadManager.instance().getDatabase().queryPendingTask();
+                for (DownloadInfo i : downloadInfos) {
+                    if (i.status == DownloadStatus.PENDING) {
+                        i.status = DownloadStatus.PAUSED;
+                    }
+                }
+                ThreadUtils.postOnUiThread(() -> {
+                    mAdapter.switchDatas(downloadInfos);
+                });
+            });
+        }
         insertTaskFromClipboard();
 
         ThreadUtils.postOnUiThreadDelayed(() -> {
@@ -149,10 +157,23 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         }, 1000);
     }
 
+    private DownloadObserver mDownloadObserver;
+
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
+
+    }
+
+    @Override
+    public void onDestroy() {
+        DownloadManager.instance().removeObserver(mDownloadObserver);
+        DownloadManager.instance().setAdapter(null);
+        if (mClipboardManager != null) {
+            mClipboardManager.removePrimaryClipChangedListener(mPrimaryClipChangedListener);
+        }
+        super.onDestroy();
 
     }
 

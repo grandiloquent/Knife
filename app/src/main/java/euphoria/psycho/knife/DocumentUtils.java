@@ -268,9 +268,25 @@ public class DocumentUtils {
 
                     // o1.getSize() >= o2.getSize() ? -1 : 1
                     if (b1 == b2) {
-                        if (isAscending)
-                            return o1.getSize() >= o2.getSize() ? 1 : -1;
-                        else return o1.getSize() <= o2.getSize() ? 1 : -1;
+                        long diffSize = o1.getSize() - o2.getSize();
+
+                        if (isAscending) {
+                            if (diffSize > 0) {
+                                return 1;
+                            } else if (diffSize < 0) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        } else {
+                            if (diffSize > 0) {
+                                return -1;
+                            } else if (diffSize < 0) {
+                                return 1;
+                            } else {
+                                return 0;
+                            }
+                        }
                     } else if (b1) {
                         if (isAscending) {
                             return -1;
@@ -432,7 +448,7 @@ public class DocumentUtils {
                 Intent epubIntent = new Intent();
                 epubIntent.setAction(Intent.ACTION_VIEW);
                 epubIntent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), "application/epub+zip");
-                epubIntent.setClassName("com.duokan.reader","com.duokan.reader.DkReaderActivity");
+                epubIntent.setClassName("com.duokan.reader", "com.duokan.reader.DkReaderActivity");
                 context.startActivity(epubIntent);
                 return;
             } catch (Exception ignored) {
