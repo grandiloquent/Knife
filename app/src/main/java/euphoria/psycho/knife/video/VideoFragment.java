@@ -202,9 +202,23 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
 
         if (mController.getVisibility() == View.VISIBLE) {
             mController.setVisibility(View.INVISIBLE);
-            SystemUtils.hideSystemUI(mDecorView);
+            mHandler.removeCallbacks(mVisibilityChecker);
+            hideSystemUI(true);
+        }
+    }
+
+    void hideSystemUI(boolean toggleActionBarVisibility) {
+        if (toggleActionBarVisibility) {
             mToolbar.setVisibility(View.INVISIBLE);
         }
+        mDecorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                        View.SYSTEM_UI_FLAG_LOW_PROFILE |
+                        View.SYSTEM_UI_FLAG_FULLSCREEN |
+                        View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
     private void initViews() {
@@ -315,10 +329,12 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
     }
 
     private void onNext(View view) {
+        mHandler.removeCallbacks(mVisibilityChecker);
         if (mCurrentPlaying + 1 < mPlayList.size()) {
             mBookmarker.setBookmark(mPlayList.get(mCurrentPlaying), mVideoView.getCurrentPosition());
             mVideoView.setVideoPath(mPlayList.get(++mCurrentPlaying));
         }
+        mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
     }
 
     private void onPlay(View view) {
@@ -350,16 +366,14 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
         mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
     }
 
-    @Override
-    public void onPause() {
-        mBookmarker.setBookmark(mPlayList.get(mCurrentPlaying), mVideoView.getCurrentPosition());
-        super.onPause();
-    }
-
     private void onPrevious(View view) {
+        mHandler.removeCallbacks(mVisibilityChecker);
+
         if (mCurrentPlaying - 1 > -1) {
             mVideoView.setVideoPath(mPlayList.get(--mCurrentPlaying));
         }
+        mHandler.postDelayed(mVisibilityChecker, HIDE_CONTROLLER_DELAY_IN_MILLIS);
+
     }
 
     private boolean onTouch(View v, MotionEvent event) {
@@ -497,6 +511,13 @@ public class VideoFragment extends Fragment implements TimeBar.OnScrubListener {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onPause() {
+        mHandler.removeCallbacksAndMessages(null);
+        mBookmarker.setBookmark(mPlayList.get(mCurrentPlaying), mVideoView.getCurrentPosition());
+        super.onPause();
     }
 
     @Override
