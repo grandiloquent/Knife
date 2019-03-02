@@ -102,9 +102,10 @@ public class StorageUtils {
                                                       boolean overwrite) {
 
         if (dstFile.exists()) {
-            if (overwrite && !dstFile.delete()) {
+            if (!overwrite) {
                 return false;
-            } else {
+            }
+            if (!dstFile.delete()) {
                 return false;
             }
         }

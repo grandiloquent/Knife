@@ -56,6 +56,7 @@ public class MoveFilesTask implements Runnable {
     private boolean sdCardToSDCard(File srcFile) {
         File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
+            if(!StorageUtils.deleteDocument(mContentResolver,targetFile,mTreeUri))
             return false;
         }
 
@@ -80,7 +81,7 @@ public class MoveFilesTask implements Runnable {
                     srcFile,
                     dstFile,
                     mTreeUri,
-                    false);
+                    true);
             if (!result) {
                 mFailedFiles.add(srcFile);
             } else {
@@ -107,7 +108,8 @@ public class MoveFilesTask implements Runnable {
     private boolean storageToSDCard(File srcFile) {
         File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
-            return false;
+            if (!StorageUtils.deleteDocument(mContentResolver, targetFile, mTreeUri))
+                return false;
         }
         InputStream is;
         OutputStream os;
@@ -143,6 +145,7 @@ public class MoveFilesTask implements Runnable {
     private boolean storageToStorage(File srcFile) {
         File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
+            if(!targetFile.delete())
             return false;
         }
         return srcFile.renameTo(targetFile);
