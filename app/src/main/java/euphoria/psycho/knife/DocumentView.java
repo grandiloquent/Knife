@@ -112,6 +112,9 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.add_bookmark:
                 mDelegate.getListMenuDelegate().addToBookmark(getItem());
                 break;
+            case R.string.extract_video_src:
+                mDelegate.extractVideoSrc(getItem());
+                break;
         }
     }
 

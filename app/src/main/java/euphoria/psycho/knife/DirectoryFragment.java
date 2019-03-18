@@ -1,18 +1,31 @@
 package euphoria.psycho.knife;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ContentUris;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Html;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,7 +54,6 @@ import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
-import euphoria.psycho.knife.video.VideoFragment;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
@@ -341,7 +353,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
         switch (documentInfo.getType()) {
             case C.TYPE_VIDEO:
-                VideoFragment.show(Objects.requireNonNull(getActivity()).getSupportFragmentManager(), documentInfo.getPath(), mSortBy, 0);
+                Intent videoIntent = new Intent();
+                videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
+                startActivity(videoIntent);
                 break;
             case C.TYPE_DIRECTORY:
                 updateLastVisiblePosition();
@@ -478,7 +492,98 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void extractVideoSrc(DocumentInfo documentInfo) {
+
+        try {
+            File src = new File(documentInfo.getPath());
+            String str = readTextFile(src, 0, null);
+            int start = str.indexOf("<video ");//src=3D"
+
+            start += "<video ".length();
+            start = str.indexOf("src=3D", start);
+            start += "src=3D".length();
+            int end = str.indexOf("\"", start);
+            String url = str.substring(start, end);
+            url = url.replaceAll("=\r\n", "");
+            url = url.replaceAll("=3D", "=");
+
+            url = Html.fromHtml(url).toString();
+            ClipboardManager clipboardManager = ((ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE));
+            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, url));
+            src.delete();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
     public void updateItem(DocumentInfo documentInfo) {
 
+    }
+
+    /**
+     * Read a text file into a String, optionally limiting the length.
+     *
+     * @param file     to read (will not seek, so things like /proc files are OK)
+     * @param max      length (positive for head, negative of tail, 0 for no limit)
+     * @param ellipsis to add of the file was truncated (can be null)
+     * @return the contents of the file, possibly truncated
+     * @throws IOException if something goes wrong reading the file
+     */
+    public static String readTextFile(File file, int max, String ellipsis) throws IOException {
+        InputStream input = new FileInputStream(file);
+        // wrapping a BufferedInputStream around it because when reading /proc with unbuffered
+        // input stream, bytes read not equal to buffer size is not necessarily the correct
+        // indication for EOF; but it is true for BufferedInputStream due to its implementation.
+        BufferedInputStream bis = new BufferedInputStream(input);
+        try {
+            long size = file.length();
+            if (max > 0 || (size > 0 && max == 0)) {  // "head" mode: read the first N bytes
+                if (size > 0 && (max == 0 || size < max)) max = (int) size;
+                byte[] data = new byte[max + 1];
+                int length = bis.read(data);
+                if (length <= 0) return "";
+                if (length <= max) return new String(data, 0, length);
+                if (ellipsis == null) return new String(data, 0, max);
+                return new String(data, 0, max) + ellipsis;
+            } else if (max < 0) {  // "tail" mode: keep the last N
+                int len;
+                boolean rolled = false;
+                byte[] last = null;
+                byte[] data = null;
+                do {
+                    if (last != null) rolled = true;
+                    byte[] tmp = last;
+                    last = data;
+                    data = tmp;
+                    if (data == null) data = new byte[-max];
+                    len = bis.read(data);
+                } while (len == data.length);
+
+                if (last == null && len <= 0) return "";
+                if (last == null) return new String(data, 0, len);
+                if (len > 0) {
+                    rolled = true;
+                    System.arraycopy(last, len, last, 0, last.length - len);
+                    System.arraycopy(data, 0, last, last.length - len, len);
+                }
+                if (ellipsis == null || !rolled) return new String(last);
+                return ellipsis + new String(last);
+            } else {  // "cat" mode: size unknown, read it all in streaming fashion
+                ByteArrayOutputStream contents = new ByteArrayOutputStream();
+                int len;
+                byte[] data = new byte[1024];
+                do {
+                    len = bis.read(data);
+                    if (len > 0) contents.write(data, 0, len);
+                } while (len == data.length);
+                return contents.toString();
+            }
+        } finally {
+            bis.close();
+            input.close();
+        }
     }
 }

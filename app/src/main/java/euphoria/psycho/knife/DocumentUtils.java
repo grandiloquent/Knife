@@ -196,6 +196,8 @@ public class DocumentUtils {
                 break;
             }
             case C.TYPE_TEXT: {
+                items.add(new Item(context, R.string.extract_video_src, true));
+
                 break;
             }
             case C.TYPE_VIDEO: {

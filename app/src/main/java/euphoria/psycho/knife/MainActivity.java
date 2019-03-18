@@ -8,7 +8,6 @@ import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.knife.download.DownloadFragment;
-import euphoria.psycho.knife.video.VideoFragment;
 import euphoria.psycho.share.util.ContextUtils;
 
 public class MainActivity extends BaseActivity {
@@ -18,17 +17,10 @@ public class MainActivity extends BaseActivity {
 
     private void handleIntent() {
         Intent intent = getIntent();
-        if (intent.getData() != null) {
 
-            VideoFragment.show(getSupportFragmentManager(), intent.getData().getPath(), C.SORT_BY_NAME, -1);
-        } else {
             DirectoryFragment.show(getSupportFragmentManager());
-        }
     }
 
-    private void showVideoFragment() {
-        VideoFragment.show(getSupportFragmentManager(), null, C.SORT_BY_NAME, 0);
-    }
 
     private void showDownloadFragment() {
         BaseFragment.show(new DownloadFragment(), getSupportFragmentManager(), R.id.container, null);

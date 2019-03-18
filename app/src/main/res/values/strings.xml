@@ -60,6 +60,7 @@
     <string name="remaining_duration_hours">%1$d hours left</string>
     <string name="remaining_duration_minutes">%1$d mins left</string>
     <string name="remaining_duration_one_day">1 day left</string>
+    <string name="extract_video_src">提取视频地址</string>
     <string name="remaining_duration_one_hour">1 hour left</string>
     <string name="remaining_duration_one_minute">1 min left</string>
     <string name="remaining_duration_one_second">1 sec left</string>

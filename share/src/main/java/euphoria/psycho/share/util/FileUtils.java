@@ -24,6 +24,29 @@ public class FileUtils {
     private static final int SKIP_BUFFER_SIZE = 2048;
     private static byte[] SKIP_BYTE_BUFFER;
     private static char[] SKIP_CHAR_BUFFER;
+    public static String changeExtension(String path, String extension) {
+        if (path != null) {
+            String s = path;
+            int length = path.length();
+            for (int i = length; --i >= 0; ) {
+                char ch = path.charAt(i);
+                if (ch == '.') {
+                    s = path.substring(0, i);
+                    break;
+                }
+                if (ch == File.separatorChar)
+                    break;
+            }
+            if (extension != null && path.length() != 0) {
+                if (extension.length() == 0 || extension.charAt(0) != '.') {
+                    s = s + ".";
+                }
+                s = s + extension;
+            }
+            return s;
+        }
+        return null;
+    }
 
     /**
      * Handle closing a {@link Closeable} via {@link Closeable#close()} and catch
