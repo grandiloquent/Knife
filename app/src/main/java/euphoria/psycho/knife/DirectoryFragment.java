@@ -54,10 +54,14 @@ import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
+import euphoria.psycho.knife.video.VideoActivity;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
+import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
+import static euphoria.psycho.knife.video.VideoActivity.KEY_SORT_BY;
+import static euphoria.psycho.knife.video.VideoActivity.KEY_SORT_DIRECTION;
 
 public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,
         DocumentActionDelegate,
@@ -353,7 +357,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
         switch (documentInfo.getType()) {
             case C.TYPE_VIDEO:
-                Intent videoIntent = new Intent();
+                Intent videoIntent = new Intent(this.getContext(), VideoActivity.class);
                 videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
                 startActivity(videoIntent);
                 break;
@@ -361,6 +365,15 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 updateLastVisiblePosition();
                 mDirectory = new File(documentInfo.getPath());
                 updateRecyclerView(false);
+                break;
+            case C.TYPE_AUDIO:
+                Intent musicService = new Intent(this.getActivity(), MusicService.class);
+                musicService.setAction(MusicService.ACTION_PLAY);
+                musicService.putExtra(MusicService.EXTRA_PATH, documentInfo.getPath());
+                musicService.putExtra(KEY_SORT_BY, mSortBy);
+                musicService.putExtra(KEY_SORT_DIRECTION, SORT_BY_DESCENDING);
+
+                this.getActivity().startService(musicService);
                 break;
             default:
                 DocumentUtils.openContent(getActivity(), documentInfo, 0);
@@ -492,6 +505,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void copyFileName(DocumentInfo documentInfo) {
+        Utilities.setClipboardText(getContext(), documentInfo.getFileName());
+    }
+
+    @Override
     public void extractVideoSrc(DocumentInfo documentInfo) {
 
         try {
@@ -500,8 +518,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             int start = str.indexOf("<video ");//src=3D"
 
             start += "<video ".length();
-            start = str.indexOf("src=3D", start);
-            start += "src=3D".length();
+            start = str.indexOf("src=3D\"", start);
+            start += "src=3D\"".length();
             int end = str.indexOf("\"", start);
             String url = str.substring(start, end);
             url = url.replaceAll("=\r\n", "");

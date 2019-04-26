@@ -26,6 +26,7 @@ import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
+import euphoria.psycho.knife.video.VideoActivity;
 import euphoria.psycho.share.util.ClipboardUtils;
 import euphoria.psycho.share.util.CollectionUtils;
 import euphoria.psycho.share.util.ContextUtils;
@@ -174,6 +175,7 @@ public class DocumentUtils {
         items.add(new Item(context, R.string.delete, true));
         items.add(new Item(context, R.string.share, true));
         items.add(new Item(context, R.string.properties, true));
+        items.add(new Item(context, R.string.copy_file_name, true));
 
         switch (documentInfo.getType()) {
             case C.TYPE_APK: {
@@ -432,7 +434,7 @@ public class DocumentUtils {
         if (documentInfo.getType() == C.TYPE_VIDEO) {
 
 
-            Intent videoIntent = new Intent(context, MainActivity.class);
+            Intent videoIntent = new Intent(context, VideoActivity.class);
             videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
             context.startActivity(videoIntent);
 

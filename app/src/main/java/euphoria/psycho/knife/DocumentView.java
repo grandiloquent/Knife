@@ -115,6 +115,9 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.extract_video_src:
                 mDelegate.extractVideoSrc(getItem());
                 break;
+            case R.string.copy_file_name:
+                mDelegate.copyFileName(getItem());
+                break;
         }
     }
 

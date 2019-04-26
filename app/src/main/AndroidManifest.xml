@@ -89,11 +89,11 @@
         <service android:name=".service.FileOperationService" />
         <service android:name=".download.DownloadService" />
         <service android:name=".server.FileServer" />
+        <service android:name=".MusicService" />
 
         <activity
             android:name=".video.VideoActivity"
             android:hardwareAccelerated="true"
-            android:launchMode="singleInstance"
             android:taskAffinity=""
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
 

@@ -3,6 +3,7 @@ package euphoria.psycho.knife.video;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
@@ -18,6 +19,7 @@ import android.view.MenuItem;
 import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
@@ -64,6 +66,7 @@ import euphoria.psycho.knife.R;
 import static com.google.android.exoplayer2.C.INDEX_UNSET;
 import static com.google.android.exoplayer2.C.TIME_END_OF_SOURCE;
 import static com.google.android.exoplayer2.C.TIME_UNSET;
+import static euphoria.psycho.knife.video.AspectRatioFrameLayout.RESIZE_MODE_FIT;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_ASCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
@@ -78,6 +81,7 @@ public class VideoActivity extends BaseVideoActivity implements
         VideoTouchHelper.Listener,
         TimeBar.OnScrubListener {
     public static final long DEFAULT_SHOW_TIMEOUT_MS = 5000L;
+    public static final String EXTRA_REFRESH = "refresh";
     public static final String KEY_SORT_BY = "sort_by";
     public static final String KEY_SORT_DIRECTION = "sort_direction_video";
     private static final String TAG = "VideoActivity";
@@ -108,40 +112,31 @@ public class VideoActivity extends BaseVideoActivity implements
         }
         String fileName = getCurrentUri();
 
-//        openDeleteVideoDialog(this, fileName, new FileUtils.OperationResultCallback() {
-//            @Override
-//            public void onCancel() {
-//            }
-//
-//            @Override
-//            public void onFinished(boolean result) {
-//                Context context = VideoActivity.this;
-//                if (fileName.startsWith(FileUtils.getRemovableStoragePath())) {
-//                    String treeUri = PreferenceManager.getDefaultSharedPreferences(context)
-//                            .getString(KEY_TREE_URI, "");
-//                    if (!isNullOrEmpty(treeUri)) {
-//                        DocumentFile documentFile = FileUtils.getDocumentFile(context,
-//                                fileName, Uri.parse(treeUri));
-//                        documentFile.delete();
-//                    }
-//                } else {
-//                    new File(fileName).delete();
-//                }
-//                mPlayer.stop();
-//                if (mStartWindow + 1 < mFiles.length) {
-//                    MediaSource mediaSource = generateMediaSource(Uri.fromFile(mFiles[mStartWindow + 1]));
-//                    mPlayer.prepare(mediaSource);
-//                    seekToFile(mFiles[mStartWindow]);
-//
-//                } else if (mStartWindow - 1 >= 0) {
-//                    MediaSource mediaSource = generateMediaSource(Uri.fromFile(mFiles[mStartWindow + -1]));
-//                    mPlayer.prepare(mediaSource);
-//                    seekToFile(mFiles[mStartWindow]);
-//                }
-//                setRefreshResult();
-//
-//            }
-//        });
+        openDeleteVideoDialog(this, fileName, new OperationResultCallback() {
+            @Override
+            public void onCancel() {
+            }
+
+            @Override
+            public void onFinished(boolean result) {
+                Context context = VideoActivity.this;
+
+                new File(fileName).delete();
+                mPlayer.stop();
+                if (mStartWindow + 1 < mFiles.length) {
+                    MediaSource mediaSource = generateMediaSource(Uri.fromFile(mFiles[mStartWindow + 1]));
+                    mPlayer.prepare(mediaSource);
+                    seekToFile(mFiles[mStartWindow]);
+
+                } else if (mStartWindow - 1 >= 0) {
+                    MediaSource mediaSource = generateMediaSource(Uri.fromFile(mFiles[mStartWindow + -1]));
+                    mPlayer.prepare(mediaSource);
+                    seekToFile(mFiles[mStartWindow]);
+                }
+                setRefreshResult();
+
+            }
+        });
     }
 
     private void actionRenamFile() {
@@ -467,6 +462,11 @@ public class VideoActivity extends BaseVideoActivity implements
         view.setVisibility(View.VISIBLE);
     }
 
+    private void setRefreshResult() {
+        Intent intent = new Intent();
+        intent.putExtra(EXTRA_REFRESH, true);
+        setResult(RESULT_OK, intent);
+    }
 
     private void setupView() {
         mRootView.setOnTouchListener((v, event) -> mVideoTouchHelper.onTouch(event));
@@ -635,6 +635,21 @@ public class VideoActivity extends BaseVideoActivity implements
         }
     }
 
+    public static void openDeleteVideoDialog(Context context, String
+            fileName, OperationResultCallback callback) {
+        new AlertDialog.Builder(context)
+                .setTitle("询问")
+                .setMessage(String.format("确定永久删除 %s 吗？", fileName))
+                .setNegativeButton(android.R.string.cancel, ((dialog, which) -> {
+                    dialog.dismiss();
+                    if (callback != null) {
+                        callback.onCancel();
+                    }
+                }))
+                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
+                    callback.onFinished(true);
+                })).show();
+    }
 
     private static long usToMs(long us) {
         if (us == C.TIME_UNSET || us == TIME_END_OF_SOURCE) return us;
@@ -654,8 +669,8 @@ public class VideoActivity extends BaseVideoActivity implements
         setupView();
         mVideoTouchHelper = new VideoTouchHelper(this, this);
 
-        mSortBy = mPreferences.getInt(KEY_SORT_BY, SORT_BY_MODIFIED_TIME);
-        mSortDirection = mPreferences.getInt(KEY_SORT_DIRECTION, SORT_BY_DESCENDING);
+        mSortBy = mPreferences.getInt(KEY_SORT_BY, SORT_BY_NAME);
+        mSortDirection = mPreferences.getInt(KEY_SORT_DIRECTION, SORT_BY_ASCENDING);
     }
 
     @Override
@@ -697,6 +712,9 @@ public class VideoActivity extends BaseVideoActivity implements
                 return true;
 
             }
+            case R.id.action_full_screen: {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -723,6 +741,7 @@ public class VideoActivity extends BaseVideoActivity implements
     @Override
     public void onPositionDiscontinuity(int reason) {
 
+        getSupportActionBar().setTitle(mFiles[mPlayer.getCurrentWindowIndex()].getName());
     }
 
     /**
@@ -831,5 +850,11 @@ public class VideoActivity extends BaseVideoActivity implements
         }
         applyTextureViewRotation(mTextureView, mTextureViewRotation);
         mExoContentFrame.setAspectRatio(ratio);
+    }
+
+    public interface OperationResultCallback {
+        void onCancel();
+
+        void onFinished(boolean result);
     }
 }

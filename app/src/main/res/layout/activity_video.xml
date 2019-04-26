@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000">
-    <euphoria.psycho.funny.ui.AspectRatioFrameLayout
+    <euphoria.psycho.knife.video.AspectRatioFrameLayout
         android:id="@+id/exo_content_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center">
         <!--TextureView Will be placed here-->
-        <euphoria.psycho.funny.ui.SubtitleView
+        <euphoria.psycho.knife.video.SubtitleView
             android:id="@+id/exo_subtitles"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -23,7 +23,7 @@
             android:background="@color/exo_error_message_background_color"
             android:gravity="center"
             android:padding="16dp" />
-    </euphoria.psycho.funny.ui.AspectRatioFrameLayout>
+    </euphoria.psycho.knife.video.AspectRatioFrameLayout>
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/controller"
         android:layout_width="match_parent"
@@ -73,7 +73,7 @@
                 android:textColor="#FFBEBEBE"
                 android:textSize="14sp"
                 android:textStyle="bold" />
-            <euphoria.psycho.funny.ui.DefaultTimeBar
+            <euphoria.psycho.knife.video.DefaultTimeBar
                 android:id="@+id/exo_progress"
                 android:layout_width="0dp"
                 android:layout_height="26dp"
