@@ -395,6 +395,8 @@ public class DocumentUtils {
             case "mp4":
             case "ts":
             case "webm":
+            case "vm":
+            case "crdownload":
                 return C.TYPE_VIDEO;
             case "txt":
             case "css":

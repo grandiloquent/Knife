@@ -290,13 +290,10 @@ public class VideoActivity extends BaseVideoActivity implements
 
     private File[] listVideoFiles(String dir) {
         File directory = new File(dir);
-        Pattern pattern = Pattern.compile("\\.(?:mp4)$");
+        Pattern pattern = Pattern.compile("\\.(?:mp4|vm|crdownload)$");
         File[] files = directory.listFiles(file ->
         {
-            if (file.isFile() && pattern.matcher(file.getName()).find()) {
-                return true;
-            }
-            return false;
+            return file.isFile() && pattern.matcher(file.getName()).find();
         });
         if (files == null || files.length == 0) return null;
         Collator collator = Collator.getInstance(Locale.CHINA);
