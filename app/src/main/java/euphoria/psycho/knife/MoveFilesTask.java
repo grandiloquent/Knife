@@ -1,4 +1,4 @@
-package euphoria.psycho.share.task;
+package euphoria.psycho.knife;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -18,10 +18,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.share.util.StorageUtils;
-import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.knife.util.StorageUtils;
 
 public class MoveFilesTask implements Runnable {
 
@@ -60,14 +60,15 @@ public class MoveFilesTask implements Runnable {
             return false;
         }
 
-        try {
-            return DocumentsContract.moveDocument(mContentResolver,
-                    StorageUtils.getDocumentUri(srcFile, mTreeUri),
-                    StorageUtils.getDocumentUri(srcFile.getParentFile(), mTreeUri),
-                    mDstDirUri) != null;
-        } catch (FileNotFoundException e) {
-
-        }
+        srcFile.renameTo(targetFile);
+//        try {
+//            return DocumentsContract.moveDocument(mContentResolver,
+//                    StorageUtils.getDocumentUri(srcFile, mTreeUri),
+//                    StorageUtils.getDocumentUri(srcFile.getParentFile(), mTreeUri),
+//                    mDstDirUri) != null;
+//        } catch (FileNotFoundException e) {
+//
+//        }
 
         return false;
     }

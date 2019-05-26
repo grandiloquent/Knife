@@ -35,10 +35,12 @@ public class MainActivity extends BaseActivity {
 //            Log.e(TAG, "initialize: " + documentFile.isDirectory()
 //                    + "\n" + documentFile.getUri().toString());
 //        }
-        String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
+       if( euphoria.psycho.knife.util.FileUtils.hasSDCardPath()) {
+           String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
 
-        if (treeUri == null)
-            FileUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
+           if (treeUri == null)
+               FileUtils.requestTreeUri(this, REQUEST_CODE_PERMISSION);
+       }
         // showVideoFragment();
         // handleIntent();
 

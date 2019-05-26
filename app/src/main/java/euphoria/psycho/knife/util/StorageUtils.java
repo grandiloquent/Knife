@@ -1,4 +1,4 @@
-package euphoria.psycho.share.util;
+package euphoria.psycho.knife.util;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -18,6 +18,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import euphoria.psycho.share.util.FileUtils;
 
 public class StorageUtils {
 
@@ -63,9 +65,10 @@ public class StorageUtils {
         }
 
         byte[] buffer = new byte[4096];
+        int len;
         try {
-            while (inputStream.read(buffer) != -1) {
-                outputStream.write(buffer);
+            while ((len = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, len);
             }
             success = true;
         } catch (Exception e) {
@@ -121,17 +124,17 @@ public class StorageUtils {
 
             is = contentResolver.openInputStream(StorageUtils.getDocumentUri(srcFile, treeUri));
         } catch (FileNotFoundException e) {
-            FileUtils.closeQuietly(os);
+            euphoria.psycho.share.util.FileUtils.closeQuietly(os);
             return false;
         }
 
         try {
-            FileUtils.copy(is, os);
+            euphoria.psycho.share.util.FileUtils.copy(is, os);
             return true;
         } catch (IOException ignored) {
 
         } finally {
-            FileUtils.closeQuietly(is);
+            euphoria.psycho.share.util.FileUtils.closeQuietly(is);
             FileUtils.closeQuietly(os);
         }
         return false;
@@ -203,9 +206,10 @@ public class StorageUtils {
     public static String getSDCardPath() {
         if (mSDCard == null) {
             File[] directories = new File("/storage").listFiles();
-            if (directories != null || directories.length > 1) {
+            if (directories != null && directories.length > 2) {
                 for (File dir : directories) {
-                    if (!dir.equals(getExternalStoragePath())) {
+                    if (!dir.getAbsolutePath().equals("/storage/emulated")
+                            && !dir.getAbsolutePath().equals("/storage/self")) {
                         mSDCard = dir.getAbsolutePath();
                         break;
                     }
@@ -216,7 +220,9 @@ public class StorageUtils {
     }
 
     public static boolean isSDCardFile(File file) {
-
+        if (getSDCardPath() == null) {
+            return false;
+        }
         return file.getAbsolutePath().startsWith(getSDCardPath());
     }
 

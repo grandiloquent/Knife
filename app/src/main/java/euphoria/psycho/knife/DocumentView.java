@@ -19,7 +19,7 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
 import euphoria.psycho.share.util.Utils;
 
-public class DocumentView extends SelectableItemView<DocumentInfo> implements ListMenuButton.Delegate, ThumbnailProvider.ThumbnailRequest {
+public class DocumentView extends SelectableItemView<DocumentInfo> implements ListMenuButton.Delegate {
 
     private final ColorStateList mCheckedIconForegroundColorList;
     private final int mIconBackgroundResId;
@@ -45,31 +45,17 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
     }
 
 
-    @Nullable
-    @Override
-    public String getContentId() {
-        return getItem() == null ? "" : Long.toString(Utils.crc64Long(getItem().getPath()));
 
-    }
 
-    @Nullable
-    @Override
-    public String getFilePath() {
-        return getItem() == null ? null : getItem().getPath();
-    }
+    //         return getItem() == null ? "" : Long.toString(Utils.crc64Long(getItem().getPath()));
 
-    @Override
-    public int getIconSize() {
-        return mIconSize;
-    }
 
     @Override
     public ListMenuButton.Item[] getItems() {
         return DocumentUtils.generateListMenu(getContext(), getItem());
     }
 
-    @Nullable
-    @Override
+
     public String getMimeType() {
         return null;
     }
@@ -118,24 +104,27 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.copy_file_name:
                 mDelegate.copyFileName(getItem());
                 break;
+            case R.string.srt_to_txt:
+                mDelegate.srt2Txt(getItem());
+                break;
         }
     }
 
-    @Override
-    public void onThumbnailRetrieved(@NonNull String contentId, @Nullable Bitmap thumbnail) {
-        if (TextUtils.equals(getContentId(), contentId) && thumbnail != null
-                && thumbnail.getWidth() > 0 && thumbnail.getHeight() > 0) {
-            assert !thumbnail.isRecycled();
-            mThumbnailBitmap = thumbnail;
-            updateView();
-        }
-    }
+//
+//    public void onThumbnailRetrieved(@NonNull String contentId, @Nullable Bitmap thumbnail) {
+//        if (TextUtils.equals(getContentId(), contentId) && thumbnail != null
+//                && thumbnail.getWidth() > 0 && thumbnail.getHeight() > 0) {
+//            assert !thumbnail.isRecycled();
+//            mThumbnailBitmap = thumbnail;
+//            updateView();
+//        }
+//    }
 
     @Override
     public void setItem(DocumentInfo documentInfo) {
         if (getItem() == documentInfo) return;
         super.setItem(documentInfo);
-        mDelegate.getThumbnailProvider().cancelRetrieval(this);
+        //mDelegate.getThumbnailProvider().cancelRetrieval(this);
         mThumbnailBitmap = null;
 
         mTitleView.setText(documentInfo.getFileName());
@@ -149,7 +138,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case C.TYPE_APK:
             case C.TYPE_IMAGE:
             case C.TYPE_VIDEO:
-                mDelegate.getThumbnailProvider().getThumbnail(this);
+               //mDelegate.getThumbnailProvider().getThumbnail(this);
                 break;
 
         }

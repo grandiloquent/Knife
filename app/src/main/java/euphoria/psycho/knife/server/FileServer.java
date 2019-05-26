@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.share.util.NotificationUtils;
-import euphoria.psycho.share.util.StorageUtils;
+import euphoria.psycho.knife.util.StorageUtils;
 import euphoria.psycho.share.util.SystemUtils;
 import euphoria.psycho.share.util.ZipUtils;
 

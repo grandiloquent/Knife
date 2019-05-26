@@ -86,8 +86,8 @@ public class DownloadManager implements DownloadObserver {
         }
 
         mDatabase.delete(downloadInfo);
-        File downloadFile = new File(downloadInfo.filePath);
-        if (downloadFile.isFile()) downloadFile.delete();
+//        File downloadFile = new File(downloadInfo.filePath);
+//        if (downloadFile.isFile()) downloadFile.delete();
         for (DownloadObserver observer : mObservers) {
             observer.deleted(downloadInfo);
         }

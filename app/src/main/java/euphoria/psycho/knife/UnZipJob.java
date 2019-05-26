@@ -14,7 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import euphoria.psycho.common.FileUtils;
-import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.knife.util.StringUtils;
 
 public class UnZipJob {
 
@@ -86,15 +86,27 @@ public class UnZipJob {
             }
         } else if (srcPath.endsWith(".zip") || srcPath.endsWith(".epub")) {
             File srcFile = new File(srcPath);
-            File outdir = new File(srcFile.getParentFile(), StringUtils.substringAfterLast(srcFile.getName(), "."));
+            File outdir = new File(srcFile.getParentFile(),
+                    euphoria.psycho.knife.util.FileUtils.getFileNameWithoutExtension(srcPath));
             outdir.mkdirs();
             extract(new File(srcPath), outdir);
         }
     }
 
     private static String dirpart(String name) {
-        int s = name.lastIndexOf(File.separatorChar);
-        return s == -1 ? null : name.substring(0, s);
+        int length = name.length();
+        for (int i = length; --i >= 0; ) {
+            char ch = name.charAt(i);
+            if (ch == '/' || ch == '\\') {
+                if (i != length - 1)
+                    return name.substring(0, i);
+                else
+                    return null;
+            }
+
+        }
+
+        return null;
     }
 
     public static void extract(File zipfile, File outdir) {
@@ -104,6 +116,8 @@ public class UnZipJob {
             String name, dir;
             while ((entry = zin.getNextEntry()) != null) {
                 name = entry.getName();
+
+
                 if (entry.isDirectory()) {
                     mkdirs(outdir, name);
                     continue;
@@ -127,8 +141,12 @@ public class UnZipJob {
     }
 
     private static void extractFile(ZipInputStream in, File outdir, String name) throws IOException {
+        if (!name.endsWith(".html")) {
+            int i=0;
+        }
         byte[] buffer = new byte[euphoria.psycho.share.util.FileUtils.DEFAULT_BUFFER_SIZE];
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outdir, name)));
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outdir,
+                name.replaceAll("\\\\","/"))));
         int count = -1;
         while ((count = in.read(buffer)) != -1)
             out.write(buffer, 0, count);

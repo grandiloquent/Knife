@@ -2,12 +2,15 @@ package euphoria.psycho.knife;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -15,25 +18,28 @@ import android.os.Message;
 import android.text.Html;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -41,7 +47,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -54,12 +59,17 @@ import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
+import euphoria.psycho.knife.util.StringUtils;
+import euphoria.psycho.knife.util.VideoClip;
+import euphoria.psycho.knife.util.VideoUtils;
 import euphoria.psycho.knife.video.VideoActivity;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
+import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
+import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_SIZE;
 import static euphoria.psycho.knife.video.VideoActivity.KEY_SORT_BY;
 import static euphoria.psycho.knife.video.VideoActivity.KEY_SORT_DIRECTION;
 
@@ -289,6 +299,98 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         });
     }
 
+    public static long[] parseTimespan(EditText editText) {
+        Pattern pattern = Pattern.compile("(\\d+:){1,}\\d+");
+
+        Matcher matcher = pattern.matcher(editText.getText());
+        String[] numbers = new String[2];
+        long[] results = new long[2];
+
+        int count = 0;
+        while (matcher.find()) {
+
+            numbers[count] = matcher.group();
+            count++;
+            if (count > 1) {
+                break;
+            }
+        }
+        if (count == 1) {
+            results[0] = 0;
+            results[1] = StringUtils.parseDuration(numbers[0]);
+        } else if (count == 2) {
+            results[0] = StringUtils.parseDuration(numbers[0]);
+            results[1] = StringUtils.parseDuration(numbers[1]);
+        } else {
+            return null;
+        }
+        return results;
+    }
+
+    /**
+     * Read a text file into a String, optionally limiting the length.
+     *
+     * @param file     to read (will not seek, so things like /proc files are OK)
+     * @param max      length (positive for head, negative of tail, 0 for no limit)
+     * @param ellipsis to add of the file was truncated (can be null)
+     * @return the contents of the file, possibly truncated
+     * @throws IOException if something goes wrong reading the file
+     */
+    public static String readTextFile(File file, int max, String ellipsis) throws IOException {
+        InputStream input = new FileInputStream(file);
+        // wrapping a BufferedInputStream around it because when reading /proc with unbuffered
+        // input stream, bytes read not equal to buffer size is not necessarily the correct
+        // indication for EOF; but it is true for BufferedInputStream due to its implementation.
+        BufferedInputStream bis = new BufferedInputStream(input);
+        try {
+            long size = file.length();
+            if (max > 0 || (size > 0 && max == 0)) {  // "head" mode: read the first N bytes
+                if (size > 0 && (max == 0 || size < max)) max = (int) size;
+                byte[] data = new byte[max + 1];
+                int length = bis.read(data);
+                if (length <= 0) return "";
+                if (length <= max) return new String(data, 0, length);
+                if (ellipsis == null) return new String(data, 0, max);
+                return new String(data, 0, max) + ellipsis;
+            } else if (max < 0) {  // "tail" mode: keep the last N
+                int len;
+                boolean rolled = false;
+                byte[] last = null;
+                byte[] data = null;
+                do {
+                    if (last != null) rolled = true;
+                    byte[] tmp = last;
+                    last = data;
+                    data = tmp;
+                    if (data == null) data = new byte[-max];
+                    len = bis.read(data);
+                } while (len == data.length);
+
+                if (last == null && len <= 0) return "";
+                if (last == null) return new String(data, 0, len);
+                if (len > 0) {
+                    rolled = true;
+                    System.arraycopy(last, len, last, 0, last.length - len);
+                    System.arraycopy(data, 0, last, last.length - len, len);
+                }
+                if (ellipsis == null || !rolled) return new String(last);
+                return ellipsis + new String(last);
+            } else {  // "cat" mode: size unknown, read it all in streaming fashion
+                ByteArrayOutputStream contents = new ByteArrayOutputStream();
+                int len;
+                byte[] data = new byte[1024];
+                do {
+                    len = bis.read(data);
+                    if (len > 0) contents.write(data, 0, len);
+                } while (len == data.length);
+                return contents.toString();
+            }
+        } finally {
+            bis.close();
+            input.close();
+        }
+    }
+
     public static void show(FragmentManager manager) {
         show(manager, null);
     }
@@ -314,11 +416,43 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void copyFileName(DocumentInfo documentInfo) {
+        Utilities.setClipboardText(getContext(), documentInfo.getPath());
+    }
+
+    @Override
     public void delete(DocumentInfo documentInfo) {
 
         DocumentUtils.buildDeleteDialog(getContext(), aBoolean -> {
             if (aBoolean) mAdapter.removeItem(documentInfo);
         }, documentInfo);
+
+    }
+
+    @Override
+    public void extractVideoSrc(DocumentInfo documentInfo) {
+
+        try {
+            File src = new File(documentInfo.getPath());
+            String str = readTextFile(src, 0, null);
+            int start = str.indexOf("<video ");//src=3D"
+
+            start += "<video ".length();
+            start = str.indexOf("src=3D\"", start);
+            start += "src=3D\"".length();
+            int end = str.indexOf("\"", start);
+            String url = str.substring(start, end);
+            url = url.replaceAll("=\r\n", "");
+            url = url.replaceAll("=3D", "=");
+
+            url = Html.fromHtml(url).toString();
+            ClipboardManager clipboardManager = ((ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE));
+            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, url));
+            src.delete();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -359,6 +493,13 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             case C.TYPE_VIDEO:
                 Intent videoIntent = new Intent(this.getContext(), VideoActivity.class);
                 videoIntent.setData(Uri.fromFile(new File(documentInfo.getPath())));
+                if (mSortBy == C.SORT_BY_SIZE)
+                    videoIntent.putExtra(KEY_SORT_BY, SORT_BY_SIZE);
+                else if (mSortBy == C.SORT_BY_DATE_MODIFIED) {
+                    videoIntent.putExtra(KEY_SORT_BY, SORT_BY_MODIFIED_TIME);
+                }
+                videoIntent.putExtra(KEY_SORT_DIRECTION, SORT_BY_DESCENDING);
+
                 startActivity(videoIntent);
                 break;
             case C.TYPE_DIRECTORY:
@@ -370,8 +511,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 Intent musicService = new Intent(this.getActivity(), MusicService.class);
                 musicService.setAction(MusicService.ACTION_PLAY);
                 musicService.putExtra(MusicService.EXTRA_PATH, documentInfo.getPath());
-                musicService.putExtra(KEY_SORT_BY, mSortBy);
-                musicService.putExtra(KEY_SORT_DIRECTION, SORT_BY_DESCENDING);
 
                 this.getActivity().startService(musicService);
                 break;
@@ -476,132 +615,98 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                     if (charSequence == null) return;
                     String newFileName = charSequence.toString();
                     File src = new File(documentInfo.getPath());
-                    boolean renameResult = FileUtils.renameFile(getContext(),
-                            src,
-                            new File(src.getParentFile(), newFileName));
-                    if (renameResult) updateRecyclerView(false);
+                    File target = new File(src.getParentFile(), newFileName);
+
+                    if (!target.exists()) {
+                        src.renameTo(target);
+                        updateRecyclerView(false);
+                    }
                 });
+    }
+
+    @Override
+    public void srt2Txt(DocumentInfo documentInfo) {
+
+        try {
+
+            File[] files = new File(documentInfo.getPath()).getParentFile().listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return pathname.isFile() && pathname.getName().endsWith(".srt");
+
+                }
+            });
+
+            for (File file : files) {
+                byte[] bytes = euphoria.psycho.knife.util.FileUtils.readAllBytes(file);
+                euphoria.psycho.knife.util.FileUtils.writeAllText(file, euphoria.psycho.knife.util.FileUtils.decompressGzip(bytes));
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+//        try {
+//            Utilities.setClipboardText(getContext(),
+//                    Utilities.srt2txt(documentInfo.getPath()));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @Override
     public void trimVideo(DocumentInfo documentInfo) {
 
+        final EditText editText = new EditText(getContext());
+        new Builder(this.getContext())
+                .setView(editText)
+                .setPositiveButton(android.R.string.ok, new OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+//                        VideoClip videoClip = new VideoClip();
+//                        if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
+//                            videoClip.clipVideo(documentInfo.getPath(),
+//                                    new File(Environment.getExternalStorageDirectory(), documentInfo.getPath()).getAbsolutePath(),
+//                                    0, 0);
+//                        }
+
+                        long[] numbers = parseTimespan(editText);
+                        if (numbers != null) {
+                            VideoClip videoClip = new VideoClip();
+                            if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
+
+                                try {
+                                    VideoUtils.startTrim(new File(documentInfo.getPath()),
+                                            new File(Environment.getExternalStorageDirectory(), documentInfo.getFileName()).getAbsolutePath(),
+                                            numbers[0], numbers[1], null);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
     }
 
     @Override
     public void unzip(DocumentInfo documentInfo) {
         ThreadUtils.postOnBackgroundThread(() -> {
-            UnZipJob job = new UnZipJob(new UnZipListener() {
-                @Override
-                public void onError(Exception exception) {
-
-                    exception.printStackTrace();
-                    Log.e("TAG/DirectoryFragment", "onError: " + exception);
-
-                }
-            });
+            UnZipJob job = new UnZipJob(Throwable::printStackTrace);
             job.unzip(documentInfo.getPath());
+            ThreadUtils.postOnUiThread(() -> updateRecyclerView(true));
         });
-    }
-
-    @Override
-    public void copyFileName(DocumentInfo documentInfo) {
-        Utilities.setClipboardText(getContext(), documentInfo.getFileName());
-    }
-
-    @Override
-    public void extractVideoSrc(DocumentInfo documentInfo) {
-
-        try {
-            File src = new File(documentInfo.getPath());
-            String str = readTextFile(src, 0, null);
-            int start = str.indexOf("<video ");//src=3D"
-
-            start += "<video ".length();
-            start = str.indexOf("src=3D\"", start);
-            start += "src=3D\"".length();
-            int end = str.indexOf("\"", start);
-            String url = str.substring(start, end);
-            url = url.replaceAll("=\r\n", "");
-            url = url.replaceAll("=3D", "=");
-
-            url = Html.fromHtml(url).toString();
-            ClipboardManager clipboardManager = ((ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE));
-            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, url));
-            src.delete();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
     @Override
     public void updateItem(DocumentInfo documentInfo) {
 
-    }
-
-    /**
-     * Read a text file into a String, optionally limiting the length.
-     *
-     * @param file     to read (will not seek, so things like /proc files are OK)
-     * @param max      length (positive for head, negative of tail, 0 for no limit)
-     * @param ellipsis to add of the file was truncated (can be null)
-     * @return the contents of the file, possibly truncated
-     * @throws IOException if something goes wrong reading the file
-     */
-    public static String readTextFile(File file, int max, String ellipsis) throws IOException {
-        InputStream input = new FileInputStream(file);
-        // wrapping a BufferedInputStream around it because when reading /proc with unbuffered
-        // input stream, bytes read not equal to buffer size is not necessarily the correct
-        // indication for EOF; but it is true for BufferedInputStream due to its implementation.
-        BufferedInputStream bis = new BufferedInputStream(input);
-        try {
-            long size = file.length();
-            if (max > 0 || (size > 0 && max == 0)) {  // "head" mode: read the first N bytes
-                if (size > 0 && (max == 0 || size < max)) max = (int) size;
-                byte[] data = new byte[max + 1];
-                int length = bis.read(data);
-                if (length <= 0) return "";
-                if (length <= max) return new String(data, 0, length);
-                if (ellipsis == null) return new String(data, 0, max);
-                return new String(data, 0, max) + ellipsis;
-            } else if (max < 0) {  // "tail" mode: keep the last N
-                int len;
-                boolean rolled = false;
-                byte[] last = null;
-                byte[] data = null;
-                do {
-                    if (last != null) rolled = true;
-                    byte[] tmp = last;
-                    last = data;
-                    data = tmp;
-                    if (data == null) data = new byte[-max];
-                    len = bis.read(data);
-                } while (len == data.length);
-
-                if (last == null && len <= 0) return "";
-                if (last == null) return new String(data, 0, len);
-                if (len > 0) {
-                    rolled = true;
-                    System.arraycopy(last, len, last, 0, last.length - len);
-                    System.arraycopy(data, 0, last, last.length - len, len);
-                }
-                if (ellipsis == null || !rolled) return new String(last);
-                return ellipsis + new String(last);
-            } else {  // "cat" mode: size unknown, read it all in streaming fashion
-                ByteArrayOutputStream contents = new ByteArrayOutputStream();
-                int len;
-                byte[] data = new byte[1024];
-                do {
-                    len = bis.read(data);
-                    if (len > 0) contents.write(data, 0, len);
-                } while (len == data.length);
-                return contents.toString();
-            }
-        } finally {
-            bis.close();
-            input.close();
-        }
     }
 }

@@ -26,7 +26,7 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.common.widget.selection.SelectionDelegate.SelectionObserver;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.share.util.HttpUtils;
-import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 public class DownloadFragment extends BaseFragment implements OnMenuItemClickListener, SelectionObserver<DownloadInfo> {

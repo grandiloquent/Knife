@@ -34,7 +34,7 @@ import java.util.Map;
 
 import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.knife.util.StringUtils;
 
 
 public class WebServer extends NanoHTTPD {

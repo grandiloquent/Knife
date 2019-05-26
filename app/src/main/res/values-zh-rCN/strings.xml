@@ -19,6 +19,7 @@
     <string name="hide_info">Hide Info</string>
     <string name="menu_sort">Sort by</string>
     <string name="properties">属性</string>
+    <string name="app_name">Knife</string>
 
     <string name="delete_notification_title">删除文件</string>
     <string name="delete_preparing">准备中...</string>

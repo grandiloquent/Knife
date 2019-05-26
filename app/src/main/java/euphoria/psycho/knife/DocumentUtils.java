@@ -33,9 +33,8 @@ import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.DialogUtils;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
 import euphoria.psycho.share.util.FileUtils;
-import euphoria.psycho.share.util.IntentUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 
@@ -59,7 +58,7 @@ public class DocumentUtils {
         AlertDialog dlg = new AlertDialog.Builder(context)
                 .setTitle(R.string.dialog_delete_title)
                 .setMessage(context.getString(R.string.dialog_delete_message, description))
-                .setTitle(R.string.dialog_rename_title)
+                .setTitle(R.string.dialog_delete_title)
                 .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
                     dialog.dismiss();
                     ThreadUtils.postOnBackgroundThread(new DeleteFileJob(context, new Listener() {
@@ -148,6 +147,8 @@ public class DocumentUtils {
             int dotIndex = originalFileName.lastIndexOf('.');
             if (dotIndex != -1) {
                 editText.setSelection(0, dotIndex);
+            } else {
+                editText.setSelection(0, editText.getText().length());
             }
         }
 
@@ -199,6 +200,7 @@ public class DocumentUtils {
             }
             case C.TYPE_TEXT: {
                 items.add(new Item(context, R.string.extract_video_src, true));
+                items.add(new Item(context, R.string.srt_to_txt, true));
 
                 break;
             }
@@ -401,6 +403,7 @@ public class DocumentUtils {
             case "java":
             case "xml":
             case "htm":
+            case "html":
             case "srt":
             case "mht":
                 return C.TYPE_TEXT;

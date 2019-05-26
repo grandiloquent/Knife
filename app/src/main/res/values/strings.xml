@@ -17,7 +17,7 @@
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
     <string name="ask">Ask</string>
     <string name="bookmark_no_exists">Can\'t find the directory marked by the bookmark</string>
-    <string name="bookmark_action_bar_close">Close dialog</string>
+    <string name="bookmark_action_bar_close">Menu</string>
     <string name="channel_name_directory">Files</string>
     <string name="delete">Delete</string>
     <string name="delete_notification_title">Deleting files</string>
@@ -72,6 +72,7 @@
     <string name="share">Share</string>
     <string name="extract">Extract...</string>
     <string name="share_link_title">Share</string>
+    <string name="srt_to_txt">SRT To Text</string>
     <string name="show_info">Show Info</string>
     <string name="sort_date">By date modified</string>
     <string name="sort_name">By name</string>

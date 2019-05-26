@@ -2,6 +2,7 @@ package euphoria.psycho.knife;
 
 import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -14,8 +15,7 @@ import java.util.List;
 import androidx.appcompat.app.AlertDialog;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
-import euphoria.psycho.share.task.MoveFilesTask;
-import euphoria.psycho.share.util.StorageUtils;
+import euphoria.psycho.knife.util.StorageUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 public class OperationManager {
@@ -66,7 +66,13 @@ public class OperationManager {
 
         File targetDirectory = mFragment.getDirectory();
         Context context = mFragment.getContext();
-        String treeUri = FileUtils.getTreeUri().toString();
+
+        String treeUri = null;
+
+        Uri uri = FileUtils.getTreeUri();
+
+        if (uri != null)
+            treeUri = uri.toString();
 
         for (DocumentInfo documentInfo : mSource) {
             File srcFile = new File(documentInfo.getPath());

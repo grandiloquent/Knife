@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 
@@ -18,7 +19,6 @@ import euphoria.psycho.share.util.ThreadUtils;
 public class DeleteFileJob extends Job {
     private final Context mContext;
     private final DocumentInfo[] mSource;
-    final String mTreeUri;
     private AlertDialog mAlertDialog;
     private long mDeletedContentLength = 0L;
     private int mDocsProcessed = 0;
@@ -31,7 +31,7 @@ public class DeleteFileJob extends Job {
         super(listener);
         mSource = source;
         mContext = context;
-        mTreeUri = FileUtils.getTreeUri().toString();
+
 
         launchDialog();
 
@@ -98,15 +98,18 @@ public class DeleteFileJob extends Job {
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mAlertDialog.setTitle("删除文件操作已完成");
-                mAlertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setVisibility(View.GONE);
-                Button positiveButton = mAlertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                mAlertDialog.dismiss();
+                Toast.makeText(mContext,"删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + FileUtils.formatFileSize(mDeletedContentLength),Toast.LENGTH_LONG).show();
 
-                positiveButton.setText(android.R.string.ok);
-                positiveButton.setVisibility(View.VISIBLE);
-                mAlertDialog.setCancelable(true);
-                mLine1.setVisibility(View.GONE);
-                mProgressBar.setVisibility(View.INVISIBLE);
+//                mAlertDialog.setTitle("删除文件操作已完成");
+//                mAlertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setVisibility(View.GONE);
+//                Button positiveButton = mAlertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+//
+//                positiveButton.setText(android.R.string.ok);
+//                positiveButton.setVisibility(View.VISIBLE);
+//                mAlertDialog.setCancelable(true);
+//                mLine1.setVisibility(View.GONE);
+//                mProgressBar.setVisibility(View.INVISIBLE);
             }
         });
     }

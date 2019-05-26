@@ -1,6 +1,4 @@
-package euphoria.psycho.share.util;
-
-import java.io.File;
+package euphoria.psycho.knife.util;
 
 public class MimeTypeUtils {
     public static String getMimeTypeForIntent(String fileName) {

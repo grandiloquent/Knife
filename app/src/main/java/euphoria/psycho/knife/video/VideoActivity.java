@@ -267,6 +267,9 @@ public class VideoActivity extends BaseVideoActivity implements
             if (uri == null) {
                 uri = Uri.fromFile(new File(Environment.getExternalStorageDirectory(), "1.mp4"));
             }
+            mSortBy =getIntent().getIntExtra(KEY_SORT_BY, SORT_BY_NAME);
+            mSortDirection =getIntent().getIntExtra(KEY_SORT_DIRECTION, SORT_BY_ASCENDING);
+
             MediaSource mediaSource = generateMediaSource(uri);
             mPlayer.prepare(mediaSource);
             if (mStartWindow > 0) {
@@ -669,8 +672,7 @@ public class VideoActivity extends BaseVideoActivity implements
         setupView();
         mVideoTouchHelper = new VideoTouchHelper(this, this);
 
-        mSortBy = mPreferences.getInt(KEY_SORT_BY, SORT_BY_NAME);
-        mSortDirection = mPreferences.getInt(KEY_SORT_DIRECTION, SORT_BY_ASCENDING);
+
     }
 
     @Override

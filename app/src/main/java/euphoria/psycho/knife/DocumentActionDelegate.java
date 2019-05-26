@@ -14,9 +14,11 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
     void unzip(DocumentInfo documentInfo);
 
 
+    void srt2Txt(DocumentInfo documentInfo);
+
     void copyFileName(DocumentInfo documentInfo);
 
-    void  extractVideoSrc(DocumentInfo documentInfo);
+    void extractVideoSrc(DocumentInfo documentInfo);
 
     void delete(DocumentInfo documentInfo);
 

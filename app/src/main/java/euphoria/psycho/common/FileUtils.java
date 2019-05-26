@@ -28,7 +28,7 @@ import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.share.util.StringUtils;
+import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 // https://android.googlesource.com/platform/packages/apps/UnifiedEmail/+/kitkat-mr1-release/src/org/apache/commons/io
@@ -113,7 +113,7 @@ public class FileUtils {
     }
 
     public static boolean deleteFile(File file) {
-        if (file.getPath().startsWith(getSDCardPath())) {
+        if (euphoria.psycho.knife.util.FileUtils.hasSDCardPath() && !file.getPath().startsWith(Environment.getExternalStorageDirectory().getAbsolutePath())) {
             if (sTreeUri == null) {
                 sTreeUri = Uri.parse(ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null));
             }
@@ -378,7 +378,9 @@ public class FileUtils {
 
     public static Uri getTreeUri() {
         if (sTreeUri == null) {
-            sTreeUri = Uri.parse(ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null));
+            String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
+            if (treeUri != null)
+                sTreeUri = Uri.parse(treeUri);
         }
         return sTreeUri;
     }
@@ -524,7 +526,7 @@ public class FileUtils {
                     Uri newDocument = DocumentsContract.createDocument(
                             context.getContentResolver(),
                             getDocumentUriFromTreeUri(destinationDirectory),
-                            MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(src.getName(),".")),
+                            MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(src.getName(), ".")),
                             src.getName());
                     if (newDocument != null) {
                         OutputStream outputStream = context.getContentResolver().openOutputStream(newDocument);
