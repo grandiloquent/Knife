@@ -52,14 +52,14 @@ import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
-import euphoria.psycho.knife.UnZipJob.UnZipListener;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
-import euphoria.psycho.knife.cache.ThumbnailProvider;
-import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
 import euphoria.psycho.knife.util.StringUtils;
+import euphoria.psycho.knife.util.ThumbnailUtils;
+import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
+import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
 import euphoria.psycho.knife.util.VideoClip;
 import euphoria.psycho.knife.util.VideoUtils;
 import euphoria.psycho.knife.video.VideoActivity;
@@ -473,7 +473,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public ThumbnailProvider getThumbnailProvider() {
         if (mThumbnailProvider == null) {
-            mThumbnailProvider = new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
+            mThumbnailProvider = new ThumbnailProviderImpl();
         }
         return mThumbnailProvider;
     }
