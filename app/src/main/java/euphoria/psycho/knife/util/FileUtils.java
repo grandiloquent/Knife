@@ -1,10 +1,13 @@
 package euphoria.psycho.knife.util;
 
+import android.text.TextUtils;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,8 +17,54 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class FileUtils {
+    private static final char AltDirectorySeparatorChar = '/';
     private static final int BUFFER_SIZE = 8192;
+    private static final char DirectorySeparatorChar = '\\';
     private static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE - 8;
+    private static final char VolumeSeparatorChar = ':';
+
+    public static String getExtension(String path) {
+        if (path == null)
+            return null;
+
+        int length = path.length();
+        for (int i = length; --i >= 0; ) {
+            char ch = path.charAt(i);
+            if (ch == '.') {
+                if (i != length - 1)
+                    return path.substring(i);
+                else
+                    return "";
+            }
+            if (ch == DirectorySeparatorChar || ch == AltDirectorySeparatorChar || ch == VolumeSeparatorChar)
+                break;
+        }
+        return "";
+    }
+
+    private static File buildFile(File parent, String name, String ext) {
+        if (TextUtils.isEmpty(ext)) {
+            return new File(parent, name);
+        } else {
+            return new File(parent, name + "." + ext);
+        }
+    }
+
+    public static File buildUniqueFileWithExtension(File parent, String name, String ext)
+            throws FileNotFoundException {
+        File file = buildFile(parent, name, ext);
+
+        // If conflicting file, try adding counter suffix
+        int n = 0;
+        while (file.exists()) {
+            if (n++ >= 32) {
+                throw new FileNotFoundException("Failed to create unique file");
+            }
+            file = buildFile(parent, name + " (" + n + ")", ext);
+        }
+
+        return file;
+    }
 
     public static byte[] compressGzip(final String str) throws IOException {
         if ((str == null) || (str.length() == 0)) {
@@ -29,9 +78,25 @@ public class FileUtils {
         return obj.toByteArray();
     }
 
-    private static final char DirectorySeparatorChar = '\\';
-    private static final   char AltDirectorySeparatorChar = '/';
-    private static final  char VolumeSeparatorChar = ':';
+    public static String decompressGzip(final byte[] compressed) throws IOException {
+        final StringBuilder outStr = new StringBuilder();
+        if ((compressed == null) || (compressed.length == 0)) {
+            return "";
+        }
+        if (isCompressed(compressed)) {
+            final GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(compressed));
+            final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(gis, "UTF-8"));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                outStr.append(line).append('\n');
+            }
+        } else {
+            outStr.append(compressed);
+        }
+        return outStr.toString();
+    }
+
     public static String getFileName(String path) {
         if (path != null) {
 
@@ -59,43 +124,10 @@ public class FileUtils {
         return null;
     }
 
-    public static String decompressGzip(final byte[] compressed) throws IOException {
-        final StringBuilder outStr = new StringBuilder();
-        if ((compressed == null) || (compressed.length == 0)) {
-            return "";
-        }
-        if (isCompressed(compressed)) {
-            final GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(compressed));
-            final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(gis, "UTF-8"));
-
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                outStr.append(line).append('\n');
-            }
-        } else {
-            outStr.append(compressed);
-        }
-        return outStr.toString();
-    }
-
     public static boolean hasSDCardPath() {
         File[] directories = new File("/storage").listFiles();
-        if (directories.length < 3) return false;
-        return true;
+        return directories.length >= 3;
     }
-
-    public static void writeAllText(File file, String content) {
-        try {
-            FileOutputStream out = new FileOutputStream(file);
-            byte[] bytes = content.getBytes("utf-8");
-            out.write(bytes, 0, bytes.length);
-
-            out.close();
-        } catch (Exception e) {
-
-        }
-    }
-
 
     public static boolean isCompressed(final byte[] compressed) {
         return (compressed[0] == (byte) (GZIPInputStream.GZIP_MAGIC)) && (compressed[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
@@ -141,5 +173,17 @@ public class FileUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void writeAllText(File file, String content) {
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            byte[] bytes = content.getBytes("utf-8");
+            out.write(bytes, 0, bytes.length);
+
+            out.close();
+        } catch (Exception e) {
+
+        }
     }
 }

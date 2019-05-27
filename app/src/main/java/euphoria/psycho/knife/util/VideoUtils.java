@@ -57,18 +57,23 @@ public class VideoUtils {
     }
 
     private static void genVideoUsingMp4Parser(File src, File dst, long startMs, long endMs, OnTrimVideoListener callback) throws IOException {
+        double startTime1 = startMs / 1000;
+        double endTime1 = endMs / 1000;
+
+        boolean timeCorrected = false;
+
+
+        Log.e("TAG/", "genVideoUsingMp4Parser: " + startTime1 + " " + endTime1);
+
+
         // NOTE: Switched to using FileDataSourceViaHeapImpl since it does not use memory mapping (VM).
         // Otherwise we get OOM with large movie files.
         Movie movie = MovieCreator.build(new FileDataSourceViaHeapImpl(src.getAbsolutePath()));
 
         List<Track> tracks = movie.getTracks();
-        movie.setTracks(new LinkedList<Track>());
+        movie.setTracks(new LinkedList<>());
         // remove all tracks we will create new tracks from the old
 
-        double startTime1 = startMs / 1000;
-        double endTime1 = endMs / 1000;
-
-        boolean timeCorrected = false;
 
         // Here we try to find a track that has sync samples. Since we can only start decoding
         // at such a sample we SHOULD make sure that the start of the new fragment is exactly
@@ -87,6 +92,7 @@ public class VideoUtils {
                 timeCorrected = true;
             }
         }
+        Log.e("TAG/", "genVideoUsingMp4Parser: corrected " + startTime1 + " " + endTime1);
 
         for (Track track : tracks) {
             long currentSample = 0;
@@ -111,6 +117,8 @@ public class VideoUtils {
                 currentTime += (double) delta / (double) track.getTrackMetaData().getTimescale();
                 currentSample++;
             }
+            Log.e("TAG/", "genVideoUsingMp4Parser: corrected " +  startSample1+ " " + endSample1);
+
             movie.addTrack(new AppendTrack(new CroppedTrack(track, startSample1, endSample1)));
         }
 
@@ -132,15 +140,15 @@ public class VideoUtils {
             callback.getResult(Uri.parse(dst.toString()));
     }
 
-    public static void startTrim(File src, String dst, long startMs, long endMs, OnTrimVideoListener callback) throws IOException {
-        final String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-        final String fileName = "MP4_" + timeStamp + ".mp4";
-        final String filePath = dst + fileName;
-
-        File file = new File(filePath);
-        file.getParentFile().mkdirs();
-        Log.d(TAG, "Generated file path " + filePath);
-        genVideoUsingMp4Parser(src, file, startMs, endMs, callback);
+    public static void startTrim(File src, File dst, long startMs, long endMs, OnTrimVideoListener callback) throws IOException {
+//        final String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+////        final String fileName = "MP4_" + timeStamp + ".mp4";
+////        final String filePath = dst + fileName;
+////
+////        File file = new File(filePath);
+////        file.getParentFile().mkdirs();
+////        Log.d(TAG, "Generated file path " + filePath);
+        genVideoUsingMp4Parser(src, dst, startMs, endMs, callback);
     }
 
     public static String stringForTime(int timeMs) {

@@ -56,12 +56,14 @@ import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
+import euphoria.psycho.knife.util.FileUtils;
 import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
 import euphoria.psycho.knife.util.VideoClip;
 import euphoria.psycho.knife.util.VideoUtils;
+import euphoria.psycho.knife.util.VideoUtils.OnTrimVideoListener;
 import euphoria.psycho.knife.video.VideoActivity;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
@@ -673,13 +675,45 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
                         long[] numbers = parseTimespan(editText);
                         if (numbers != null) {
-                            VideoClip videoClip = new VideoClip();
+
                             if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
 
                                 try {
-                                    VideoUtils.startTrim(new File(documentInfo.getPath()),
-                                            new File(Environment.getExternalStorageDirectory(), documentInfo.getFileName()).getAbsolutePath(),
-                                            numbers[0], numbers[1], null);
+                                    File sourceFile = new File(documentInfo.getPath());
+
+                                    String fileName = FileUtils.getFileNameWithoutExtension(documentInfo.getFileName());
+                                    String ext = FileUtils.getExtension(documentInfo.getFileName());
+
+                                    File destinationFile = FileUtils.buildUniqueFileWithExtension(
+                                            sourceFile.getParentFile(),
+                                            fileName,
+                                            ext
+                                    );
+
+                                    VideoUtils.startTrim(sourceFile,
+                                            destinationFile,
+                                            numbers[0], numbers[1], new OnTrimVideoListener() {
+                                                @Override
+                                                public void cancelAction() {
+
+                                                }
+
+                                                @Override
+                                                public void getResult(Uri uri) {
+
+                                                    updateRecyclerView(false);
+                                                }
+
+                                                @Override
+                                                public void onError(String message) {
+
+                                                }
+
+                                                @Override
+                                                public void onTrimStarted() {
+
+                                                }
+                                            });
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }

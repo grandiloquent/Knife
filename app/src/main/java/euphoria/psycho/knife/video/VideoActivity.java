@@ -267,8 +267,8 @@ public class VideoActivity extends BaseVideoActivity implements
             if (uri == null) {
                 uri = Uri.fromFile(new File(Environment.getExternalStorageDirectory(), "1.mp4"));
             }
-            mSortBy =getIntent().getIntExtra(KEY_SORT_BY, SORT_BY_NAME);
-            mSortDirection =getIntent().getIntExtra(KEY_SORT_DIRECTION, SORT_BY_ASCENDING);
+            mSortBy = getIntent().getIntExtra(KEY_SORT_BY, SORT_BY_NAME);
+            mSortDirection = getIntent().getIntExtra(KEY_SORT_DIRECTION, SORT_BY_ASCENDING);
 
             MediaSource mediaSource = generateMediaSource(uri);
             mPlayer.prepare(mediaSource);
@@ -572,7 +572,15 @@ public class VideoActivity extends BaseVideoActivity implements
             Timeline timeline = mPlayer.getCurrentTimeline();
             if (!timeline.isEmpty())
                 timeline.getWindow(mPlayer.getCurrentWindowIndex(), mWindow);
+
+
             duration = usToMs(mWindow.getDurationUs());
+
+//            Log.e("TAG/VideoActivity", "[ERROR] updateProgress: " + mPlayer.getDuration() + " "
+//                    + mPlayer.getContentDuration()
+//                    + " " + duration
+//            + mPlayer.du);
+
             position = mPlayer.getCurrentPosition();
             playbackState = mPlayer.getPlaybackState();
         }
