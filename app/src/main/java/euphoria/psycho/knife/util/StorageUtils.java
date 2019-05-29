@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
 import android.webkit.MimeTypeMap;
@@ -19,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import euphoria.psycho.common.C;
+import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.FileUtils;
 
 public class StorageUtils {
@@ -139,6 +142,25 @@ public class StorageUtils {
         }
         return false;
     }
+
+    public static boolean deleteFile(ContentResolver contentResolver, File srcFile, String treeUri) {
+        if (srcFile.delete()) {
+            return true;
+        }
+        if (contentResolver != null && treeUri != null) {
+            return deleteDocument(contentResolver, srcFile, treeUri);
+        }
+        return false;
+    }
+
+
+
+    public static String getTreeUri(Context context) {
+
+        return PreferenceManager.getDefaultSharedPreferences(context).getString(C.KEY_TREE_URI, null);
+
+    }
+
 
     @SuppressLint("NewApi")
     public static boolean deleteDocument(ContentResolver contentResolver, File srcFile, String treeUri) {

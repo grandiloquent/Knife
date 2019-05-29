@@ -1,6 +1,7 @@
 package euphoria.psycho.knife;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.LayoutInflater;
@@ -14,6 +15,7 @@ import java.io.File;
 
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.base.Job;
+import euphoria.psycho.knife.util.StorageUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 public class DeleteFileJob extends Job {
@@ -26,12 +28,15 @@ public class DeleteFileJob extends Job {
     private TextView mLine2;
     private ProgressBar mProgressBar;
     private static final String TAG = "TAG/" + DeleteFileJob.class.getSimpleName();
+    private final ContentResolver mContentResolver;
+    private final String mTreeUri;
 
     DeleteFileJob(Context context, Listener listener, DocumentInfo[] source) {
         super(listener);
         mSource = source;
         mContext = context;
-
+        mContentResolver = context.getContentResolver();
+        mTreeUri = StorageUtils.getTreeUri(context);
 
         launchDialog();
 
@@ -55,13 +60,13 @@ public class DeleteFileJob extends Job {
         if (path.isFile()) {
 
             long length = path.length();
-            if (FileUtils.deleteFile(path)) {
+            if (StorageUtils.deleteFile(mContentResolver, path, mTreeUri)) {
                 mDocsProcessed++;
                 mDeletedContentLength += length;
                 updateDialog(path.getAbsolutePath());
             }
         } else {
-            if (FileUtils.deleteFile(path)) {
+            if (StorageUtils.deleteFile(mContentResolver, path, mTreeUri)) {
                 mDocsProcessed++;
                 updateDialog(path.getAbsolutePath());
             }
@@ -99,7 +104,7 @@ public class DeleteFileJob extends Job {
             @Override
             public void run() {
                 mAlertDialog.dismiss();
-                Toast.makeText(mContext,"删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + FileUtils.formatFileSize(mDeletedContentLength),Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext, "删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + FileUtils.formatFileSize(mDeletedContentLength), Toast.LENGTH_LONG).show();
 
 //                mAlertDialog.setTitle("删除文件操作已完成");
 //                mAlertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setVisibility(View.GONE);

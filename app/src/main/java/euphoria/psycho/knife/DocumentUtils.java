@@ -65,7 +65,6 @@ public class DocumentUtils {
                         @Override
                         public void onFinished(Job job) {
                             ThreadUtils.postOnUiThread(() -> callback.accept(true));
-
                         }
 
                         @Override
