@@ -15,6 +15,8 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
 
     void delete(DocumentInfo documentInfo);
 
+    void deleteLessFiles(DocumentInfo item);
+
     void extractPdfBookmark(DocumentInfo item);
 
     void extractVideoSrc(DocumentInfo documentInfo);

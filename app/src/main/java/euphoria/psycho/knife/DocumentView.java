@@ -158,6 +158,9 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.split_pdf_by_title_and_page_number:
                 mDelegate.splitPdfByTitleAndPageNumber(getItem());
                 break;
+            case R.string.delete_less_files:
+                mDelegate.deleteLessFiles(getItem());
+                break;
         }
     }
 

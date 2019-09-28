@@ -24,5 +24,6 @@ int64_t calculate_dir_size(int dfd);
 int64_t stat_size(struct stat *s);
 
 int unlink_recursive(const char *name);
-
+int
+list_files_by_dir(const char *dirnam, char **pargz, size_t *pargz_len);
 #endif

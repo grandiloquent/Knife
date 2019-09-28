@@ -173,11 +173,14 @@ public class DocumentUtils {
 
     public static native void extractToDirectory(String filename, String directory);
 
+    public static native void deleteLessFiles(String fileName);
+
     public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
         List<Item> items = new ArrayList<>();
 
         items.add(new Item(context, R.string.rename, true));
         items.add(new Item(context, R.string.delete, true));
+        items.add(new Item(context, R.string.delete_less_files, true));
         items.add(new Item(context, R.string.share, true));
         items.add(new Item(context, R.string.properties, true));
         items.add(new Item(context, R.string.copy_file_name, true));

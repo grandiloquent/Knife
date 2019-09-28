@@ -3,7 +3,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <zip.h>
+#include <stdio.h>
 #include "file.h"
+#include "str.h"
 
 #define LOGI(...) \
   ((void)__android_log_print(ANDROID_LOG_INFO, "main::", __VA_ARGS__))
@@ -65,4 +67,38 @@ Java_euphoria_psycho_knife_DocumentUtils_moveFilesByExtension(JNIEnv *env, jclas
 
     (*env)->ReleaseStringUTFChars(env, dirPath_, dirPath);
     (*env)->ReleaseStringUTFChars(env, destDirName_, destDirName);
+}
+
+JNIEXPORT void JNICALL
+Java_euphoria_psycho_knife_DocumentUtils_deleteLessFiles(JNIEnv *env, jclass type,
+                                                         jstring fileName_) {
+    const char *fileName = (*env)->GetStringUTFChars(env, fileName_, 0);
+
+    const char *p = fileName + strlen(fileName);
+    int n = 0;
+    while (*(--p)) {
+        if (*p == '/')
+            break;
+        n++;
+    }
+    char tmp[FILENAME_MAX];
+    n = strlen(fileName) - n - 1;
+    int i = 0;
+    while (i < n) {
+        tmp[i++] = fileName[i];
+    }
+    tmp[n] = 0;
+    char *fn = strrchr(fileName, '/');
+    if (fn)fn++;
+
+    char *argz = 0;
+    size_t argz_len = 0;
+    if (list_files_by_dir(fileName, &argz, &argz_len) == 0) {
+        char *f = 0;
+        while ((f = argz_next(argz, argz_len, f))) {
+            if (strcmp(f, fn) != 0)
+                LOGE(f);
+        }
+    }
+    (*env)->ReleaseStringUTFChars(env, fileName_, fileName);
 }

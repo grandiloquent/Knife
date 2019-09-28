@@ -852,6 +852,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void deleteLessFiles(DocumentInfo item) {
+        DocumentUtils.deleteLessFiles(item.getPath());
+    }
+
+    @Override
     public void updateItem(DocumentInfo documentInfo) {
 
     }
