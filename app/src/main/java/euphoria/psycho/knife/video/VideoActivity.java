@@ -3,7 +3,6 @@ package euphoria.psycho.knife.video;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
@@ -11,15 +10,12 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.preference.PreferenceManager;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
@@ -48,7 +44,6 @@ import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.video.VideoListener;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.text.Collator;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -59,14 +54,12 @@ import java.util.regex.Pattern;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.documentfile.provider.DocumentFile;
-import euphoria.psycho.common.FileUtils;
+import euphoria.common.Files;
 import euphoria.psycho.knife.R;
 
 import static com.google.android.exoplayer2.C.INDEX_UNSET;
 import static com.google.android.exoplayer2.C.TIME_END_OF_SOURCE;
 import static com.google.android.exoplayer2.C.TIME_UNSET;
-import static euphoria.psycho.knife.video.AspectRatioFrameLayout.RESIZE_MODE_FIT;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_ASCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
@@ -199,7 +192,7 @@ public class VideoActivity extends BaseVideoActivity implements
 
     private MediaSource generateMediaSource(Uri uri) {
         String sourcePath = uri.getPath();
-        File[] files = listVideoFiles(FileUtils.getDirectoryName(sourcePath));
+        File[] files = listVideoFiles(Files.getDirectoryName(sourcePath));
         mFiles = files;
         if (files == null) return null;
         int length = files.length;

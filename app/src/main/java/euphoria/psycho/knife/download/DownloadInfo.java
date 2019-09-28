@@ -4,8 +4,8 @@ import android.content.Context;
 
 import java.io.File;
 
+import euphoria.common.Strings;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.util.StringUtils;
 
 public class DownloadInfo {
     public long _id;
@@ -24,9 +24,9 @@ public class DownloadInfo {
     }
 
     public String getDisplayName() {
-        String name = StringUtils.substringAfter(url, "://");
+        String name = Strings.substringAfter(url, "://");
         if (name == null) return "";
-        String hostName = StringUtils.substringBefore(name, "/");
+        String hostName = Strings.substringBefore(name, "/");
         if (hostName == null) return name;
         return hostName;
     }

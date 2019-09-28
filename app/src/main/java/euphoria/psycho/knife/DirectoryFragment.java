@@ -2,7 +2,6 @@ package euphoria.psycho.knife;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
@@ -15,20 +14,16 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.text.Html;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +33,6 @@ import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -46,8 +40,12 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
+import euphoria.common.Dialogs;
+import euphoria.common.Files;
+import euphoria.common.Keys;
+import euphoria.common.Logs;
+import euphoria.common.Strings;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
@@ -57,17 +55,20 @@ import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
 import euphoria.psycho.knife.util.FileUtils;
-import euphoria.psycho.knife.util.StringUtils;
-import euphoria.psycho.knife.util.ThumbnailUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
-import euphoria.psycho.knife.util.VideoClip;
 import euphoria.psycho.knife.util.VideoUtils;
 import euphoria.psycho.knife.util.VideoUtils.OnTrimVideoListener;
 import euphoria.psycho.knife.video.VideoActivity;
+import euphoria.psycho.notes.common.Contexts;
+import euphoria.psycho.notes.common.Markdowns;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.utils.Pdfboxs;
+import euphoria.utils.Pdfs;
+import euphoria.utils.Pdfs.Listener;
 
+import static android.content.Context.CLIPBOARD_SERVICE;
 import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
@@ -319,78 +320,14 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         }
         if (count == 1) {
             results[0] = 0;
-            results[1] = StringUtils.parseDuration(numbers[0]);
+            results[1] = Strings.parseDuration(numbers[0]);
         } else if (count == 2) {
-            results[0] = StringUtils.parseDuration(numbers[0]);
-            results[1] = StringUtils.parseDuration(numbers[1]);
+            results[0] = Strings.parseDuration(numbers[0]);
+            results[1] = Strings.parseDuration(numbers[1]);
         } else {
             return null;
         }
         return results;
-    }
-
-    /**
-     * Read a text file into a String, optionally limiting the length.
-     *
-     * @param file     to read (will not seek, so things like /proc files are OK)
-     * @param max      length (positive for head, negative of tail, 0 for no limit)
-     * @param ellipsis to add of the file was truncated (can be null)
-     * @return the contents of the file, possibly truncated
-     * @throws IOException if something goes wrong reading the file
-     */
-    public static String readTextFile(File file, int max, String ellipsis) throws IOException {
-        InputStream input = new FileInputStream(file);
-        // wrapping a BufferedInputStream around it because when reading /proc with unbuffered
-        // input stream, bytes read not equal to buffer size is not necessarily the correct
-        // indication for EOF; but it is true for BufferedInputStream due to its implementation.
-        BufferedInputStream bis = new BufferedInputStream(input);
-        try {
-            long size = file.length();
-            if (max > 0 || (size > 0 && max == 0)) {  // "head" mode: read the first N bytes
-                if (size > 0 && (max == 0 || size < max)) max = (int) size;
-                byte[] data = new byte[max + 1];
-                int length = bis.read(data);
-                if (length <= 0) return "";
-                if (length <= max) return new String(data, 0, length);
-                if (ellipsis == null) return new String(data, 0, max);
-                return new String(data, 0, max) + ellipsis;
-            } else if (max < 0) {  // "tail" mode: keep the last N
-                int len;
-                boolean rolled = false;
-                byte[] last = null;
-                byte[] data = null;
-                do {
-                    if (last != null) rolled = true;
-                    byte[] tmp = last;
-                    last = data;
-                    data = tmp;
-                    if (data == null) data = new byte[-max];
-                    len = bis.read(data);
-                } while (len == data.length);
-
-                if (last == null && len <= 0) return "";
-                if (last == null) return new String(data, 0, len);
-                if (len > 0) {
-                    rolled = true;
-                    System.arraycopy(last, len, last, 0, last.length - len);
-                    System.arraycopy(data, 0, last, last.length - len, len);
-                }
-                if (ellipsis == null || !rolled) return new String(last);
-                return ellipsis + new String(last);
-            } else {  // "cat" mode: size unknown, read it all in streaming fashion
-                ByteArrayOutputStream contents = new ByteArrayOutputStream();
-                int len;
-                byte[] data = new byte[1024];
-                do {
-                    len = bis.read(data);
-                    if (len > 0) contents.write(data, 0, len);
-                } while (len == data.length);
-                return contents.toString();
-            }
-        } finally {
-            bis.close();
-            input.close();
-        }
     }
 
     public static void show(FragmentManager manager) {
@@ -418,8 +355,56 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void changePdfName(DocumentInfo item) {
+        File pdfFile = new File(item.getPath());
+        try {
+            Pdfs.changeFileNameByMetadata(pdfFile);
+            updateRecyclerView(false);
+        } catch (Exception e) {
+            Logs.t(e);
+            try {
+                Pdfboxs.changeFileName(pdfFile);
+                updateRecyclerView(false);
+
+            } catch (Exception ex) {
+                Logs.t(ex);
+
+            }
+        }
+    }
+
+    @Override
+    public void copyContent(DocumentInfo documentInfo) {
+        try {
+            File sourceFile = new File(documentInfo.getPath());
+            String text = new String(euphoria.common.Files.readFully(sourceFile), "UTF-8");
+
+            ClipboardManager manager = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
+            if (manager != null) {
+                manager.setPrimaryClip(ClipData.newPlainText(null, text));
+            }
+            File dir = new File(sourceFile.getParentFile(), "Copied");
+            if (!dir.isDirectory()) dir.mkdir();
+            sourceFile.renameTo(new File(dir, sourceFile.getName()));
+            updateRecyclerView(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    @Override
     public void copyFileName(DocumentInfo documentInfo) {
-        Utilities.setClipboardText(getContext(), documentInfo.getPath());
+        Utilities.setClipboardText(getContext(), documentInfo.getFileName());
+
+        if (euphoria.common.Files.isSupportedImage(documentInfo.getFileName()) && documentInfo.getPath().contains("/Download/")) {
+
+            new File(documentInfo.getPath()).renameTo(new File(Environment.getExternalStorageDirectory(),
+                    "Browser/static/pictures/" + documentInfo.getFileName()));
+
+
+        }
     }
 
     @Override
@@ -432,29 +417,94 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
-    public void extractVideoSrc(DocumentInfo documentInfo) {
-
+    public void extractPdfBookmark(DocumentInfo item) {
         try {
-            File src = new File(documentInfo.getPath());
-            String str = readTextFile(src, 0, null);
-            int start = str.indexOf("<video ");//src=3D"
+            File pdfFile = new File(item.getPath());
 
-            start += "<video ".length();
-            start = str.indexOf("src=3D\"", start);
-            start += "src=3D\"".length();
-            int end = str.indexOf("\"", start);
-            String url = str.substring(start, end);
-            url = url.replaceAll("=\r\n", "");
-            url = url.replaceAll("=3D", "=");
-
-            url = Html.fromHtml(url).toString();
-            ClipboardManager clipboardManager = ((ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE));
-            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, url));
-            src.delete();
-
+            String results = Pdfs.collectTitles(pdfFile, true);
+            euphoria.common.Contexts.setText(results);
         } catch (IOException e) {
             e.printStackTrace();
+            Logs.t(e);
         }
+    }
+
+    @Override
+    public void extractPdfImages(DocumentInfo documentInfo) {
+        String prefix = Long.toString(Keys.crc64Long(Keys.getBytes(documentInfo.getFileName())));
+
+        Pdfs.extractPdfImages(getContext(), new File(documentInfo.getPath()), prefix, new Listener() {
+            @Override
+            public void onSuccess(String result) {
+                updateRecyclerView(false);
+            }
+        });
+//        try {
+//            Pdfs.extractImages(documentInfo.getPath());
+//        } catch (Exception e) {
+//
+//
+//        }
+    }
+
+    @Override
+    public void extractPdfToImage(DocumentInfo documentInfo) {
+        Pdfs.extractPdfToImage(getContext(), new File(documentInfo.getPath()), result -> updateRecyclerView(false));
+
+    }
+
+    @Override
+    public void setPdfName(DocumentInfo documentInfo) {
+//        Pdfs.extractText(getContext(), new File(documentInfo.getPath()), new Listener() {
+//            @Override
+//            public void onSuccess(String result) {
+//                euphoria.common.Contexts.setText(getContext(), result);
+//            }
+//        });
+        File pdfFile = new File(documentInfo.getPath());
+
+        Dialogs.showDialog(getContext(), null, new Dialogs.Listener() {
+            @Override
+            public void onPositive(CharSequence text) {
+                try {
+
+                    Pdfboxs.setTitle(pdfFile, text.toString());
+                } catch (IOException e1) {
+                    Logs.t(e1);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void extractVideoSrc(DocumentInfo documentInfo) {
+        File htmlFile = new File(documentInfo.getPath());
+        File dstDir = new File(htmlFile.getParentFile(), "Download");
+        if (!dstDir.isDirectory()) {
+            dstDir.mkdir();
+        }
+        euphoria.common.Files.moveImages(htmlFile, dstDir);
+//        try {
+//            File src = new File(documentInfo.getPath());
+//            String str = readTextFile(src, 0, null);
+//            int start = str.indexOf("<video ");//src=3D"
+//
+//            start += "<video ".length();
+//            start = str.indexOf("src=3D\"", start);
+//            start += "src=3D\"".length();
+//            int end = str.indexOf("\"", start);
+//            String url = str.substring(start, end);
+//            url = url.replaceAll("=\r\n", "");
+//            url = url.replaceAll("=3D", "=");
+//
+//            url = Html.fromHtml(url).toString();
+//            ClipboardManager clipboardManager = ((ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE));
+//            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, url));
+//            src.delete();
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
@@ -478,6 +528,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             mThumbnailProvider = new ThumbnailProviderImpl();
         }
         return mThumbnailProvider;
+    }
+
+    @Override
+    public void html2Markdown1(DocumentInfo documentInfo) {
+        ClipboardManager clipboardManager = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
+
+        try {
+            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, Markdowns.html2markdown1(new File(documentInfo.getPath()))));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -510,11 +571,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 updateRecyclerView(false);
                 break;
             case C.TYPE_AUDIO:
-                Intent musicService = new Intent(this.getActivity(), MusicService.class);
-                musicService.setAction(MusicService.ACTION_PLAY);
-                musicService.putExtra(MusicService.EXTRA_PATH, documentInfo.getPath());
+                Intent musicService = new Intent(Intent.ACTION_VIEW);
+                musicService.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), "audio/*");
 
-                this.getActivity().startService(musicService);
+
+                this.getActivity().startActivity(Intent.createChooser(musicService, "音乐"));
+
+//                Intent musicService = new Intent(this.getActivity(), MusicService.class);
+//                musicService.setAction(MusicService.ACTION_PLAY);
+//                musicService.putExtra(MusicService.EXTRA_PATH, documentInfo.getPath());
+//
+//                this.getActivity().startService(musicService);
                 break;
             default:
                 DocumentUtils.openContent(getActivity(), documentInfo, 0);
@@ -545,7 +612,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup
+            container, @Nullable Bundle savedInstanceState) {
         return LayoutInflater.from(getContext()).inflate(R.layout.fragment_directory, container, false);
     }
 
@@ -627,27 +695,60 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
-    public void srt2Txt(DocumentInfo documentInfo) {
+    public void splitPdfByTitleList(DocumentInfo item) {
+        Dialogs.showDialog(getContext(), null, text -> {
+
+            try {
+                File pdfFile = new File(item.getPath());
+                File dir = new File(item.getPath().replaceFirst("\\.\\w+$", " "));
+                if (!dir.isDirectory()) dir.mkdirs();
+
+                Pdfs.splitByTitles(pdfFile,
+                        Strings.lines(euphoria.common.Contexts.getText().toString()),
+                        dir);
+                updateRecyclerView(false);
+            } catch (IOException e) {
+                Logs.t(e);
+            }
+        });
+    }
+
+    @Override
+    public void splitPdfByTitleAndPageNumber(DocumentInfo item) {
 
         try {
+            File pdfFile = new File(item.getPath());
 
-            File[] files = new File(documentInfo.getPath()).getParentFile().listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.isFile() && pathname.getName().endsWith(".srt");
-
-                }
-            });
-
-            for (File file : files) {
-                byte[] bytes = euphoria.psycho.knife.util.FileUtils.readAllBytes(file);
-                euphoria.psycho.knife.util.FileUtils.writeAllText(file, euphoria.psycho.knife.util.FileUtils.decompressGzip(bytes));
-
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            String marks = Pdfboxs.extractOutlines(pdfFile);
+            Pdfs.splitBy(marks, item.getPath());
+            updateRecyclerView(false);
+        } catch (IOException e) {
+            Logs.t(e);
         }
+    }
+
+    @Override
+    public void srt2Txt(DocumentInfo documentInfo) {
+
+//        try {
+//
+//            File[] files = new File(documentInfo.getPath()).getParentFile().listFiles(new FileFilter() {
+//                @Override
+//                public boolean accept(File pathname) {
+//                    return pathname.isFile() && pathname.getName().endsWith(".srt");
+//
+//                }
+//            });
+//
+//            for (File file : files) {
+//                byte[] bytes = euphoria.psycho.knife.util.FileUtils.readAllBytes(file);
+//                euphoria.psycho.knife.util.FileUtils.writeAllText(file, euphoria.psycho.knife.util.FileUtils.decompressGzip(bytes));
+//
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
 //        try {
 //            Utilities.setClipboardText(getContext(),
@@ -681,10 +782,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                                 try {
                                     File sourceFile = new File(documentInfo.getPath());
 
-                                    String fileName = FileUtils.getFileNameWithoutExtension(documentInfo.getFileName());
-                                    String ext = FileUtils.getExtension(documentInfo.getFileName());
+                                    String fileName = Files.getFileNameWithoutExtension(documentInfo.getFileName());
+                                    String ext = Files.getExtension(documentInfo.getFileName());
 
-                                    File destinationFile = FileUtils.buildUniqueFileWithExtension(
+                                    final File destinationFile = FileUtils.buildUniqueFileWithExtension(
                                             sourceFile.getParentFile(),
                                             fileName,
                                             ext
@@ -700,7 +801,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
                                                 @Override
                                                 public void getResult(Uri uri) {
-
+                                                    euphoria.common.Contexts.triggerMediaScanner(getContext(), destinationFile);
                                                     updateRecyclerView(false);
                                                 }
 
@@ -718,6 +819,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                                     e.printStackTrace();
                                 }
                             }
+                        } else {
+                            Toast.makeText(getContext(), "0:0", Toast.LENGTH_LONG).show();
                         }
                         dialog.dismiss();
                     }
@@ -732,6 +835,15 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void unzip(DocumentInfo documentInfo) {
+        if (Pattern.compile("\\.(?:zip|epub)$").matcher(documentInfo.getFileName()).find()) {
+            File dir = new File(documentInfo.getPath(), Strings.substringBeforeLast(documentInfo.getFileName(),
+                    '.')).getParentFile();
+            if (!dir.isDirectory()) dir.mkdirs();
+            DocumentUtils.extractToDirectory(documentInfo.getPath(),
+                    dir.getAbsolutePath()
+            );
+            return;
+        }
         ThreadUtils.postOnBackgroundThread(() -> {
             UnZipJob job = new UnZipJob(Throwable::printStackTrace);
             job.unzip(documentInfo.getPath());

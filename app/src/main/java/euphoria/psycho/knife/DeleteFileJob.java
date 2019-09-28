@@ -3,17 +3,15 @@ package euphoria.psycho.knife;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
 
-import euphoria.psycho.common.FileUtils;
+import euphoria.common.Files;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.knife.util.StorageUtils;
 import euphoria.psycho.share.util.ThreadUtils;
@@ -94,7 +92,7 @@ public class DeleteFileJob extends Job {
         ThreadUtils.postOnUiThread(() -> {
 
             mLine1.setText(path);
-            mLine2.setText("删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + FileUtils.formatFileSize(mDeletedContentLength));
+            mLine2.setText("删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + Files.formatFileSize(mDeletedContentLength));
         });
     }
 
@@ -104,7 +102,7 @@ public class DeleteFileJob extends Job {
             @Override
             public void run() {
                 mAlertDialog.dismiss();
-                Toast.makeText(mContext, "删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + FileUtils.formatFileSize(mDeletedContentLength), Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext, "删除 " + mDocsProcessed + " 个文件, 总共释放空间 " + Files.formatFileSize(mDeletedContentLength), Toast.LENGTH_LONG).show();
 
 //                mAlertDialog.setTitle("删除文件操作已完成");
 //                mAlertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setVisibility(View.GONE);

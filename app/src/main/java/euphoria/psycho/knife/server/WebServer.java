@@ -32,9 +32,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import euphoria.common.Strings;
 import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.knife.util.StringUtils;
 
 
 public class WebServer extends NanoHTTPD {
@@ -70,7 +70,7 @@ public class WebServer extends NanoHTTPD {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
             os.write(indexBytes[0]);
-            os.write(StringUtils.escapeHTML(dir.getAbsolutePath()).getBytes(UTF8));
+            os.write(Strings.escapeHTML(dir.getAbsolutePath()).getBytes(UTF8));
             os.write(indexBytes[1]);
             os.write(generateFileInfos(children));
             os.write(indexBytes[2]);

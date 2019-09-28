@@ -7,29 +7,47 @@ import euphoria.psycho.knife.util.ThumbnailUtils;
 
 public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo> {
 
-    void onClicked(DocumentInfo documentInfo);
+    void changePdfName(DocumentInfo item);
 
-
-    void updateItem(DocumentInfo documentInfo);
-
-    void unzip(DocumentInfo documentInfo);
-
-
-    void srt2Txt(DocumentInfo documentInfo);
+    void copyContent(DocumentInfo documentInfo);
 
     void copyFileName(DocumentInfo documentInfo);
 
-    void extractVideoSrc(DocumentInfo documentInfo);
-
     void delete(DocumentInfo documentInfo);
 
-    void trimVideo(DocumentInfo documentInfo);
+    void extractPdfBookmark(DocumentInfo item);
 
-    void getProperties(DocumentInfo documentInfo);
+    void extractVideoSrc(DocumentInfo documentInfo);
 
-    void rename(DocumentInfo documentInfo);
 
     ListMenuDelegate getListMenuDelegate();
 
+    void getProperties(DocumentInfo documentInfo);
+
     ThumbnailUtils.ThumbnailProvider getThumbnailProvider();
+
+    void html2Markdown1(DocumentInfo documentInfo);
+
+    void onClicked(DocumentInfo documentInfo);
+
+    void rename(DocumentInfo documentInfo);
+
+    void setPdfName(DocumentInfo item);
+
+    void splitPdfByTitleAndPageNumber(DocumentInfo item);
+
+    void splitPdfByTitleList(DocumentInfo item);
+
+    void srt2Txt(DocumentInfo documentInfo);
+
+    void trimVideo(DocumentInfo documentInfo);
+
+    void extractPdfToImage(DocumentInfo documentInfo);
+
+    void extractPdfImages(DocumentInfo documentInfo);
+
+
+    void unzip(DocumentInfo documentInfo);
+
+    void updateItem(DocumentInfo documentInfo);
 }

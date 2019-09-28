@@ -1,9 +1,11 @@
 package euphoria.psycho.knife.util;
 
+import euphoria.common.Strings;
+
 public class MimeTypeUtils {
     public static String getMimeTypeForIntent(String fileName) {
 
-        String ext = StringUtils.substringAfterLast(fileName, ".");
+        String ext = Strings.substringAfterLast(fileName, ".");
         if (ext == null) return "application/*";
         ext = ext.toLowerCase();
 

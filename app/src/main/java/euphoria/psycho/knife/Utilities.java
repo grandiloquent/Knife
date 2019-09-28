@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
 
-import euphoria.psycho.knife.util.StringUtils;
+import euphoria.common.Strings;
 
 public class Utilities {
 
@@ -33,7 +33,7 @@ public class Utilities {
         Pattern numberLine = Pattern.compile("(^[0-9]+$)|(^[0-9]+[^a-zA-Z]*?[0-9]+$)");
         String line;
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(StringUtils.substringAfterLast(fileName,"/")).append("\r\n\r\n");
+        stringBuilder.append(Strings.substringAfterLast(fileName,"/")).append("\r\n\r\n");
         while ((line = reader.readLine()) != null) {
             if (numberLine.matcher(line).matches()) continue;
             stringBuilder.append(line.trim()).append(' ');

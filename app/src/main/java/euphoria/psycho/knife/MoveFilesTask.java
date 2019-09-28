@@ -18,7 +18,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import euphoria.psycho.knife.util.StringUtils;
+import euphoria.common.Strings;
 import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.knife.util.StorageUtils;
@@ -56,8 +56,8 @@ public class MoveFilesTask implements Runnable {
     private boolean sdCardToSDCard(File srcFile) {
         File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
-            if(!StorageUtils.deleteDocument(mContentResolver,targetFile,mTreeUri))
-            return false;
+            if (!StorageUtils.deleteDocument(mContentResolver, targetFile, mTreeUri))
+                return false;
         }
 
         srcFile.renameTo(targetFile);
@@ -77,6 +77,8 @@ public class MoveFilesTask implements Runnable {
     private void sdCardToStorage(File srcFile, File dstDir) {
         if (mListener != null) mListener.onUpdateProgress(srcFile);
         File dstFile = new File(dstDir, srcFile.getName());
+        if (dstFile.getAbsolutePath().equals(srcFile.getAbsolutePath()))
+            return;
         if (srcFile.isFile()) {
             boolean result = StorageUtils.sdCardDocumentToStorageFile(mContentResolver,
                     srcFile,
@@ -116,7 +118,7 @@ public class MoveFilesTask implements Runnable {
         OutputStream os;
         try {
             Uri targetUri = DocumentsContract.createDocument(mContentResolver, mDstDirUri,
-                    MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(srcFile.getName(), ".")),
+                    MimeUtils.guessMimeTypeFromExtension(Strings.substringAfterLast(srcFile.getName(), ".")),
                     srcFile.getName());
             os = mContentResolver.openOutputStream(targetUri);
         } catch (FileNotFoundException e) {
@@ -146,8 +148,8 @@ public class MoveFilesTask implements Runnable {
     private boolean storageToStorage(File srcFile) {
         File targetFile = new File(mDstDir, srcFile.getName());
         if (targetFile.exists()) {
-            if(!targetFile.delete())
-            return false;
+            if (!targetFile.delete())
+                return false;
         }
         return srcFile.renameTo(targetFile);
     }

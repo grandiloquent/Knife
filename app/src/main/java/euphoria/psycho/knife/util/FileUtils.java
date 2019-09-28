@@ -1,6 +1,7 @@
 package euphoria.psycho.knife.util;
 
 import android.text.TextUtils;
+import android.widget.ListView;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -12,36 +13,45 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class FileUtils {
-    private static final char AltDirectorySeparatorChar = '/';
+
     private static final int BUFFER_SIZE = 8192;
-    private static final char DirectorySeparatorChar = '\\';
     private static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE - 8;
-    private static final char VolumeSeparatorChar = ':';
 
-    public static String getExtension(String path) {
-        if (path == null)
-            return null;
 
-        int length = path.length();
-        for (int i = length; --i >= 0; ) {
-            char ch = path.charAt(i);
-            if (ch == '.') {
-                if (i != length - 1)
-                    return path.substring(i);
-                else
-                    return "";
+
+    public  static List<String> readAllLines(File src){
+
+        BufferedReader reader=null;
+        try {
+            FileInputStream in=  new FileInputStream(src);
+         reader =new BufferedReader(new InputStreamReader(in,"utf-8"));
+            String line;
+            List<String> list=new ArrayList<>() ;
+            while ((line=reader.readLine())!=null){
+            list.add(line);
             }
-            if (ch == DirectorySeparatorChar || ch == AltDirectorySeparatorChar || ch == VolumeSeparatorChar)
-                break;
-        }
-        return "";
-    }
+            return  list;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if(reader!=null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
+        }
+        return  null;
+    }
     private static File buildFile(File parent, String name, String ext) {
         if (TextUtils.isEmpty(ext)) {
             return new File(parent, name);
@@ -97,32 +107,9 @@ public class FileUtils {
         return outStr.toString();
     }
 
-    public static String getFileName(String path) {
-        if (path != null) {
 
 
-            int length = path.length();
-            for (int i = length; --i >= 0; ) {
-                char ch = path.charAt(i);
-                if (ch == DirectorySeparatorChar || ch == AltDirectorySeparatorChar || ch == VolumeSeparatorChar)
-                    return path.substring(i + 1);
 
-            }
-        }
-        return path;
-    }
-
-    public static String getFileNameWithoutExtension(String path) {
-        path = getFileName(path);
-        if (path != null) {
-            int i;
-            if ((i = path.lastIndexOf('.')) == -1)
-                return path; // No path extension found
-            else
-                return path.substring(0, i);
-        }
-        return null;
-    }
 
     public static boolean hasSDCardPath() {
         File[] directories = new File("/storage").listFiles();

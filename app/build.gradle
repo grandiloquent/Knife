@@ -1,18 +1,24 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.protobuf'
+//apply plugin: 'com.google.protobuf'
 
 android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "euphoria.psycho.knife"
-        minSdkVersion 16
+        minSdkVersion 26
         targetSdkVersion 28
         versionCode 2
         versionName "1.1"
         vectorDrawables.useSupportLibrary = true
+        ndk.abiFilters 'armeabi-v7a'
         externalNativeBuild {
             cmake {
                 cppFlags ""
+            }
+        }
+        javaCompileOptions {
+            annotationProcessorOptions {
+                includeCompileClasspath true
             }
         }
     }
@@ -21,7 +27,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
     }
+
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
@@ -49,14 +57,19 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.1.0-alpha02'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0-alpha02'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0-beta04'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
-     implementation 'com.googlecode.mp4parser:isoparser:1.1.22'
+    implementation 'com.googlecode.mp4parser:isoparser:1.1.22'
     implementation 'com.google.android.material:material:1.1.0-alpha03'
     implementation 'com.google.protobuf:protobuf-lite:3.0.1'
     // https://mvnrepository.com/artifact/org.mp4parser/muxer
-
+// https://mvnrepository.com/artifact/org.jsoup/jsoup
+    implementation "org.jsoup:jsoup:1.12.1"
+// https://mvnrepository.com/artifact/com.itextpdf/itextpdf
+    //implementation group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.16'
+    implementation 'com.tom_roush:pdfbox-android:1.8.10.1'
+    //implementation 'com.github.barteksc:pdfium-android:1.9.0'
     implementation 'org.apache.commons:commons-compress:1.18'
     implementation "com.google.android.exoplayer:exoplayer:2.9.2"
     //implementation "com.github.bumptech.glide:glide:4.9.0"
@@ -65,28 +78,28 @@ dependencies {
     // protobuf files("ext/")
 }
 
-protobuf {
-    protoc {
-        // You still need protoc like in the non-Android case
-        artifact = 'com.google.protobuf:protoc:3.0.0'
-    }
-    plugins {
-        javalite {
-            // The codegen for lite comes as a separate artifact
-            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
-        }
-    }
-    generateProtoTasks {
-        all().each { task ->
-            task.builtins {
-                // In most cases you don't need the full Java output
-                // if you use the lite output.
-                remove java
-            }
-            task.plugins {
-                javalite {}
-            }
-        }
-    }
-    generatedFilesBaseDir = "$projectDir/src/generated"
-}
+//protobuf {
+//    protoc {
+//        // You still need protoc like in the non-Android case
+//        artifact = 'com.google.protobuf:protoc:3.0.0'
+//    }
+//    plugins {
+//        javalite {
+//            // The codegen for lite comes as a separate artifact
+//            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+//        }
+//    }
+//    generateProtoTasks {
+//        all().each { task ->
+//            task.builtins {
+//                // In most cases you don't need the full Java output
+//                // if you use the lite output.
+//                remove java
+//            }
+//            task.plugins {
+//                javalite {}
+//            }
+//        }
+//    }
+//    generatedFilesBaseDir = "$projectDir/src/generated"
+//}

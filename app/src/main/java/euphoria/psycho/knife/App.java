@@ -2,6 +2,7 @@ package euphoria.psycho.knife;
 
 import android.provider.ContactsContract.Directory;
 
+import euphoria.common.Contexts;
 import euphoria.psycho.common.base.BaseApp;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.pool.BytesBufferPool;
@@ -32,7 +33,6 @@ public class App extends BaseApp {
     }
 
 
-
     public static Status getmStatus() {
         return mStatus;
     }
@@ -52,6 +52,7 @@ public class App extends BaseApp {
 //            }
 //        });
         FileLogger.getLogger(getApplicationContext());
+        Contexts.setContext(this);
     }
 
     public static class Status {

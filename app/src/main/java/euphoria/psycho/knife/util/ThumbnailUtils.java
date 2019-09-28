@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.os.Process;
-import android.util.Log;
 import android.util.Pair;
 
 import java.io.File;
@@ -14,8 +13,8 @@ import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import euphoria.common.Files;
 import euphoria.psycho.common.Callback;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.share.util.BitmapUtils;
 import euphoria.psycho.share.util.IconUtils;
 
@@ -62,6 +61,12 @@ public class ThumbnailUtils {
             mTasks = tasks;
         }
 
+        private Bitmap createImageThumbnail(String filePath, int iconSize) {
+            Bitmap thumbnail = BitmapFactory.decodeFile(filePath);
+            return BitmapUtils.resizeAndCropCenter(thumbnail, iconSize, true);
+
+        }
+
         private Bitmap createVideoThumbnail(String filePath, int iconSize) {
             Bitmap thumbnail = BitmapUtils.createVideoThumbnail(filePath);
 
@@ -81,7 +86,7 @@ public class ThumbnailUtils {
                     break;
                 }
             }
-            if (index != -1) {
+            if (index != -1 && index < mTasks.size()) {
                 mTasks.remove(index);
             }
         }
@@ -108,12 +113,12 @@ public class ThumbnailUtils {
                 return;
             }
             Bitmap thumbnail = null;
-            if (euphoria.psycho.common.FileUtils.isSupportedVideo(mRequest.getFilePath())) {
+            if (Files.isSupportedVideo(mRequest.getFilePath())) {
 
 
                 thumbnail = createVideoThumbnail(mRequest.getFilePath(), mRequest.getIconSize());
-            } else if (FileUtils.isSupportedImage(mRequest.getFilePath())) {
-                //thumbnail = createImageThumbnail(request.getFilePath(), request.getIconSize());
+            } else if (Files.isSupportedImage(mRequest.getFilePath())) {
+                thumbnail = createImageThumbnail(mRequest.getFilePath(), mRequest.getIconSize());
 
             } else if (mRequest.getFilePath().endsWith(".apk")) {
                 thumbnail = IconUtils.drawableToBitmap(IconUtils.getAppIcon(mRequest.getFilePath()));

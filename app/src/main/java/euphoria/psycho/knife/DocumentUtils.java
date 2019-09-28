@@ -21,6 +21,8 @@ import java.util.Set;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
+import euphoria.common.Files;
+import euphoria.common.Strings;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
@@ -34,7 +36,6 @@ import euphoria.psycho.share.util.DialogUtils;
 import euphoria.psycho.share.util.DialogUtils.DialogListener;
 import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 
@@ -164,9 +165,13 @@ public class DocumentUtils {
         dlg.show();
     }
 
+    public static native void moveFilesByExtension(String dirPath, String destDirName);
+
     public static native long calculateDirectory(String dir);
 
     public static native int deleteDirectories(String[] directories);
+
+    public static native void extractToDirectory(String filename, String directory);
 
     public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
         List<Item> items = new ArrayList<>();
@@ -195,11 +200,22 @@ public class DocumentUtils {
                 break;
             }
             case C.TYPE_PDF: {
+                items.add(new Item(context, R.string.extract_pdf_to_image, true));
+                // items.add(new Item(context, R.string.extract_pdf_images, true));
+                items.add(new Item(context, R.string.set_pdf_name, true));
+                items.add(new Item(context, R.string.change_pdf_name, true));
+                items.add(new Item(context, R.string.split_pdf_by_title_list, true));
+                items.add(new Item(context, R.string.split_pdf_by_title_and_page_number, true));
+
+                items.add(new Item(context, R.string.extract_pdf_bookmark, true));
+
                 break;
             }
             case C.TYPE_TEXT: {
                 items.add(new Item(context, R.string.extract_video_src, true));
                 items.add(new Item(context, R.string.srt_to_txt, true));
+                items.add(new Item(context, R.string.html_to_markdown_1, true));
+                items.add(new Item(context, R.string.copy_content, true));
 
                 break;
             }
@@ -369,32 +385,17 @@ public class DocumentUtils {
         if (file.isDirectory()) return C.TYPE_DIRECTORY;
 
 
-        String ext = StringUtils.substringAfterLast(file.getName(), ".");
+        String ext = Strings.substringAfterLast(file.getName(), ".");
         if (ext == null) return C.TYPE_OTHER;
         ext = ext.toLowerCase();
 
+        if (Files.isAudio(ext)) return C.TYPE_AUDIO;
+        if (Files.isVideo(ext)) return C.TYPE_VIDEO;
+
         switch (ext) {
-            case "aac":
-            case "flac":
-            case "imy":
-            case "m4a":
-            case "mid":
-            case "mp3":
-            case "mxmf":
-            case "ogg":
-            case "ota":
-            case "rtttl":
-            case "rtx":
-            case "wav":
-            case "xmf":
-                return C.TYPE_AUDIO;
+
             // https://developer.android.com/guide/appendix/media-formats.html
-            case "3gp":
-            case "mkv":
-            case "mp4":
-            case "ts":
-            case "webm":
-            case "vm":
+
             case "crdownload":
                 return C.TYPE_VIDEO;
             case "txt":
@@ -415,6 +416,7 @@ public class DocumentUtils {
             case "zip":
             case "rar":
             case "gz":
+            case "epub":
                 return C.TYPE_ZIP;
             case "bmp":
             case "gif":
@@ -467,7 +469,7 @@ public class DocumentUtils {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())),
-                MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(documentInfo.getFileName(), ".")));
+                MimeUtils.guessMimeTypeFromExtension(Strings.substringAfterLast(documentInfo.getFileName(), ".")));
 
         if (documentInfo.getFileName().toLowerCase().endsWith(".apk")) {
             context.startActivity(Intent.createChooser(intent, "打开"));
@@ -491,7 +493,7 @@ public class DocumentUtils {
 
         List<DocumentInfo> infos = delegate.getSelectedItemsAsList();
         if (infos.size() < 1) return;
-        String extension = StringUtils.substringAfterLast(infos.get(0).getFileName(), ".");
+        String extension = Strings.substringAfterLast(infos.get(0).getFileName(), ".");
         if (extension == null) return;
         List<DocumentInfo> infoList = adapter.getInfos();
 

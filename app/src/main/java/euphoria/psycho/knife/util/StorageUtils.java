@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import euphoria.common.Strings;
 import euphoria.psycho.common.C;
-import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.FileUtils;
 
 public class StorageUtils {
@@ -56,7 +56,7 @@ public class StorageUtils {
                 Uri newDocumentUri = DocumentsContract.createDocument(
                         context.getContentResolver(),
                         getDocumentUri(targetDirectory, treeUri),
-                        MimeTypeMap.getSingleton().getMimeTypeFromExtension(StringUtils.substringAfterLast(srcFile.getName(), ".")),
+                        MimeTypeMap.getSingleton().getMimeTypeFromExtension(Strings.substringAfterLast(srcFile.getName(), ".")),
                         srcFile.getName()
                 );
                 if (newDocumentUri == null) return success;
@@ -202,13 +202,13 @@ public class StorageUtils {
     }
 
     public static Uri getDocumentUri(File file, String treeUri) {
-        String lastPath = StringUtils.substringAfterLast(treeUri, "/");
+        String lastPath = Strings.substringAfterLast(treeUri, "/");
 
         String baseURI = treeUri + "/document/" + lastPath;
-        String splited = StringUtils.substringBeforeLast(lastPath, "%");
+        String splited = Strings.substringBeforeLast(lastPath, "%");
 
 
-        String subPath = StringUtils.substringAfter(file.getAbsolutePath(), splited + "/");
+        String subPath = Strings.substringAfter(file.getAbsolutePath(), splited + "/");
 
         if (subPath != null) {
             subPath = Uri.encode(subPath);

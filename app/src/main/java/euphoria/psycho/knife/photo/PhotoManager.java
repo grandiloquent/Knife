@@ -18,7 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.accessibility.AccessibilityEventCompat;
 import androidx.core.view.accessibility.AccessibilityRecordCompat;
-import euphoria.psycho.common.FileUtils;
+import euphoria.common.Files;
 
 public class PhotoManager {
     public static final String EXTRA_MAX_INITIAL_SCALE = "max_initial_scale";
@@ -166,7 +166,7 @@ public class PhotoManager {
 
     @Nullable
     public static List<ImageInfo> collectImageInfos(@NonNull File directory) {
-        File[] images = directory.listFiles(pathname -> pathname.isFile() && FileUtils.isSupportedImage(pathname.getName()));
+        File[] images = directory.listFiles(pathname -> pathname.isFile() && Files.isSupportedImage(pathname.getName()));
 
         if (images == null || images.length == 0) return null;
 

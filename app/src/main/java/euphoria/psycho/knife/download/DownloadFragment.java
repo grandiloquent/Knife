@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar.OnMenuItemClickListener;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
+import euphoria.common.Strings;
 import euphoria.psycho.common.ContentUtils;
 import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -26,7 +27,6 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.common.widget.selection.SelectionDelegate.SelectionObserver;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.share.util.HttpUtils;
-import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 public class DownloadFragment extends BaseFragment implements OnMenuItemClickListener, SelectionObserver<DownloadInfo> {
@@ -56,9 +56,9 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         String url = ContentUtils.getTextFormClipboard(mClipboardManager);
         if (url == null) return;
         if (!HttpUtils.isValidURL(url)) return;
-        String fileName = StringUtils.substringAfterLast(url, "/");
+        String fileName = Strings.substringAfterLast(url, "/");
         if (fileName.indexOf('?') != -1)
-            fileName = StringUtils.substringBefore(fileName, "?");
+            fileName = Strings.substringBefore(fileName, "?");
 
         File targetFile = new File(mDirectory, fileName);
         DownloadInfo downloadInfo = new DownloadInfo();

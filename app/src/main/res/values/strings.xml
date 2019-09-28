@@ -61,6 +61,12 @@
     <string name="remaining_duration_minutes">%1$d mins left</string>
     <string name="remaining_duration_one_day">1 day left</string>
     <string name="extract_video_src">提取视频地址</string>
+    <string name="extract_pdf_to_image">Extract PDF Page</string>
+    <string name="extract_pdf_images">Extract PDF Images</string>
+    <string name="change_pdf_name">格式化文件名</string>
+    <string name="set_pdf_name">设置文档标题</string>
+
+
     <string name="remaining_duration_one_hour">1 hour left</string>
     <string name="remaining_duration_one_minute">1 min left</string>
     <string name="remaining_duration_one_second">1 sec left</string>
@@ -73,6 +79,16 @@
     <string name="extract">Extract...</string>
     <string name="share_link_title">Share</string>
     <string name="srt_to_txt">SRT To Text</string>
+    <string name="html_to_markdown_1">MarkDown 1</string>
+    <string name="html_to_markdown_2">MarkDown 2</string>
+    <string name="copy_content">复制内容</string>
+
+    <string name="html_to_markdown_4">MarkDown 4</string>
+
+    <string name="extract_pdf_bookmark">提取书签</string>
+
+    <string name="split_pdf_by_title_and_page_number">分割(书签)</string>
+    <string name="split_pdf_by_title_list">分割(标题列表)</string>
     <string name="show_info">Show Info</string>
     <string name="sort_date">By date modified</string>
     <string name="sort_name">By name</string>

@@ -5,18 +5,16 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import euphoria.common.Files;
 import euphoria.psycho.common.ApiCompatibilityUtils;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.ListMenuButton;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
-import euphoria.psycho.knife.cache.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailRequest;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.share.util.Utils;
@@ -131,6 +129,35 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.srt_to_txt:
                 mDelegate.srt2Txt(getItem());
                 break;
+            case R.string.html_to_markdown_1:
+                mDelegate.html2Markdown1(getItem());
+                break;
+            case R.string.copy_content:
+                mDelegate.copyContent(getItem());
+                break;
+
+            case R.string.extract_pdf_to_image:
+                mDelegate.extractPdfToImage(getItem());
+                break;
+
+            case R.string.extract_pdf_images:
+                mDelegate.extractPdfImages(getItem());
+                break;
+            case R.string.set_pdf_name:
+                mDelegate.setPdfName(getItem());
+                break;
+            case R.string.change_pdf_name:
+                mDelegate.changePdfName(getItem());
+                break;
+            case R.string.split_pdf_by_title_list:
+                mDelegate.splitPdfByTitleList(getItem());
+                break;
+            case R.string.extract_pdf_bookmark:
+                mDelegate.extractPdfBookmark(getItem());
+                break;
+            case R.string.split_pdf_by_title_and_page_number:
+                mDelegate.splitPdfByTitleAndPageNumber(getItem());
+                break;
         }
     }
 
@@ -167,7 +194,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
 
         }
         if (documentInfo.getType() != C.TYPE_DIRECTORY) {
-            mDescriptionView.setText(FileUtils.formatFileSize(documentInfo.getSize()));
+            mDescriptionView.setText(Files.formatFileSize(documentInfo.getSize()));
         }
     }
 

@@ -16,8 +16,17 @@ add_library( # Sets the name of the library.
         # Sets the library as a shared library.
         SHARED
 
+        src/main/cpp/file.c
         # Provides a relative path to your source file(s).
         src/main/cpp/native-lib.c)
+
+include_directories(src/main/cpp/zip)
+
+add_library(
+        libminzip
+        SHARED
+        src/main/cpp/zip/zip.c)
+
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -39,6 +48,7 @@ find_library( # Sets the name of the path variable.
 target_link_libraries( # Specifies the target library.
         native-lib
 
+        libminzip
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})

@@ -1,0 +1,313 @@
+#include <assert.h>
+#include <memory.h>
+#include <malloc.h>
+#include <asm/errno.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <unistd.h>
+#include "file.h"
+#include <fcntl.h>
+#include <errno.h>
+#include "log.h"
+
+#  define D_NAMLEN(dirent) (strlen((dirent)->d_name))
+
+char *argz_next(char *argz, size_t argz_len, const char *entry) {
+    assert((argz && argz_len) || (!argz && !argz_len));
+    if (entry) {
+        assert((!argz && !argz_len) || ((argz <= entry) && (entry < (argz + argz_len))));
+        entry = 1 + strchr(entry, '\0');
+        return (entry >= argz + argz_len) ? 0 : (char *) entry;
+    } else {
+        if (argz_len > 0)
+            return argz;
+        else return 0;
+    }
+}
+
+int64_t stat_size(struct stat *s) {
+    return s->st_blocks * 512;
+}
+
+error_t argz_append(char **pargz, size_t *pargz_len, const char *buf, size_t buf_len) {
+    size_t argz_len;
+    char *argz;
+    assert(pargz);
+    assert(pargz_len);
+    assert((*pargz && *pargz_len) || (!*pargz && !*pargz_len));
+    if (buf_len == 0)return 0;
+    argz_len = *pargz_len + buf_len;
+    argz = (char *) realloc(*pargz, argz_len);
+    if (!argz)
+        return ENOMEM;
+    memcpy(argz + *pargz_len, buf, buf_len);
+    *pargz = argz;
+    *pargz_len = argz_len;
+    return 0;
+}
+
+error_t argz_insert(char **pargz, size_t *pargz_len, char *before, const char *entry) {
+    assert(pargz);
+    assert(pargz_len);
+    assert(entry && *entry);
+    if (!before)
+        return argz_append(pargz, pargz_len, entry, 1 + strlen(entry));
+    while ((before > *pargz) && (before[-1] != '\0'))
+        --before;
+    {
+        size_t entry_len = 1 + strlen(entry);
+        size_t argz_len = *pargz_len + entry_len;
+        size_t offset = before - *pargz;
+        char *argz = (char *) realloc(*pargz, argz_len);
+        if (!argz)return ENOMEM;
+        before = argz + offset;
+        memmove(before + entry_len, before, *pargz_len - offset);
+        memcpy(before, entry, entry_len);
+        *pargz = argz;
+        *pargz_len = argz_len;
+    }
+    return 0;
+}
+
+int64_t calculate_dir_size(int dfd) {
+    int64_t size = 0;
+    struct stat s;
+    DIR *d;
+    struct dirent *de;
+    d = fdopendir(dfd);
+    if (d == NULL) {
+        close(dfd);
+        return 0;
+    }
+    while ((de = readdir(d))) {
+        const char *name = de->d_name;
+        if (de->d_type == DT_DIR) {
+            int subfd;
+            if (name[0] == '.') {
+                if (name[1] == 0)
+                    continue;
+                if ((name[1] == '.') && (name[2] == 0))
+                    continue;
+            }
+            if (fstatat(dfd, name, &s, AT_SYMLINK_NOFOLLOW) == 0) {
+                size += stat_size(&s);
+            }
+            subfd = openat(dfd, name, O_RDONLY | O_DIRECTORY);
+            if (subfd >= 0) {
+                size += calculate_dir_size(subfd);
+            }
+        } else {
+            if (fstatat(dfd, name, &s, AT_SYMLINK_NOFOLLOW) == 0) {
+                size += stat_size(&s);
+            }
+        }
+    }
+    closedir(d);
+    return size;
+}
+
+int create_directory(const char *p) {
+    struct stat s;
+    if (stat(p, &s) == 0 && S_ISDIR(s.st_mode)) {
+        return 0;
+    } else {
+        return mkdir(p, 0777);
+    }
+
+
+}
+
+int move_files(const char *dfd, const char *dir_name) {
+    struct stat s;
+    DIR *d;
+    struct dirent *de;
+    d = opendir(dfd);
+    if (d == NULL) {
+        close((int) dfd);
+        return 0;
+    }
+    //=====>>>
+    char dir[FILENAME_MAX];
+    memset(dir, 0, FILENAME_MAX);
+    strcat(dir, dfd);
+    strcat(dir, "/");
+    strcat(dir, dir_name);
+    create_directory(dir);
+    //=====>>>
+    while ((de = readdir(d))) {
+        const char *name = de->d_name;
+        //=====>>>
+        char p[FILENAME_MAX];
+        memset(p, '\0', sizeof(p));
+        strcat(p, dfd);
+        strcat(p, "/");
+        strcat(p, name);
+        //=====>>>
+        if (name[0] == '.') {
+            if (name[1] == 0)continue;
+            if ((name[1] == '.' && name[2] == 0))continue;
+        }
+        stat(p, &s);
+        if (S_ISREG(s.st_mode)) {
+            char *e = strrchr(p, '.');
+            if (!e || strlen(e) <= 1)continue;
+            //=====>>>
+            char tmp[FILENAME_MAX];
+            strcpy(tmp, e + 1);
+            if (tmp[0] >= 'a' && tmp[0] <= 'z')
+                tmp[0] ^= 32;
+            //=====>>>
+            //=====>>>
+            char n[FILENAME_MAX];
+            memset(n, '\0', FILENAME_MAX);
+            strcat(n, dir);
+            strcat(n, "/");
+            strcat(n, tmp);
+            //=====>>>
+            int ret = create_directory(n);
+            LOGD("create_directory: %s === %d.\n", n, ret);
+            strcat(n, "/");
+            strcat(n, de->d_name);
+
+            rename(p, n);
+        }
+    }
+    return 1;
+}
+
+/*
+
+ /storage/emulated/0/Download/(Routledge Library Editions_ History of Sexuality, 7) Joyce E. Salisbury - Sex in the Middle Ages_ A Book of Essays-Routledge (2019).epub ===
+ /storage/emulated/0/Download/Extensions/Epub/(Routledge Library Editions_ History of Sexuality, 7) Joyce E. Salisbury - Sex in the Middle Ages_ A Book of Essays-Routledge (2019).epub
+ */
+int unlink_recursive(const char *name) {
+    struct stat st;
+    DIR *dir;
+    struct dirent *de;
+    int fail = 0;
+    if (lstat(name, &st) < 0) return -1;
+    if (!S_ISDIR(st.st_mode))
+        return unlink(name);
+    dir = opendir(name);
+    if (dir == NULL)
+        return -1;
+    errno = 0;
+    while ((de = readdir(dir)) != NULL) {
+        char dn[PATH_MAX];
+        if (!strcmp(de->d_name, "..") || !strcmp(de->d_name, "."))
+            continue;
+        sprintf(dn, "%s/%s", name, de->d_name);
+        if (unlink_recursive(dn) < 0) {
+            fail = 1;
+            break;
+        }
+        errno = 0;
+    }
+    if (fail || errno < 0) {
+        int save = errno;
+        closedir(dir);
+        errno = save;
+        return -1;
+    }
+    if (closedir(dir) < 0)
+        return -1;
+    return rmdir(name);
+}
+
+
+static int argz_insertinorder(char **pargz,
+                              size_t *pargz_len,
+                              const char *entry
+) {
+    char *before = 0;
+    assert(pargz);
+    assert(pargz_len);
+    assert(entry && *entry);
+    if (*pargz)
+        while ((before = argz_next(*pargz, *pargz_len, before))) {
+            int cmp = strcmp(entry, before);
+            if (cmp < 0)break;
+            if (cmp == 0)return 0;
+        }
+
+    return argz_insert(pargz, pargz_len, before, entry);
+}
+
+static int argz_insertdir(char **pargz,
+                          size_t *pargz_len,
+                          const char *dirnam,
+                          struct dirent *dp) {
+    char *buf = 0;
+    size_t buf_len = 0;
+    char *end = 0;
+    size_t end_offset = 0;
+    size_t dir_len = 0;
+    int errors = 0;
+    assert(pargz);
+    assert(pargz_len);
+    assert(dp);
+    dir_len = strlen(dirnam);
+    end = dp->d_name + D_NAMLEN(dp);
+//  {
+//    char *p;
+//    for (p = end; p - 1 > dp->d_name; --p)
+//      if (strchr(".0123456789", p[-1]) == 0)
+//        break;
+//    if (*p == '.')
+//      end = p;
+//  }
+//  {
+//    char *p;
+//    for (p = end - 1; p > dp->d_name; --p)
+//      if (*p == '.') {
+//        end = p;
+//        break;
+//      }
+//  }
+
+    end_offset = end - dp->d_name;
+    buf_len = dir_len + 1 + end_offset;
+    buf = malloc((1 + buf_len) * sizeof(char));
+
+    if (!buf)
+        return ++errors;
+    assert(buf);
+
+    strcpy(buf, dirnam);
+    strcat(buf, "/");
+    strncat(buf, dp->d_name, end_offset);
+    buf[buf_len] = '\0';
+
+    if (argz_insertinorder(pargz, pargz_len, buf) != 0)
+        ++errors;
+    free(buf);
+
+    return errors;
+}
+
+int
+list_files_by_dir(const char *dirnam, char **pargz, size_t *pargz_len) {
+    DIR *dirp = 0;
+    int errors = 0;
+    assert (dirnam && *dirnam);
+    assert (pargz);
+    assert (pargz_len);
+    assert (dirnam[strlen(dirnam) - 1] != '/');
+    dirp = opendir(dirnam);
+    if (dirp) {
+        struct dirent *dp = 0;
+        while ((dp = readdir(dirp))) {
+            if (dp->d_name[0] != '.')
+
+                if (argz_insertdir(pargz, pargz_len, dirnam, dp)) {
+                    ++errors;
+
+                    break;
+                }
+        }
+        closedir(dirp);
+    } else
+        ++errors;
+    return errors;
+}

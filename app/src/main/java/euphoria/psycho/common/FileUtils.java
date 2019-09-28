@@ -1,9 +1,6 @@
 package euphoria.psycho.common;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
@@ -26,9 +23,11 @@ import java.util.zip.ZipFile;
 
 import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
+import euphoria.common.Documents;
+import euphoria.common.Files;
+import euphoria.common.Strings;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.knife.util.StringUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 // https://android.googlesource.com/platform/packages/apps/UnifiedEmail/+/kitkat-mr1-release/src/org/apache/commons/io
@@ -44,15 +43,12 @@ public class FileUtils {
     private static final String TAG = "FileUtils";
     private static final char UNIX_SEPARATOR = '/';
     private static final char WINDOWS_SEPARATOR = '\\';
-    private static String[] mSupportVideoExtensions;
-    private static String[] mSupportedAudioExtensions;
-    private static String[] mSupportedImageExtensions;
-    private static String[] mSupportedTextExtensions;
+
     private static String sSDCardPath;
     private static Uri sTreeUri;
 
     /**
-     * Delete the given files or directories by calling {@link #recursivelyDeleteFile(File)}.
+     * Delete the given files or directories by calling {@link Files#recursivelyDeleteFile(File)}.
      *
      * @param files The files to delete.
      */
@@ -60,7 +56,7 @@ public class FileUtils {
         ThreadUtils.assertOnBackgroundThread();
 
         for (File file : files) {
-            if (file.exists()) recursivelyDeleteFile(file);
+            if (file.exists()) Files.recursivelyDeleteFile(file);
         }
     }
 
@@ -132,7 +128,7 @@ public class FileUtils {
         if (!result) {
             if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
                 try {
-                    return DocumentsContract.deleteDocument(context.getContentResolver(), getDocumentUriFromTreeUri(file));
+                    return DocumentsContract.deleteDocument(context.getContentResolver(), Documents.getDocumentUriFromTreeUri(file));
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -142,20 +138,6 @@ public class FileUtils {
         return result;
     }
 
-    private static boolean extensionMatch(String[] extensions, String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex == -1) return false;
-
-        // somevideo.mp4 => .mp4
-        String extension = fileName.substring(dotIndex).toLowerCase();
-
-
-        for (String e : extensions) {
-            if (e.equals(extension)) return true;
-        }
-
-        return false;
-    }
 
     /**
      * Extracts an asset from the app's APK to a file.
@@ -200,53 +182,11 @@ public class FileUtils {
         File[] files = dir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
-                return pathname.isFile() && isSupportedImage(pathname.getName());
+                return pathname.isFile() && Files.isSupportedImage(pathname.getName());
             }
         });
         if (files != null && files.length > 0) return files[0];
         return null;
-    }
-
-    public static String formatFileSize(long number) {
-        float result = number;
-        String suffix = "";
-        if (result > 900) {
-            suffix = " KB";
-            result = result / 1024;
-        }
-        if (result > 900) {
-            suffix = " MB";
-            result = result / 1024;
-        }
-        if (result > 900) {
-            suffix = " GB";
-            result = result / 1024;
-        }
-        if (result > 900) {
-            suffix = " TB";
-            result = result / 1024;
-        }
-        if (result > 900) {
-            suffix = " PB";
-            result = result / 1024;
-        }
-        String value;
-        if (result < 1) {
-            value = String.format("%.2f", result);
-        } else if (result < 10) {
-            value = String.format("%.1f", result);
-        } else if (result < 100) {
-            value = String.format("%.0f", result);
-        } else {
-            value = String.format("%.0f", result);
-        }
-        return value + suffix;
-    }
-
-    public static String getDirectoryName(String file) {
-        int index = file.lastIndexOf('/');
-        if (index == -1) return "";
-        return file.substring(0, index);
     }
 
     public static DocumentFile getDocumentFile(final File file, final boolean isDirectory, Context context, Uri treeUri) {
@@ -289,23 +229,6 @@ public class FileUtils {
         }
 
         return document;
-    }
-
-    public static Uri getDocumentUriFromTreeUri(File file) {
-        String lastPath = StringUtils.substringAfterLast(getTreeUri().toString(), "/");
-
-        String baseURI = getTreeUri() + "/document/" + lastPath;
-        String splited = StringUtils.substringBeforeLast(lastPath, "%");
-
-
-        String subPath = StringUtils.substringAfter(file.getAbsolutePath(), splited + "/");
-
-        if (subPath != null) {
-            subPath = Uri.encode(subPath);
-        } else {
-            subPath = "";
-        }
-        return Uri.parse(baseURI + subPath);
     }
 
     public static String getExtension(String filename) {
@@ -404,79 +327,6 @@ public class FileUtils {
         return Math.max(lastUnixPos, lastWindowsPos);
     }
 
-    public static boolean isSupportedAudio(String fileName) {
-        if (mSupportedAudioExtensions == null) {
-            mSupportedAudioExtensions = new String[]{
-                    ".3gp",
-                    ".aac",
-                    ".flac",
-                    ".imy",
-                    ".m4a",
-                    ".mid",
-                    ".mkv",
-                    ".mp3",
-                    ".mp4",
-                    ".mxmf",
-                    ".ogg",
-                    ".ota",
-                    ".rtttl",
-                    ".rtx",
-                    ".ts",
-                    ".wav",
-                    ".xmf",
-            };
-        }
-        return extensionMatch(mSupportedAudioExtensions, fileName);
-    }
-
-    public static boolean isSupportedImage(String fileName) {
-        if (mSupportedImageExtensions == null) {
-            mSupportedImageExtensions = new String[]{
-                    ".jpg",
-                    ".gif",
-                    ".png",
-                    ".bmp",
-                    ".webp"
-            };
-        }
-        return extensionMatch(mSupportedImageExtensions, fileName);
-    }
-
-    public static boolean isSupportedText(String fileName) {
-
-        if (mSupportedTextExtensions == null) {
-            mSupportedTextExtensions = new String[]{"css",
-                    "htm",
-                    "js",
-                    "log",
-                    "srt",
-                    "txt",
-            };
-        }
-        return extensionMatch(mSupportedTextExtensions, fileName);
-    }
-
-    public static boolean isSupportedVideo(String fileName) {
-
-        if (mSupportVideoExtensions == null) {
-            mSupportVideoExtensions = new String[]{
-                    ".3gp",
-                    ".mkv",
-                    ".mp4",
-                    ".ts",
-                    ".webm",
-            };
-        }
-        return extensionMatch(mSupportVideoExtensions, fileName);
-    }
-
-
-    @TargetApi(VERSION_CODES.KITKAT)
-    public static void keepPermission(Context context, Intent intent) {
-
-        context.getContentResolver().takePersistableUriPermission(intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        context.grantUriPermission(context.getPackageName(), intent.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-    }
 
     public static boolean moveFile(Context context, File src, File destinationDirectory) {
 
@@ -490,9 +340,9 @@ public class FileUtils {
             if (!r && VERSION.SDK_INT >= VERSION_CODES.N) {
                 try {
                     Uri resultURI = DocumentsContract.moveDocument(context.getContentResolver(),
-                            getDocumentUriFromTreeUri(src),
-                            getDocumentUriFromTreeUri(src.getParentFile()),
-                            getDocumentUriFromTreeUri(destinationDirectory));
+                            Documents.getDocumentUriFromTreeUri(src),
+                            Documents.getDocumentUriFromTreeUri(src.getParentFile()),
+                            Documents.getDocumentUriFromTreeUri(destinationDirectory));
 
                     r = resultURI != null;
                 } catch (Exception e) {
@@ -503,13 +353,13 @@ public class FileUtils {
 
         if (!r && VERSION.SDK_INT >= VERSION_CODES.N) {
             if (!src.getAbsolutePath().startsWith(Environment.getExternalStorageDirectory().getAbsolutePath())) {
-                Uri srcDocumentUri = getDocumentUriFromTreeUri(src);
+                Uri srcDocumentUri = Documents.getDocumentUriFromTreeUri(src);
 
 
                 try {
                     r = DocumentsContract.copyDocument(context.getContentResolver(),
                             srcDocumentUri,
-                            getDocumentUriFromTreeUri(destinationDirectory)) != null;
+                            Documents.getDocumentUriFromTreeUri(destinationDirectory)) != null;
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -525,8 +375,8 @@ public class FileUtils {
                 try {
                     Uri newDocument = DocumentsContract.createDocument(
                             context.getContentResolver(),
-                            getDocumentUriFromTreeUri(destinationDirectory),
-                            MimeUtils.guessMimeTypeFromExtension(StringUtils.substringAfterLast(src.getName(), ".")),
+                            Documents.getDocumentUriFromTreeUri(destinationDirectory),
+                            MimeUtils.guessMimeTypeFromExtension(Strings.substringAfterLast(src.getName(), ".")),
                             src.getName());
                     if (newDocument != null) {
                         OutputStream outputStream = context.getContentResolver().openOutputStream(newDocument);
@@ -548,23 +398,6 @@ public class FileUtils {
         return r;
     }
 
-    /**
-     * Delete the given File and (if it's a directory) everything within it.
-     */
-    public static void recursivelyDeleteFile(File currentFile) {
-        ThreadUtils.assertOnBackgroundThread();
-        if (currentFile.isDirectory()) {
-            File[] files = currentFile.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    recursivelyDeleteFile(file);
-                }
-            }
-        }
-
-        if (!currentFile.delete()) Log.e(TAG, "Failed to delete: " + currentFile);
-    }
-
     public static boolean renameFile(Context context, File src, File dst) {
 
 
@@ -573,7 +406,7 @@ public class FileUtils {
         if (!result && VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
 
 
-            Uri srcDocumentUri = getDocumentUriFromTreeUri(src);
+            Uri srcDocumentUri = Documents.getDocumentUriFromTreeUri(src);
 
 //            Log.e("TAG/", "renameFile: " +
 //                    "\n" + srcDocumentUri +
@@ -598,44 +431,5 @@ public class FileUtils {
         return result;
     }
 
-    @TargetApi(VERSION_CODES.LOLLIPOP)
-    public static void requestTreeUri(Activity activity, int requestCode) {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        activity.startActivityForResult(intent, requestCode);
-    }
-
-    public static long sizeOfDirectory(File directory) {
-        if (!directory.exists()) {
-            String message = directory + " does not exist";
-            throw new IllegalArgumentException(message);
-        }
-
-        if (!directory.isDirectory()) {
-            String message = directory + " is not a directory";
-            throw new IllegalArgumentException(message);
-        }
-
-        long size = 0;
-
-        File[] files = directory.listFiles();
-        if (files == null) {  // null if security restricted
-            return 0L;
-        }
-        for (int i = 0; i < files.length; i++) {
-            File file = files[i];
-
-            if (file.isDirectory()) {
-                size += sizeOfDirectory(file);
-            } else {
-                size += file.length();
-            }
-        }
-
-        return size;
-    }
 
 }

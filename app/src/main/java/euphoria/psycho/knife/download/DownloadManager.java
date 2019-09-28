@@ -16,7 +16,6 @@ import euphoria.psycho.knife.App;
 import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.cache.ThumbnailProvider;
-import euphoria.psycho.knife.cache.ThumbnailProviderImpl;
 import euphoria.psycho.share.util.ContextUtils;
 
 public class DownloadManager implements DownloadObserver {
@@ -158,8 +157,7 @@ public class DownloadManager implements DownloadObserver {
     }
 
     ThumbnailProvider provideThumbnailProvider() {
-
-        return new ThumbnailProviderImpl(((App) ContextUtils.getApplicationContext()).getReferencePool());
+        return null;
     }
 
     void resume(DownloadInfo downloadInfo) {

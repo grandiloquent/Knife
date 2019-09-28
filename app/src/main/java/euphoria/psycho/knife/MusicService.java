@@ -9,10 +9,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
@@ -38,9 +36,9 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import euphoria.common.Strings;
 
-import static euphoria.psycho.common.FileUtils.getDirectoryName;
-import static euphoria.psycho.knife.video.Utils.getFileName;
+import static euphoria.common.Files.getDirectoryName;
 
 public class MusicService extends Service {
     public static final String ACTION_NEXT = "euphoria.psycho.knife.ACTION_NEXT";
@@ -307,25 +305,26 @@ public class MusicService extends Service {
     public static MediaItem getMediaItem(File path) {
         MediaItem item = new MediaItem();
         item.path = path.getAbsolutePath();
-        if (path.isDirectory()) {
-            item.isBrowseable = true;
-            item.title = path.getName();
-            return item;
-        }
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(path.getAbsolutePath());
-        item.title = getFileName(path.getAbsolutePath());
-//        item.title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-//        if (isEmpty(item.title)) {
-//            item.title = getFileName(path.getAbsolutePath());
+        item.title = Strings.substringBeforeLast(path.getName(),".");
+//        if (path.isDirectory()) {
+//            item.isBrowseable = true;
+//            item.title = path.getName();
+//            return item;
 //        }
-        item.artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-        item.duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        item.isBrowseable = false;
-        byte[] bitmap = retriever.getEmbeddedPicture();
-        if (bitmap != null) {
-            item.bitmap = BitmapFactory.decodeByteArray(bitmap, 0, bitmap.length);
-        }
+//        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+//        retriever.setDataSource(path.getAbsolutePath());
+//        item.title = getFileName(path.getAbsolutePath());
+////        item.title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+////        if (isEmpty(item.title)) {
+////            item.title = getFileName(path.getAbsolutePath());
+////        }
+//        item.artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+//        item.duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+//        item.isBrowseable = false;
+//        byte[] bitmap = retriever.getEmbeddedPicture();
+//        if (bitmap != null) {
+//            item.bitmap = BitmapFactory.decodeByteArray(bitmap, 0, bitmap.length);
+//        }
         //        int[] keyArray = new int[]{
 //                MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER,
 //                /*1*/  MediaMetadataRetriever.METADATA_KEY_ALBUM,

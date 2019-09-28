@@ -3,7 +3,7 @@ package euphoria.psycho.knife.cache;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import euphoria.psycho.common.FileUtils;
+import euphoria.common.Files;
 import euphoria.psycho.knife.cache.ThumbnailProvider.ThumbnailRequest;
 import euphoria.psycho.share.util.BitmapUtils;
 import euphoria.psycho.share.util.IconUtils;
@@ -15,11 +15,11 @@ public class ThumbnailGenerator {
 
     public void retrieveThumbnail(ThumbnailRequest request, ThumbnailGeneratorCallback callback) {
         Bitmap thumbnail = null;
-        if (FileUtils.isSupportedVideo(request.getFilePath())) {
+        if (Files.isSupportedVideo(request.getFilePath())) {
 
 
             thumbnail = createVideoThumbnail(request.getFilePath(), request.getIconSize());
-        } else if (FileUtils.isSupportedImage(request.getFilePath())) {
+        } else if (Files.isSupportedImage(request.getFilePath())) {
             thumbnail = createImageThumbnail(request.getFilePath(), request.getIconSize());
 
         } else if (request.getFilePath().endsWith(".apk")) {
