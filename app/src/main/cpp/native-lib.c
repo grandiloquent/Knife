@@ -83,21 +83,25 @@ Java_euphoria_psycho_knife_DocumentUtils_deleteLessFiles(JNIEnv *env, jclass typ
     }
     char tmp[FILENAME_MAX];
     n = strlen(fileName) - n - 1;
+
     int i = 0;
     while (i < n) {
-        tmp[i++] = fileName[i];
+        tmp[i] = fileName[i];
+        i++;
+
     }
     tmp[n] = 0;
     char *fn = strrchr(fileName, '/');
-    if (fn)fn++;
+
 
     char *argz = 0;
     size_t argz_len = 0;
-    if (list_files_by_dir(fileName, &argz, &argz_len) == 0) {
+    if (list_files_by_dir(tmp, &argz, &argz_len) == 0) {
         char *f = 0;
         while ((f = argz_next(argz, argz_len, f))) {
-            if (strcmp(f, fn) != 0)
-                LOGE(f);
+            remove(f);
+            if (strcmp(strrchr(f, '/'), fn) == 0)
+                break;
         }
     }
     (*env)->ReleaseStringUTFChars(env, fileName_, fileName);

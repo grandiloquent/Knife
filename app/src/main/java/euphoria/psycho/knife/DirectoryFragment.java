@@ -1,5 +1,6 @@
 package euphoria.psycho.knife;
 
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
@@ -764,9 +765,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         final EditText editText = new EditText(getContext());
         new Builder(this.getContext())
                 .setView(editText)
-                .setPositiveButton(android.R.string.ok, new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
 //                        VideoClip videoClip = new VideoClip();
 //                        if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
 //                            videoClip.clipVideo(documentInfo.getPath(),
@@ -774,56 +773,56 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 //                                    0, 0);
 //                        }
 
-                        long[] numbers = parseTimespan(editText);
-                        if (numbers != null) {
+                    long[] numbers = parseTimespan(editText);
+                    if (numbers != null) {
 
-                            if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
+                        if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
 
-                                try {
-                                    File sourceFile = new File(documentInfo.getPath());
+                            try {
+                                File sourceFile = new File(documentInfo.getPath());
 
-                                    String fileName = Files.getFileNameWithoutExtension(documentInfo.getFileName());
-                                    String ext = Files.getExtension(documentInfo.getFileName());
+                                String fileName = Files.getFileNameWithoutExtension(documentInfo.getFileName());
+                                String ext = Files.getExtension(documentInfo.getFileName());
+                                if (ext.length() > 0) ext = ext.substring(1);
 
-                                    final File destinationFile = FileUtils.buildUniqueFileWithExtension(
-                                            sourceFile.getParentFile(),
-                                            fileName,
-                                            ext
-                                    );
+                                final File destinationFile = FileUtils.buildUniqueFileWithExtension(
+                                        sourceFile.getParentFile(),
+                                        String.format("%s_%d", fileName, numbers[1] - numbers[0]),
+                                        ext
+                                );
 
-                                    VideoUtils.startTrim(sourceFile,
-                                            destinationFile,
-                                            numbers[0], numbers[1], new OnTrimVideoListener() {
-                                                @Override
-                                                public void cancelAction() {
+                                VideoUtils.startTrim(sourceFile,
+                                        destinationFile,
+                                        numbers[0], numbers[1], new OnTrimVideoListener() {
+                                            @Override
+                                            public void cancelAction() {
 
-                                                }
+                                            }
 
-                                                @Override
-                                                public void getResult(Uri uri) {
-                                                    euphoria.common.Contexts.triggerMediaScanner(getContext(), destinationFile);
-                                                    updateRecyclerView(false);
-                                                }
+                                            @Override
+                                            public void getResult(Uri uri) {
+                                                euphoria.common.Contexts.triggerMediaScanner(getContext(), destinationFile);
+                                                updateRecyclerView(false);
+                                            }
 
-                                                @Override
-                                                public void onError(String message) {
+                                            @Override
+                                            public void onError(String message) {
 
-                                                }
+                                            }
 
-                                                @Override
-                                                public void onTrimStarted() {
+                                            @Override
+                                            public void onTrimStarted() {
 
-                                                }
-                                            });
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                            }
+                                        });
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-                        } else {
-                            Toast.makeText(getContext(), "0:0", Toast.LENGTH_LONG).show();
                         }
-                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(getContext(), "0:0", Toast.LENGTH_LONG).show();
                     }
+                    dialog.dismiss();
                 })
                 .setNegativeButton(android.R.string.cancel, new OnClickListener() {
                     @Override
@@ -836,12 +835,14 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void unzip(DocumentInfo documentInfo) {
         if (Pattern.compile("\\.(?:zip|epub)$").matcher(documentInfo.getFileName()).find()) {
-            File dir = new File(documentInfo.getPath(), Strings.substringBeforeLast(documentInfo.getFileName(),
-                    '.')).getParentFile();
+            File dir = new File(
+                    Strings.substringBeforeLast(documentInfo.getPath(),
+                            '.'));
             if (!dir.isDirectory()) dir.mkdirs();
             DocumentUtils.extractToDirectory(documentInfo.getPath(),
                     dir.getAbsolutePath()
             );
+            updateRecyclerView(false);
             return;
         }
         ThreadUtils.postOnBackgroundThread(() -> {
@@ -853,7 +854,13 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void deleteLessFiles(DocumentInfo item) {
-        DocumentUtils.deleteLessFiles(item.getPath());
+        new AlertDialog.Builder(getContext())
+                .setMessage(String.format("确定删除文件名在排序上小于或等于此文件的所有文件吗?\n%s",
+                        item.getFileName()))
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    DocumentUtils.deleteLessFiles(item.getPath());
+                    updateRecyclerView(false);
+                }).show();
     }
 
     @Override
