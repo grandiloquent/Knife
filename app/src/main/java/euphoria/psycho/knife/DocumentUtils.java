@@ -409,6 +409,7 @@ public class DocumentUtils {
             case "xml":
             case "htm":
             case "html":
+            case "xhtml":
             case "srt":
             case "mht":
                 return C.TYPE_TEXT;

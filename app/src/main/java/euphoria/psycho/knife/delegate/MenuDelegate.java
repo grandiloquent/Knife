@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +32,7 @@ import euphoria.common.Contexts;
 import euphoria.common.Files;
 import euphoria.common.Strings;
 import euphoria.psycho.common.C;
+import euphoria.psycho.helpers.FileHelpers;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.DocumentInfo;
 import euphoria.psycho.knife.DocumentUtils;
@@ -269,8 +271,16 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
                 mFragment.updateRecyclerView(false);
                 break;
             case R.id.action_move_images:
-                Utils.moveFiles(mFragment.getContext(), mFragment.getDirectory());
-                mFragment.updateRecyclerView(false);
+                try {
+                    if (StorageUtils.isSDCardFile(mFragment.getDirectory())) {
+                        FileHelpers.moveFilesByKeywords(mFragment.getDirectory().getAbsolutePath());
+                        mFragment.updateRecyclerView(false);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+//                Utils.moveFiles(mFragment.getContext(), mFragment.getDirectory());
+//                mFragment.updateRecyclerView(false);
                 break;
             case R.id.action_calculate_directory:
                 calculateDirectories(mFragment.getContext(), mFragment.getDirectory());
