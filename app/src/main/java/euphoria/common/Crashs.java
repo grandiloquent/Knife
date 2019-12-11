@@ -1,6 +1,6 @@
 
 
-package euphoria.psycho.common;
+package euphoria.common;
 
 import android.content.Context;
 import android.content.Intent;

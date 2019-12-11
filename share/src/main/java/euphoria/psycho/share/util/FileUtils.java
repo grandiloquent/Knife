@@ -338,18 +338,15 @@ public class FileUtils {
     public static void sortByName(File[] files, boolean isAscending) {
 
         Collator collator = Collator.getInstance(Locale.CHINA);
-        Arrays.sort(files, new Comparator<File>() {
-            @Override
-            public int compare(File o1, File o2) {
-                boolean b1 = o1.isDirectory();
-                boolean b2 = o2.isDirectory();
-                if (b1 == b2) {
-                    return collator.compare(o1.getName(), o2.getName());
-                } else if (b1) {
-                    return -1;
-                } else {
-                    return 1;
-                }
+        Arrays.sort(files, (o1, o2) -> {
+            boolean b1 = o1.isDirectory();
+            boolean b2 = o2.isDirectory();
+            if (b1 == b2) {
+                return collator.compare(o1.getName(), o2.getName());
+            } else if (b1) {
+                return -1;
+            } else {
+                return 1;
             }
         });
     }

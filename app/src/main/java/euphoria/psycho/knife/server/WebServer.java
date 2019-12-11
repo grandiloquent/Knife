@@ -48,10 +48,6 @@ public class WebServer extends NanoHTTPD {
     private String mTreeUri;
     private Context mContext;
 
-    public void setContext(Context context) {
-        mContext = context;
-    }
-
     public WebServer(int port) {
         super(port);
         initialize();
@@ -126,7 +122,7 @@ public class WebServer extends NanoHTTPD {
     private Response handleIndex() {
 
 
-        return generateDirectoryPage(mStartDirectory, 1);
+        return generateDirectoryPage(mStartDirectory, 0);
 
     }
 
@@ -347,6 +343,10 @@ public class WebServer extends NanoHTTPD {
         response.addHeader(ServerUtils.HTTP_X_POWERED_BY, "Java/NanoHTTPD");
         response.addHeader(ServerUtils.HTTP_SERVER, "NanoHTTPD");
         return response;
+    }
+
+    public void setContext(Context context) {
+        mContext = context;
     }
 
     public void setStartDirectory(File startDirectory) {

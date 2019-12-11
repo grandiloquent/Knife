@@ -18,6 +18,8 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +27,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.widget.Toolbar;
@@ -32,6 +36,7 @@ import euphoria.common.Contexts;
 import euphoria.common.Files;
 import euphoria.common.Strings;
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.Log;
 import euphoria.psycho.helpers.FileHelpers;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.DocumentInfo;
@@ -51,36 +56,86 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
     }
 
+    private static final String TAG = "TAG/" + MenuDelegate.class.getSimpleName();
+
     private void actionDeleteBy(File directory, Context context) {
-        List<String> files = Files.getFilesRecursively(directory);
-        List<String> findFiles = new ArrayList<>();
+        Path start = Paths.get(directory.getAbsolutePath());
 
-        Collections.sort(files, (o1, o2) ->
+        Stream<Path> stream = null;
+        try {
+            stream = java.nio.file.Files.walk(start, Integer.MAX_VALUE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (stream == null) return;
+        List<String> collect = stream
+                .filter(path -> path.toFile().isFile())
+                .map(p -> p.toAbsolutePath().toString())
+                .sorted(new Comparator<String>() {
+                    @Override
+                    public int compare(String o1, String o2) {
+                        return o1.length() - o2.length();
+                    }
+                })
+                .collect(Collectors.toList());
+        List<String> keepList = new ArrayList<>();
+        List<String> deleteList = new ArrayList<>();
 
-                Integer.compare(o1.length(), o2.length())
-        );
-        while (files.size() > 0) {
-            String path = files.remove(0);
-            String fileName = Files.getFileName(path);
-            for (String f : files) {
-                if (Files.getFileName(f).equals(fileName)) {
-                    findFiles.add(f);
-                }
+        for (String p : collect) {
+            String fileName = Strings.substringAfterLast(p, '/');
+//            boolean found = false;
+//            for (String k : keepList) {
+//                if (fileName.equals(Strings.substringAfterLast(k, '/'))) {
+//                    deleteList.add(p);
+//                    found = true;
+//                    break;
+//                }
+//            }
+            // if (!found) keepList.add(p);
+            if (keepList.stream().anyMatch(x -> Strings.substringAfterLast(x, "/").equals(fileName))) {
+                deleteList.add(p);
+            } else {
+                keepList.add(p);
             }
 
         }
-        ContentResolver contentResolver = context.getContentResolver();
-        String treeUri = StorageUtils.getTreeUri(context);
-        for (String f : findFiles) {
-            if (!new File(f).delete()) {
-                StorageUtils.deleteFile(contentResolver, new File(f), treeUri);
-            }
-        }
+        deleteList.forEach(p -> {
+            new File(p).delete();
 
-        if (VERSION.SDK_INT >= VERSION_CODES.N) {
-            String text = Files.countFileNames(directory);
-            Contexts.setText(text);
-        }
+            Log.e(TAG, "Debug: actionDeleteBy, " + p);
+
+        });
+
+
+//        List<String> files = Files.getFilesRecursively(directory);
+//        List<String> findFiles = new ArrayList<>();
+//
+//        Collections.sort(files, (o1, o2) ->
+//
+//                Integer.compare(o1.length(), o2.length())
+//        );
+//        while (files.size() > 0) {
+//            String path = files.remove(0);
+//            String fileName = Files.getFileName(path);
+//            for (String f : files) {
+//                if (Files.getFileName(f).equals(fileName)) {
+//                    findFiles.add(f);
+//                }
+//            }
+//
+//        }
+//        ContentResolver contentResolver = context.getContentResolver();
+//        String treeUri = StorageUtils.getTreeUri(context);
+//        for (String f : findFiles) {
+//            if (!new File(f).delete()) {
+//                StorageUtils.deleteFile(contentResolver, new File(f), treeUri);
+//            }
+//        }
+//
+//        if (VERSION.SDK_INT >= VERSION_CODES.N) {
+//            String text = Files.countFileNames(directory);
+//            Contexts.setText(text);
+//        }
 
 //        File pattern = new File(Environment.getExternalStorageDirectory(), "目录.txt");
 //        if (pattern.isFile()) {

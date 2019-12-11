@@ -842,6 +842,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             DocumentUtils.extractToDirectory(documentInfo.getPath(),
                     dir.getAbsolutePath()
             );
+            new File(documentInfo.getPath()).delete();
             updateRecyclerView(false);
             return;
         }

@@ -3,6 +3,7 @@ package euphoria.psycho.knife;
 import android.provider.ContactsContract.Directory;
 
 import euphoria.common.Contexts;
+import euphoria.common.Crashs;
 import euphoria.psycho.common.base.BaseApp;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.pool.BytesBufferPool;
@@ -53,6 +54,7 @@ public class App extends BaseApp {
 //        });
         FileLogger.getLogger(getApplicationContext());
         Contexts.setContext(this);
+        Crashs.getInstance().init(this, "发生了错误，详情请查看日记。", "");
     }
 
     public static class Status {

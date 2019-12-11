@@ -20,15 +20,15 @@ public class FileHelpers {
 
     public static void moveFilesByKeywords(String dir) throws IOException {
         String[] keywords = new String[]{
-                "C",
                 "C#",
                 "C++",
+                "C",
                 "Python",
                 "JavaScript",
-                "CSS",
                 "OpenCV",
                 "Google",
                 "Adobe",
+                "Kotlin",
                 "AI",
                 "TensorFlow",
                 "OpenGL",
@@ -38,23 +38,49 @@ public class FileHelpers {
                 "HTTP",
                 "Blockchain",
                 "SQL",
-                "Data",
                 "Node",
                 "HTML",
+                "NET",
                 "Wireshark",
                 "Embedded",
                 "Drones",
                 "Microservices",
+                "Microservice",
                 "Web",
                 "Cookbook",
                 "CentOS",
                 "Linux",
+                "UX",
+                "Go",
+                "HBR",
+                "Windows",
+                "Make",
+                "TypeScript",
+                "PostgreSQL",
+                "Nginx",
+                "Elixir",
+                "Audio",
+                "Haskell",
+                "Kubernetes",
+                "SVG",
+                "Git",
+                "Security",
+                "Hacking",
+                "React",
+                "Analysis",
                 "Computer Vision",
                 "Machine Learning",
+                "Neural Networks",
                 "Assembly Language",
                 "Deep Learning",
+                "MongoDB",
+                "Nutshell",
+                "Data Science",
+                "Regular Expressions",
+                "Jump Start",
                 "Natural Language",
                 "For Dummies",
+                "Data",
         };
         File baseDirectory = new File(dir, "Extensions");
 
@@ -62,9 +88,9 @@ public class FileHelpers {
 
         Files.newDirectoryStream(Paths.get(dir), path -> path.toFile().isFile())
                 .forEach(file -> {
-                    if (file.getParent().toAbsolutePath().toString().contains("/Extensions/")) {
-                        return;
-                    }
+//                    if (file.getParent().toAbsolutePath().toString().contains("/Extensions/")) {
+//                        return;
+//                    }
                     Log.e(TAG, "Debug: moveFilesByKeywords, " + file.toAbsolutePath());
 
                     String fileName = file.getFileName().toString();
