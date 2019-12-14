@@ -175,6 +175,8 @@ public class DocumentUtils {
 
     public static native void deleteLessFiles(String fileName);
 
+    public static native void padFileNames(String dir, int paddingLeftLength);
+
     public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
         List<Item> items = new ArrayList<>();
 

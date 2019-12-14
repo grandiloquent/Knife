@@ -106,3 +106,12 @@ Java_euphoria_psycho_knife_DocumentUtils_deleteLessFiles(JNIEnv *env, jclass typ
     }
     (*env)->ReleaseStringUTFChars(env, fileName_, fileName);
 }
+
+JNIEXPORT void JNICALL
+Java_euphoria_psycho_knife_DocumentUtils_padFileNames(JNIEnv *env, jclass type,
+                                                         jstring dir_,jint paddingLeftLength) {
+    const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
+    LOGE("%s\n",dir);
+    rename_files(dir,paddingLeftLength);
+    (*env)->ReleaseStringUTFChars(env, dir_, dir);
+}

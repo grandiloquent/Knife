@@ -311,3 +311,138 @@ list_files_by_dir(const char *dirnam, char **pargz, size_t *pargz_len) {
         ++errors;
     return errors;
 }
+
+static int pad_num(const char* s, char* buf, size_t pad_len)
+{
+    char c;
+    int found = 0;
+    char t[PATH_MAX];
+    memset(t, 0, PATH_MAX);
+
+    int count = 0;
+    int offset = 0;
+    int last = 0;
+
+    const char* saved = s;
+
+    while (c = *s)
+    {
+        offset++;
+
+        if (!found)
+        {
+            if (c >= '0' && c <= '9')
+            {
+                found = 1;
+            }
+        }
+        if (found)
+        {
+
+            if (c < '0' || c > '9')
+            {
+                break;
+            }
+            else
+            {
+                t[count++] = c;
+            }
+        }
+        s++;
+    }
+    if (count == 0 || count >= pad_len)
+        return -1;
+    // if last char is number fix the offset
+    if (offset == strlen(saved))
+    {
+        last = 1;
+    }
+    int saved_offset = offset;
+
+    offset = offset - count - 1;
+    if (last)
+    {
+        offset++;
+    }
+
+    // before numebrs
+    for (size_t i = 0; i < offset; i++)
+    {
+        *(buf + i) = *(saved + i);
+    }
+    // pad 0
+    for (size_t i = 0; i < pad_len - count; i++)
+    {
+
+        *(buf + offset + i) = '0';
+    }
+
+    // numbers
+    offset = offset + pad_len - count;
+
+    for (size_t i = 0; i < count; i++)
+    {
+        *(buf + offset + i) = t[i];
+    }
+    // after numbers
+    if (!last)
+    {
+        saved_offset--;
+        int dif = strlen(saved) - saved_offset;
+
+        if (dif)
+        {
+            offset = offset + count;
+
+            for (size_t i = 0; i < dif; i++)
+            {
+
+                *(buf + offset + i) = *(saved + saved_offset + i);
+                // printf("%c\n", *(buf + offset + i));
+            }
+        }
+    }
+    return 0;
+}
+
+int rename_files(const char* dir,size_t pad_len)
+{
+    DIR* directory;
+    struct dirent* ent;
+    int len;
+    char file[PATH_MAX];
+    char target[PATH_MAX];
+    char file_name[PATH_MAX];
+    int ret;
+    struct stat stat_buf;
+
+    directory = opendir(dir);
+    if (directory == NULL)
+    {
+        return -1;
+    }
+    while ((ent = readdir(directory)) != NULL)
+    {
+        if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
+            continue;
+        len = strlen(dir) + 1 + strlen(ent->d_name) + 1;
+        if (len > PATH_MAX)
+        {
+            ret = -1;
+            goto out;
+        }
+        snprintf(file, PATH_MAX, "%s/%s", dir, ent->d_name);
+
+        if (stat(file, &stat_buf) || !S_ISREG(stat_buf.st_mode))
+            continue;
+        memset(file_name, 0, PATH_MAX);
+        if (pad_num(ent->d_name, file_name, pad_len) == -1)
+            continue;
+        snprintf(target, PATH_MAX, "%s/%s", dir, file_name);
+        rename(file,target);
+        LOGD("%s -> %s\n",file,target);
+    }
+out:
+    closedir(directory);
+    return 0;
+}

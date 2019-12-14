@@ -81,7 +81,7 @@
             android:title="刷新" />
         <item
             android:id="@+id/action_move_images"
-            android:title="移动" />
+            android:title="序列化文件名" />
         <item
             android:id="@+id/action_move_files"
             android:title="移动文件" />
