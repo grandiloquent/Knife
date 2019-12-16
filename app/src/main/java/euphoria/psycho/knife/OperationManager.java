@@ -138,7 +138,11 @@ public class OperationManager {
         mSource.clear();
         mSource.addAll(source);
         showActionButtons();
-        Toast.makeText(mFragment.getContext(), "文件已存放到剪切板", Toast.LENGTH_SHORT).show();
+        // Attempt to invoke virtual method 'java.lang.String android.content.Context.getPackageName()'
+        // on a null object reference
+        // android.widget.Toast.<init>
+        if (mFragment.getContext() != null)
+            Toast.makeText(mFragment.getContext(), "文件已存放到剪切板", Toast.LENGTH_SHORT).show();
     }
 
 
