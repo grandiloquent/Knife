@@ -23,10 +23,11 @@ import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.MaterialProgressBar;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.cache.ThumbnailProvider;
+import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
+import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailRequest;
 import euphoria.psycho.share.util.Utils;
 
-public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ThumbnailProvider.ThumbnailRequest, ListMenuButton.Delegate {
+public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ThumbnailRequest, ListMenuButton.Delegate {
     private final ColorStateList mCheckedIconForegroundColorList;
     private final int mIconBackgroundResId;
     private final ColorStateList mIconForegroundColorList;
@@ -230,11 +231,6 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
                 new Item(getContext(), R.string.delete, true)};
     }
 
-    @Nullable
-    @Override
-    public String getMimeType() {
-        return null;
-    }
 
     @Override
     protected void onClick() {
