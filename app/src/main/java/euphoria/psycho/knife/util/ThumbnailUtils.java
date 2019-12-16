@@ -80,13 +80,13 @@ public class ThumbnailUtils {
         private void remove() {
             int index = -1;
             String contentId = mRequest.getContentId();
-            for (int i = 0; i < mTasks.size(); i++) {
+            for (int i = 0, j = mTasks.size(); i < j; i++) {
                 if (mTasks.get(i).first.equals(contentId)) {
                     index = i;
                     break;
                 }
             }
-            if (index != -1 && index < mTasks.size()) {
+            if (index != -1) {
                 mTasks.remove(index);
             }
         }
