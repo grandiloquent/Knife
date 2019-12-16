@@ -15,7 +15,9 @@ import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.knife.App;
 import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.cache.ThumbnailProvider;
+import euphoria.psycho.knife.util.ThumbnailUtils;
+import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
+import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
 import euphoria.psycho.share.util.ContextUtils;
 
 public class DownloadManager implements DownloadObserver {
@@ -28,6 +30,8 @@ public class DownloadManager implements DownloadObserver {
     private CopyOnWriteArrayList<TaskRecord> mTaskRecords = new CopyOnWriteArrayList<>();
     private DownloadAdapter mAdapter;
     private boolean mIsInitialize;
+    private ThumbnailProvider mThumbnailProvider;
+
 
     private DownloadManager(Context context) {
         int numThreads = 3;
@@ -157,7 +161,10 @@ public class DownloadManager implements DownloadObserver {
     }
 
     ThumbnailProvider provideThumbnailProvider() {
-        return null;
+        if (mThumbnailProvider == null) {
+            mThumbnailProvider = new ThumbnailProviderImpl();
+        }
+        return mThumbnailProvider;
     }
 
     void resume(DownloadInfo downloadInfo) {
