@@ -23,11 +23,15 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 
+import com.google.android.exoplayer2.util.Util;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Formatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -65,6 +69,7 @@ import euphoria.psycho.notes.common.Contexts;
 import euphoria.psycho.notes.common.Markdowns;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.psycho.share.util.Utils;
 import euphoria.utils.Pdfboxs;
 import euphoria.utils.Pdfs;
 import euphoria.utils.Pdfs.Listener;
@@ -779,6 +784,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                         if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
 
                             try {
+                                StringBuilder formatBuilder = new StringBuilder();
+                                Formatter formatter =  new Formatter(formatBuilder, Locale.getDefault());
+
                                 File sourceFile = new File(documentInfo.getPath());
 
                                 String fileName = Files.getFileNameWithoutExtension(documentInfo.getFileName());
@@ -787,7 +795,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
                                 final File destinationFile = FileUtils.buildUniqueFileWithExtension(
                                         sourceFile.getParentFile(),
-                                        String.format("%s_%d", fileName, numbers[1] - numbers[0]),
+                                        String.format("%s_%s_%s", fileName,
+                                                Util.getStringForTime(formatBuilder,formatter,numbers[0]).replaceAll(":","-"),
+                                                Util.getStringForTime(formatBuilder,formatter,numbers[1]).replaceAll(":","-")
+                                                ),
                                         ext
                                 );
 
