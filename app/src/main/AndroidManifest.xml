@@ -141,5 +141,6 @@
             </intent-filter>
 
         </activity>
+        <activity android:name=".MarkdownActivity"/>
     </application>
 </manifest>

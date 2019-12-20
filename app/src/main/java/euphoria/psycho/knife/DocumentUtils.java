@@ -175,6 +175,8 @@ public class DocumentUtils {
 
     public static native void deleteLessFiles(String fileName);
 
+    public static native String renderMarkdown(String text);
+
     public static native void padFileNames(String dir, int paddingLeftLength);
 
     public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
@@ -414,6 +416,7 @@ public class DocumentUtils {
             case "xhtml":
             case "srt":
             case "mht":
+            case "md":
                 return C.TYPE_TEXT;
             case "pdf":
                 return C.TYPE_PDF;
@@ -452,6 +455,12 @@ public class DocumentUtils {
 
             return;
         } else if (documentInfo.getType() == C.TYPE_TEXT) {
+            if (documentInfo.getPath().endsWith(".md")) {
+                Intent m = new Intent(context, MarkdownActivity.class);
+                m.putExtra("file_path", documentInfo.getPath());
+                context.startActivity(m);
+                return;
+            }
             // 用 Chrome 浏览器打开，更好的阅读体验
             Intent textIntent = new Intent();
             textIntent.setAction(Intent.ACTION_VIEW);

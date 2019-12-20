@@ -423,6 +423,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void deleteLessFiles(DocumentInfo item) {
+        new AlertDialog.Builder(getContext())
+                .setMessage(String.format("确定删除文件名在排序上小于或等于此文件的所有文件吗?\n%s",
+                        item.getFileName()))
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    DocumentUtils.deleteLessFiles(item.getPath());
+                    updateRecyclerView(false);
+                }).show();
+    }
+
+    @Override
     public void extractPdfBookmark(DocumentInfo item) {
         try {
             File pdfFile = new File(item.getPath());
@@ -457,29 +468,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void extractPdfToImage(DocumentInfo documentInfo) {
         Pdfs.extractPdfToImage(getContext(), new File(documentInfo.getPath()), result -> updateRecyclerView(false));
 
-    }
-
-    @Override
-    public void setPdfName(DocumentInfo documentInfo) {
-//        Pdfs.extractText(getContext(), new File(documentInfo.getPath()), new Listener() {
-//            @Override
-//            public void onSuccess(String result) {
-//                euphoria.common.Contexts.setText(getContext(), result);
-//            }
-//        });
-        File pdfFile = new File(documentInfo.getPath());
-
-        Dialogs.showDialog(getContext(), null, new Dialogs.Listener() {
-            @Override
-            public void onPositive(CharSequence text) {
-                try {
-
-                    Pdfboxs.setTitle(pdfFile, text.toString());
-                } catch (IOException e1) {
-                    Logs.t(e1);
-                }
-            }
-        });
     }
 
     @Override
@@ -701,20 +689,24 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
-    public void splitPdfByTitleList(DocumentInfo item) {
-        Dialogs.showDialog(getContext(), null, text -> {
+    public void setPdfName(DocumentInfo documentInfo) {
+//        Pdfs.extractText(getContext(), new File(documentInfo.getPath()), new Listener() {
+//            @Override
+//            public void onSuccess(String result) {
+//                euphoria.common.Contexts.setText(getContext(), result);
+//            }
+//        });
+        File pdfFile = new File(documentInfo.getPath());
 
-            try {
-                File pdfFile = new File(item.getPath());
-                File dir = new File(item.getPath().replaceFirst("\\.\\w+$", " "));
-                if (!dir.isDirectory()) dir.mkdirs();
+        Dialogs.showDialog(getContext(), null, new Dialogs.Listener() {
+            @Override
+            public void onPositive(CharSequence text) {
+                try {
 
-                Pdfs.splitByTitles(pdfFile,
-                        Strings.lines(euphoria.common.Contexts.getText().toString()),
-                        dir);
-                updateRecyclerView(false);
-            } catch (IOException e) {
-                Logs.t(e);
+                    Pdfboxs.setTitle(pdfFile, text.toString());
+                } catch (IOException e1) {
+                    Logs.t(e1);
+                }
             }
         });
     }
@@ -731,6 +723,25 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         } catch (IOException e) {
             Logs.t(e);
         }
+    }
+
+    @Override
+    public void splitPdfByTitleList(DocumentInfo item) {
+        Dialogs.showDialog(getContext(), null, text -> {
+
+            try {
+                File pdfFile = new File(item.getPath());
+                File dir = new File(item.getPath().replaceFirst("\\.\\w+$", " "));
+                if (!dir.isDirectory()) dir.mkdirs();
+
+                Pdfs.splitByTitles(pdfFile,
+                        Strings.lines(euphoria.common.Contexts.getText().toString()),
+                        dir);
+                updateRecyclerView(false);
+            } catch (IOException e) {
+                Logs.t(e);
+            }
+        });
     }
 
     @Override
@@ -862,17 +873,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             job.unzip(documentInfo.getPath());
             ThreadUtils.postOnUiThread(() -> updateRecyclerView(true));
         });
-    }
-
-    @Override
-    public void deleteLessFiles(DocumentInfo item) {
-        new AlertDialog.Builder(getContext())
-                .setMessage(String.format("确定删除文件名在排序上小于或等于此文件的所有文件吗?\n%s",
-                        item.getFileName()))
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                    DocumentUtils.deleteLessFiles(item.getPath());
-                    updateRecyclerView(false);
-                }).show();
     }
 
     @Override

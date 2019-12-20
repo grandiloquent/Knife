@@ -6,6 +6,8 @@
 * [x] 基于目录浏览的图片浏览器
 * [x] Web 服务器，可用于在设备之间传输文件和播放视频
 * [ ] 深度清理储存空间
+* [x] Markdown 阅读器
+
 
 [下载](https://github.com/grandiloquent/Knife/blob/master/app/release/app-release.apk?raw=true)
 
