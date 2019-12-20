@@ -1,6 +1,7 @@
 package euphoria.common;
 
 import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 import android.view.View.OnClickListener;
 
@@ -13,5 +14,11 @@ public class Views {
                 view.setOnClickListener(onClickListener);
             }
         }
+    }
+
+
+    public static int dp2px(Context context, int v) {
+        float density = context.getResources().getDisplayMetrics().density;
+        return (int) (v * density + 0.5f);
     }
 }
