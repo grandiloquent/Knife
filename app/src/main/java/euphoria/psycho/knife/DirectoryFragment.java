@@ -389,10 +389,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             if (manager != null) {
                 manager.setPrimaryClip(ClipData.newPlainText(null, text));
             }
-            File dir = new File(sourceFile.getParentFile(), "Copied");
-            if (!dir.isDirectory()) dir.mkdir();
-            sourceFile.renameTo(new File(dir, sourceFile.getName()));
-            updateRecyclerView(false);
+//            File dir = new File(sourceFile.getParentFile(), "Copied");
+//            if (!dir.isDirectory()) dir.mkdir();
+//            sourceFile.renameTo(new File(dir, sourceFile.getName()));
+//            updateRecyclerView(false);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -796,7 +796,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
                             try {
                                 StringBuilder formatBuilder = new StringBuilder();
-                                Formatter formatter =  new Formatter(formatBuilder, Locale.getDefault());
+                                Formatter formatter = new Formatter(formatBuilder, Locale.getDefault());
 
                                 File sourceFile = new File(documentInfo.getPath());
 
@@ -807,9 +807,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                                 final File destinationFile = FileUtils.buildUniqueFileWithExtension(
                                         sourceFile.getParentFile(),
                                         String.format("%s_%s_%s", fileName,
-                                                Util.getStringForTime(formatBuilder,formatter,numbers[0]).replaceAll(":","-"),
-                                                Util.getStringForTime(formatBuilder,formatter,numbers[1]).replaceAll(":","-")
-                                                ),
+                                                Util.getStringForTime(formatBuilder, formatter, numbers[0]).replaceAll(":", "-"),
+                                                Util.getStringForTime(formatBuilder, formatter, numbers[1]).replaceAll(":", "-")
+                                        ),
                                         ext
                                 );
 
