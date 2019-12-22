@@ -3,17 +3,11 @@
 package euphoria.common;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Environment;
 import android.os.Looper;
-import android.text.TextUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 

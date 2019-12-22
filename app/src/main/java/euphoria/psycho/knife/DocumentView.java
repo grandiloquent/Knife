@@ -15,6 +15,7 @@ import euphoria.psycho.common.C;
 import euphoria.psycho.common.widget.ListMenuButton;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
+import euphoria.psycho.knife.helpers.ContextHelper;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailRequest;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.share.util.Utils;
@@ -78,7 +79,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
 
     @Override
     public ListMenuButton.Item[] getItems() {
-        return DocumentUtils.generateListMenu(getContext(), getItem());
+        return ContextHelper.generateListMenu(getContext(), getItem());
     }
 
 
@@ -120,47 +121,17 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.add_bookmark:
                 mDelegate.getListMenuDelegate().addToBookmark(getItem());
                 break;
-            case R.string.extract_video_src:
-                mDelegate.extractVideoSrc(getItem());
-                break;
+
             case R.string.copy_file_name:
                 mDelegate.copyFileName(getItem());
                 break;
-            case R.string.srt_to_txt:
-                mDelegate.srt2Txt(getItem());
-                break;
-            case R.string.html_to_markdown_1:
-                mDelegate.html2Markdown1(getItem());
-                break;
+
             case R.string.copy_content:
                 mDelegate.copyContent(getItem());
                 break;
 
-            case R.string.extract_pdf_to_image:
-                mDelegate.extractPdfToImage(getItem());
-                break;
 
-            case R.string.extract_pdf_images:
-                mDelegate.extractPdfImages(getItem());
-                break;
-            case R.string.set_pdf_name:
-                mDelegate.setPdfName(getItem());
-                break;
-            case R.string.change_pdf_name:
-                mDelegate.changePdfName(getItem());
-                break;
-            case R.string.split_pdf_by_title_list:
-                mDelegate.splitPdfByTitleList(getItem());
-                break;
-            case R.string.extract_pdf_bookmark:
-                mDelegate.extractPdfBookmark(getItem());
-                break;
-            case R.string.split_pdf_by_title_and_page_number:
-                mDelegate.splitPdfByTitleAndPageNumber(getItem());
-                break;
-            case R.string.delete_less_files:
-                mDelegate.deleteLessFiles(getItem());
-                break;
+
         }
     }
 

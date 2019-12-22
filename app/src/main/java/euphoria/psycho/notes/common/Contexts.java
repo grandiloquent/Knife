@@ -1,17 +1,5 @@
 package euphoria.psycho.notes.common;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
-
-import java.lang.reflect.Method;
-
-import euphoria.common.Strings;
-
-
 public class Contexts {
 
 }

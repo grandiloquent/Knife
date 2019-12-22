@@ -2,8 +2,6 @@ package euphoria.psycho.share.concurrent;
 
 import android.util.Log;
 
-
-
 import java.util.LinkedList;
 
 import euphoria.psycho.share.concurrent.ThreadPool.Job;

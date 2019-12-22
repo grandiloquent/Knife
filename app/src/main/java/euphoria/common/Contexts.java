@@ -16,7 +16,6 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.File;
-import java.lang.reflect.Method;
 
 public class Contexts {
 

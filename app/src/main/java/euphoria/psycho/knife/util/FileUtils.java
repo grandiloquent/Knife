@@ -1,7 +1,6 @@
 package euphoria.psycho.knife.util;
 
 import android.text.TextUtils;
-import android.widget.ListView;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

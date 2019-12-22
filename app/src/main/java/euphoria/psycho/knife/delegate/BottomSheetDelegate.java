@@ -13,8 +13,8 @@ import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.download.DownloadActivity;
 import euphoria.psycho.knife.photo.PhotoViewActivity;
 import euphoria.psycho.knife.server.FileServerActivity;
-import euphoria.psycho.share.util.DialogUtils.DialogListener;
 import euphoria.psycho.knife.util.StorageUtils;
+import euphoria.psycho.share.util.DialogUtils.DialogListener;
 
 public class BottomSheetDelegate {
     private DirectoryFragment mFragment;

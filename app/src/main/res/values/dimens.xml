@@ -25,8 +25,6 @@
     <dimen name="photo_crop_stroke_width">1dip</dimen>
     <dimen name="photo_crop_width">280dip</dimen>
     <dimen name="photo_page_margin">32dip</dimen>
-    <dimen name="photo_preview_size">200dip</dimen>
-    <dimen name="retry_button_size">48dip</dimen>
     <dimen name="search_toolbar_modern_bg_lateral_inset">8.0dip</dimen>
     <dimen name="search_toolbar_modern_bg_top_bottom_inset">8.0dip</dimen>
     <dimen name="selectable_list_action_bar_end_padding">6.0dip</dimen>

@@ -1,10 +1,5 @@
 package euphoria.psycho.notes.common;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class Files {
 
 //    public static File[] getAudioFiles(File dir, boolean isAll) {

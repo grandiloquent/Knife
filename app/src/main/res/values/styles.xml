@@ -124,13 +124,8 @@
     <item name="android:windowEnterAnimation">@anim/menu_enter_from_bottom</item>
     <item name="android:windowExitAnimation">@anim/menu_exit_from_bottom</item>
   </style>
-  <style name="VideoButton">
-    <item name="android:layout_width">36dp</item>
-    <item name="android:layout_height">36dp</item>
-    <item name="android:background">@drawable/btn</item>
-    <item name="android:scaleType">fitCenter</item>
-  </style>
-  <style name="WhiteHeadline">
+
+    <style name="WhiteHeadline">
     <item name="android:textSize">@dimen/headline_size</item>
     <item name="android:textColor">@android:color/white</item>
   </style>

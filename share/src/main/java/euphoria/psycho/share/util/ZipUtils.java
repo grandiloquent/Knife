@@ -1,7 +1,5 @@
 package euphoria.psycho.share.util;
 
-import android.util.Log;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

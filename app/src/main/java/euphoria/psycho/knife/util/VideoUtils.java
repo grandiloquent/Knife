@@ -16,13 +16,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Formatter;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 public class VideoUtils {
     private static final String TAG = VideoUtils.class.getSimpleName();

@@ -1,9 +1,6 @@
 package euphoria.common;
 
-import android.content.Context;
 import android.widget.Toast;
-
-import euphoria.psycho.knife.R;
 
 public class Logs {
 

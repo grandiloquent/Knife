@@ -2,7 +2,6 @@ package euphoria.common;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.widget.EditText;
 
 public class Dialogs {

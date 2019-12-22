@@ -16,9 +16,7 @@
   <color name="modern_grey_900">#ff202124</color>
   <color name="photo_crop_dim_color">#cc000000</color>
   <color name="photo_crop_highlight_color">#fff</color>
-  <color name="photo_status_bar_black">#d9000000</color>
-  <color name="solid_black">#ff000000</color>
-  <color name="white_alpha_70">#b3ffffff</color>
+    <color name="white_alpha_70">#b3ffffff</color>
   <color name="default_icon_color">@color/modern_grey_800</color>
   <color name="default_icon_color_blue">@color/modern_blue_600</color>
   <color name="default_text_color">@color/modern_grey_900</color>

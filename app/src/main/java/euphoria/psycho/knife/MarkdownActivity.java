@@ -1,35 +1,17 @@
 package euphoria.psycho.knife;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.view.WindowManager;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
 
 import androidx.annotation.Nullable;
-import euphoria.common.Contexts;
 import euphoria.common.Files;
 import euphoria.common.Views;
-import euphoria.psycho.knife.video.Utils;
-
-import org.commonmark.Extension;
-import org.commonmark.ext.gfm.tables.TablesExtension;
-import org.commonmark.node.*;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
 
 public class MarkdownActivity extends Activity {
 

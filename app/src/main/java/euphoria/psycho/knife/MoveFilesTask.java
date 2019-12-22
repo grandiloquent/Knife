@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import euphoria.common.Strings;
+import euphoria.psycho.knife.util.StorageUtils;
 import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.knife.util.StorageUtils;
 
 public class MoveFilesTask implements Runnable {
 

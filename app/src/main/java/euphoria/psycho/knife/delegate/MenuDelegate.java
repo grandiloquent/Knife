@@ -3,10 +3,7 @@ package euphoria.psycho.knife.delegate;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
 import android.text.format.Formatter;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -32,20 +29,15 @@ import java.util.stream.Stream;
 
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.widget.Toolbar;
-import euphoria.common.Contexts;
-import euphoria.common.Files;
 import euphoria.common.Strings;
+import euphoria.common.Threads;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.Log;
-import euphoria.psycho.helpers.FileHelpers;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.DocumentInfo;
 import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.OperationManager;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.util.StorageUtils;
-import euphoria.common.Threads;
-import euphoria.psycho.notes.common.Utils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 public class MenuDelegate implements Toolbar.OnMenuItemClickListener {

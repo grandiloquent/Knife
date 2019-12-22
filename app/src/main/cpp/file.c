@@ -365,7 +365,7 @@ static int pad_num(const char* s, char* buf, size_t pad_len)
         offset++;
     }
 
-    // before numebrs
+    // before numbers
     for (size_t i = 0; i < offset; i++)
     {
         *(buf + i) = *(saved + i);

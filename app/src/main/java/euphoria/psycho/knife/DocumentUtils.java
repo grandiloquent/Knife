@@ -26,7 +26,6 @@ import euphoria.common.Strings;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
-import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.video.VideoActivity;
 import euphoria.psycho.share.util.ClipboardUtils;
@@ -179,68 +178,7 @@ public class DocumentUtils {
 
     public static native void padFileNames(String dir, int paddingLeftLength);
 
-    public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
-        List<Item> items = new ArrayList<>();
 
-        items.add(new Item(context, R.string.rename, true));
-        items.add(new Item(context, R.string.delete, true));
-        items.add(new Item(context, R.string.delete_less_files, true));
-        items.add(new Item(context, R.string.share, true));
-        items.add(new Item(context, R.string.properties, true));
-        items.add(new Item(context, R.string.copy_file_name, true));
-
-        switch (documentInfo.getType()) {
-            case C.TYPE_APK: {
-                break;
-            }
-            case C.TYPE_AUDIO: {
-                break;
-            }
-            case C.TYPE_DIRECTORY: {
-                items.add(new Item(context, R.string.add_bookmark, true));
-                break;
-            }
-            case C.TYPE_EXCEL: {
-                break;
-            }
-            case C.TYPE_OTHER: {
-                break;
-            }
-            case C.TYPE_PDF: {
-                items.add(new Item(context, R.string.extract_pdf_to_image, true));
-                // items.add(new Item(context, R.string.extract_pdf_images, true));
-                items.add(new Item(context, R.string.set_pdf_name, true));
-                items.add(new Item(context, R.string.change_pdf_name, true));
-                items.add(new Item(context, R.string.split_pdf_by_title_list, true));
-                items.add(new Item(context, R.string.split_pdf_by_title_and_page_number, true));
-
-                items.add(new Item(context, R.string.extract_pdf_bookmark, true));
-
-                break;
-            }
-            case C.TYPE_TEXT: {
-                items.add(new Item(context, R.string.extract_video_src, true));
-                items.add(new Item(context, R.string.srt_to_txt, true));
-                items.add(new Item(context, R.string.html_to_markdown_1, true));
-                items.add(new Item(context, R.string.copy_content, true));
-
-                break;
-            }
-            case C.TYPE_VIDEO: {
-                items.add(new Item(context, R.string.trim_video, true));
-                break;
-            }
-            case C.TYPE_WORD: {
-                break;
-            }
-            case C.TYPE_ZIP: {
-                items.add(new Item(context, R.string.extract, true));
-                break;
-            }
-        }
-
-        return items.toArray(new Item[0]);
-    }
 
     static List<DocumentInfo> getDocumentInfos(File dir, int sortBy, FilenameFilter filter) {
 

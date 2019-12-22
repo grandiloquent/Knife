@@ -1,7 +1,6 @@
 package euphoria.psycho.share.util;
 
 import android.annotation.TargetApi;
-import android.app.Notification;
 import android.app.Notification.Builder;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

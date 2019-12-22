@@ -3,7 +3,6 @@ package euphoria.psycho.share.util;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.text.TextUtils;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
 
