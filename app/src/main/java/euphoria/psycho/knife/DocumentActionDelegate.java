@@ -14,7 +14,6 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
     void delete(DocumentInfo documentInfo);
 
 
-
     ListMenuDelegate getListMenuDelegate();
 
     void getProperties(DocumentInfo documentInfo);
@@ -29,8 +28,9 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
 
     void trimVideo(DocumentInfo documentInfo);
 
+    void addToArchive(DocumentInfo documentInfo);
 
     void unzip(DocumentInfo documentInfo);
 
-    void updateItem(DocumentInfo documentInfo);
+
 }

@@ -79,6 +79,8 @@
     <string name="sort_date">By date modified</string>
     <string name="sort_name">By name</string>
     <string name="copy_file_name">Copy FileName</string>
+    <string name="add_to_archive">Add To Archive</string>
+
     <string name="sort_size">By size</string>
     <string name="titles">
     <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" id="title">%s</xliff:g>, <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" id="subtitle">%s</xliff:g></string>

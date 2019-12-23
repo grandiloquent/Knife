@@ -1,10 +1,11 @@
-package euphoria.psycho.knife;
+package euphoria.psycho.knife.helpers;
 
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.util.SparseArray;
 
 import euphoria.psycho.common.C;
+import euphoria.psycho.knife.R;
 import euphoria.psycho.share.util.ContextUtils;
 
 public class IconHelper {

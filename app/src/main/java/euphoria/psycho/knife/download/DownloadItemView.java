@@ -25,6 +25,7 @@ import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailRequest;
+import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.share.util.Utils;
 
 public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ThumbnailRequest, ListMenuButton.Delegate {
@@ -197,9 +198,7 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
                 if (mThumbnailBitmap == null) updateView();
                 break;
             }
-            case DownloadStatus.FAILED: {
-                break;
-            }
+            case DownloadStatus.FAILED:
             case DownloadStatus.RETIRED: {
                 break;
             }
@@ -282,11 +281,8 @@ public class DownloadItemView extends SelectableItemView<DownloadInfo> implement
 
     @Override
     public void onThumbnailRetrieved(@NonNull String contentId, @Nullable Bitmap thumbnail) {
-        if (TextUtils.equals(getContentId(), contentId) && thumbnail != null
-                && thumbnail.getWidth() > 0 && thumbnail.getHeight() > 0) {
-            assert !thumbnail.isRecycled();
-            setThumbnailBitmap(thumbnail);
-        }
+        mThumbnailBitmap = thumbnail;
+        ThreadUtils.postOnUiThread(this::updateView);
     }
 
     @Override

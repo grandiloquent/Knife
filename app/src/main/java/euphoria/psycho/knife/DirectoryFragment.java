@@ -45,6 +45,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.common.Files;
 import euphoria.common.Strings;
+import euphoria.common.Threads;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -268,6 +269,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         updateRecyclerView(false);
     }
 
+
     private void updateLastVisiblePosition() {
 
         mLastVisiblePosition = mLayoutManager.findLastVisibleItemPosition();
@@ -349,6 +351,18 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         }
     }
 
+    @Override
+    public void addToArchive(DocumentInfo documentInfo) {
+        Threads.postOnBackgroundThread(() -> {
+            if (documentInfo.getType() == C.TYPE_DIRECTORY) {
+                DocumentUtils.createZipFromDirectory(documentInfo.getPath(),
+                        documentInfo.getPath() + ".zip");
+                Threads.postOnUiThread(() -> {
+                    updateRecyclerView(false);
+                });
+            }
+        });
+    }
 
     @Override
     public void copyContent(DocumentInfo documentInfo) {
@@ -393,7 +407,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
-
     @Override
     public ListMenuDelegate getListMenuDelegate() {
 
@@ -415,7 +428,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         }
         return mThumbnailProvider;
     }
-
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -570,7 +582,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 });
     }
 
-
     @Override
     public void trimVideo(DocumentInfo documentInfo) {
 
@@ -669,10 +680,5 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             job.unzip(documentInfo.getPath());
             ThreadUtils.postOnUiThread(() -> updateRecyclerView(true));
         });
-    }
-
-    @Override
-    public void updateItem(DocumentInfo documentInfo) {
-
     }
 }

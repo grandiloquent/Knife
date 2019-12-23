@@ -19,6 +19,7 @@ public class ContextHelper {
         items.add(new Item(context, R.string.share, true));
         items.add(new Item(context, R.string.properties, true));
         items.add(new Item(context, R.string.copy_file_name, true));
+        items.add(new Item(context, R.string.add_to_archive, true));
 
         switch (documentInfo.getType()) {
             case C.TYPE_APK:

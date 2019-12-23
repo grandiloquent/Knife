@@ -9,6 +9,14 @@
 typedef int error_t;
 #endif
 
+struct files
+{
+    char** files_name;
+    size_t capacity;
+    size_t index;
+};
+int list_directory(char* path, struct files* list);
+
 char *argz_next(char *argz, size_t argz_len, const char *entry);
 
 error_t argz_append(char **pargz, size_t *pargz_len, const char *buf, size_t buf_len);

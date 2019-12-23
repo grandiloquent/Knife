@@ -16,6 +16,7 @@ import euphoria.psycho.common.widget.ListMenuButton;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.helpers.ContextHelper;
+import euphoria.psycho.knife.helpers.IconHelper;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailRequest;
 import euphoria.psycho.share.util.ThreadUtils;
 import euphoria.psycho.share.util.Utils;
@@ -55,12 +56,7 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
     @Override
     public void onThumbnailRetrieved(@NonNull String contentId, @Nullable Bitmap thumbnail) {
         mThumbnailBitmap = thumbnail;
-        ThreadUtils.postOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                updateView();
-            }
-        });
+        ThreadUtils.postOnUiThread(this::updateView);
     }
 
     @Override
@@ -100,6 +96,9 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
     @Override
     public void onItemSelected(ListMenuButton.Item item) {
         switch (item.getTextId()) {
+            case R.string.add_to_archive:
+                mDelegate.addToArchive(getItem());
+                break;
             case R.string.share:
                 mDelegate.getListMenuDelegate().shareDocumentInfo(getItem());
                 break;
@@ -129,7 +128,6 @@ public class DocumentView extends SelectableItemView<DocumentInfo> implements Li
             case R.string.copy_content:
                 mDelegate.copyContent(getItem());
                 break;
-
 
 
         }

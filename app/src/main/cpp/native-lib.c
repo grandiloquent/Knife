@@ -240,3 +240,41 @@ Java_euphoria_psycho_knife_DocumentUtils_padFileNames(JNIEnv *env, jclass type,
     rename_files(dir,paddingLeftLength);
     (*env)->ReleaseStringUTFChars(env, dir_, dir);
 }
+
+
+
+
+
+
+JNIEXPORT void JNICALL
+Java_euphoria_psycho_knife_DocumentUtils_createZipFromDirectory(JNIEnv *env, jclass type,
+                                                         jstring dir_,jstring filename_) {
+    const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
+        const char *filename= (*env)->GetStringUTFChars(env,fileName_, 0);
+ struct zip_t* zip = zip_open("foo.zip", ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
+
+size_t cap=128;
+    struct files list = {
+        .files_name = malloc(sizeof(char*) * cap),
+        .capacity = cap,
+        .index = 0,
+    };
+
+    char* p = strdup(path);
+
+    list_directory(p, &list);
+    for (size_t i = 0; i < list.index; i++)
+    {
+
+        zip_entry_open(zip, *(list.files_name + i) + strlen(path) + 1);
+        zip_entry_fwrite(zip, *(list.files_name + i));
+        zip_entry_close(zip);
+        free(*(list.files_name + i));
+    }
+
+    free(list.files_name);
+    zip_close(zip);
+    (*env)->ReleaseStringUTFChars(env, dir_, dir);
+        (*env)->ReleaseStringUTFChars(env, fileName_, fileName);
+
+}

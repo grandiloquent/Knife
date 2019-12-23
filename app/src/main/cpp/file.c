@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "log.h"
+#include <stdlib.h>
+
 
 #  define D_NAMLEN(dirent) (strlen((dirent)->d_name))
 
@@ -444,5 +446,59 @@ int rename_files(const char* dir,size_t pad_len)
     }
 out:
     closedir(directory);
+    return 0;
+}
+
+int list_directory(char* path, struct files* list)
+{
+
+    DIR* dir = opendir(path);
+
+    if (dir)
+    {
+
+        struct dirent* dp;
+        struct stat s;
+
+        while ((dp = readdir(dir)))
+        {
+            if (strcmp(dp->d_name, ".") == 0
+                || strcmp(dp->d_name, "..") == 0)
+                continue;
+
+            size_t len = strlen(path) + 2 + strlen(dp->d_name);
+            char* buf = malloc(len);
+            memset(buf, 0, len);
+            strcat(buf, path);
+            strcat(buf, "/");
+            strcat(buf, dp->d_name);
+
+            if (stat(buf, &s) == -1)
+            {
+                free(buf);
+                continue;
+            }
+            if (S_ISDIR(s.st_mode))
+            {
+
+                list_directory(buf, list);
+            }
+            else
+            {
+                if (list->index + 1 >= list->capacity)
+                {
+                    list->capacity = list->capacity * 2;
+                    list->files_name = realloc(list->files_name, sizeof(char*) * list->capacity);
+                }
+                //printf("%d %s\n", list->index, buf);
+
+                *(list->files_name + list->index++) = buf;
+            }
+        }
+        closedir(dir);
+    }
+
+    free(path);
+
     return 0;
 }

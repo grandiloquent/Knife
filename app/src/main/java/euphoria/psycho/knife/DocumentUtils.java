@@ -176,8 +176,10 @@ public class DocumentUtils {
 
     public static native String renderMarkdown(String text);
 
-    public static native void padFileNames(String dir, int paddingLeftLength);
 
+    public static native void createZipFromDirectory(String dir, String filename);
+
+    public static native void padFileNames(String dir, int paddingLeftLength);
 
 
     static List<DocumentInfo> getDocumentInfos(File dir, int sortBy, FilenameFilter filter) {
