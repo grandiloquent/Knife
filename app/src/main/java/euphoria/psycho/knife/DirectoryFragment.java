@@ -1,5 +1,6 @@
 package euphoria.psycho.knife;
 
+import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
@@ -48,6 +49,7 @@ import euphoria.common.Strings;
 import euphoria.common.Threads;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.BaseActivity;
+import euphoria.psycho.common.widget.MaterialProgressDialog;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
@@ -353,12 +355,15 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void addToArchive(DocumentInfo documentInfo) {
+        ProgressDialog dialog = MaterialProgressDialog.show(getContext(),
+                "", "正在压缩 " + documentInfo.getFileName());
         Threads.postOnBackgroundThread(() -> {
             if (documentInfo.getType() == C.TYPE_DIRECTORY) {
                 DocumentUtils.createZipFromDirectory(documentInfo.getPath(),
                         documentInfo.getPath() + ".zip");
                 Threads.postOnUiThread(() -> {
                     updateRecyclerView(false);
+                    dialog.dismiss();
                 });
             }
         });
