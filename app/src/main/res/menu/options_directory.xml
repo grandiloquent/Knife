@@ -61,6 +61,12 @@
                 <item
                     android:id="@+id/action_sort_by_size"
                     android:title="@string/sort_size" />
+                <item
+                    android:id="@+id/action_sort_by_ascending"
+                    android:title="@string/sort_by_ascending" />
+                <item
+                    android:id="@+id/action_sort_by_descending"
+                    android:title="@string/sort_by_descending" />
             </menu>
         </item>
         <item

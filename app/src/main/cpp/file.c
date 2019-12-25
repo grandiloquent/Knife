@@ -16,7 +16,6 @@
 #  define D_NAMLEN(dirent) (strlen((dirent)->d_name))
 
 
-
 error_t argz_append(char **pargz, size_t *pargz_len, const char *buf, size_t buf_len) {
     size_t argz_len;
     char *argz;
@@ -33,6 +32,7 @@ error_t argz_append(char **pargz, size_t *pargz_len, const char *buf, size_t buf
     *pargz_len = argz_len;
     return 0;
 }
+
 error_t argz_insert(char **pargz, size_t *pargz_len, char *before, const char *entry) {
     assert(pargz);
     assert(pargz_len);
@@ -55,6 +55,24 @@ error_t argz_insert(char **pargz, size_t *pargz_len, char *before, const char *e
     }
     return 0;
 }
+
+static int argz_insertinorder(char **pargz,
+                              size_t *pargz_len,
+                              const char *entry
+) {
+    char *before = 0;
+    assert(pargz);
+    assert(pargz_len);
+    assert(entry && *entry);
+    if (*pargz)
+        while ((before = argz_next(*pargz, *pargz_len, before))) {
+            int cmp = strcmp(entry, before);
+            if (cmp < 0)break;
+            if (cmp == 0)return 0;
+        }
+    return argz_insert(pargz, pargz_len, before, entry);
+}
+
 static int argz_insertdir(char **pargz,
                           size_t *pargz_len,
                           const char *dirnam,
@@ -101,22 +119,7 @@ static int argz_insertdir(char **pargz,
     free(buf);
     return errors;
 }
-static int argz_insertinorder(char **pargz,
-                              size_t *pargz_len,
-                              const char *entry
-) {
-    char *before = 0;
-    assert(pargz);
-    assert(pargz_len);
-    assert(entry && *entry);
-    if (*pargz)
-        while ((before = argz_next(*pargz, *pargz_len, before))) {
-            int cmp = strcmp(entry, before);
-            if (cmp < 0)break;
-            if (cmp == 0)return 0;
-        }
-    return argz_insert(pargz, pargz_len, before, entry);
-}
+
 char *argz_next(char *argz, size_t argz_len, const char *entry) {
     assert((argz && argz_len) || (!argz && !argz_len));
     if (entry) {
@@ -129,6 +132,7 @@ char *argz_next(char *argz, size_t argz_len, const char *entry) {
         else return 0;
     }
 }
+
 int64_t calculate_dir_size(int dfd) {
     int64_t size = 0;
     struct stat s;
@@ -165,6 +169,7 @@ int64_t calculate_dir_size(int dfd) {
     closedir(d);
     return size;
 }
+
 int create_directory(const char *p) {
     struct stat s;
     if (stat(p, &s) == 0 && S_ISDIR(s.st_mode)) {
@@ -173,6 +178,7 @@ int create_directory(const char *p) {
         return mkdir(p, 0777);
     }
 }
+
 int
 list_files_by_dir(const char *dirnam, char **pargz, size_t *pargz_len) {
     DIR *dirp = 0;
@@ -196,6 +202,7 @@ list_files_by_dir(const char *dirnam, char **pargz, size_t *pargz_len) {
         ++errors;
     return errors;
 }
+
 int list_directory(char *path, struct files *list) {
     DIR *dir = opendir(path);
     if (dir) {
@@ -231,6 +238,7 @@ int list_directory(char *path, struct files *list) {
     free(path);
     return 0;
 }
+
 int move_files(const char *dfd, const char *dir_name) {
     struct stat s;
     DIR *d;
@@ -287,6 +295,7 @@ int move_files(const char *dfd, const char *dir_name) {
     }
     return 1;
 }
+
 static int pad_num(const char *s, char *buf, size_t pad_len) {
     char c;
     int found = 0;
@@ -296,7 +305,7 @@ static int pad_num(const char *s, char *buf, size_t pad_len) {
     int offset = 0;
     int last = 0;
     const char *saved = s;
-    while (c = *s) {
+    while ((c = *s)) {
         offset++;
         if (!found) {
             if (c >= '0' && c <= '9') {
@@ -350,6 +359,7 @@ static int pad_num(const char *s, char *buf, size_t pad_len) {
     }
     return 0;
 }
+
 int rename_files(const char *dir, size_t pad_len) {
     DIR *directory;
     struct dirent *ent;
@@ -385,9 +395,11 @@ int rename_files(const char *dir, size_t pad_len) {
     closedir(directory);
     return 0;
 }
+
 int64_t stat_size(struct stat *s) {
     return s->st_blocks * 512;
 }
+
 int unlink_recursive(const char *name) {
     struct stat st;
     DIR *dir;

@@ -311,6 +311,12 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
             case R.id.action_sort_by_size:
                 mFragment.sortBy(C.SORT_BY_SIZE);
                 break;
+            case R.id.action_sort_by_ascending:
+                mFragment.sortByAscending(true);
+                break;
+            case R.id.action_sort_by_descending:
+                mFragment.sortByAscending(false);
+                break;
             case R.id.action_delete_by:
                 actionDeleteBy(mFragment.getDirectory(), mFragment.getContext());
                 break;

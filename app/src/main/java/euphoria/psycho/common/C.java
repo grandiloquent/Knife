@@ -19,6 +19,8 @@ public class C {
     public static final String KEY_DIRECTORY = "directory";
     public static final String KEY_LAYOUT_STYLE = "layout_style";
     public static final String KEY_SORT_BY = "sort_by";
+    public static final String KEY_SORT_BY_ASCENDING = "sort_by_ascending";
+
     public static final String KEY_TREE_URI = "tree_uri";
     public static final String EXTRA_FILE_PATH = "file_Path";
     public static final int SORT_BY_DATE_MODIFIED = 2;

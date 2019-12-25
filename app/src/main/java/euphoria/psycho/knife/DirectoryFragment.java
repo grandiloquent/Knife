@@ -53,6 +53,7 @@ import euphoria.psycho.common.widget.MaterialProgressDialog;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
+import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
@@ -67,7 +68,6 @@ import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
-import static euphoria.psycho.knife.DocumentUtils.getDocumentInfos;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_SIZE;
@@ -99,16 +99,24 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 //    };
     private SelectionDelegate mSelectionDelegate;
     private int mSortBy = C.SORT_BY_UNSPECIFIED;
+    private boolean mSortAscending = false;
     private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
 
 
             String search = (String) msg.obj;
-            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, search != null ? (dir, name) -> {
-                if (name.contains(search)) return true;
-                return false;
-            } : null);
+            List<DocumentInfo> infos = null;
+            try {
+                infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
+                        mSortAscending,
+                        search != null ? (dir, name) -> {
+                            if (name.contains(search)) return true;
+                            return false;
+                        } : null);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
 
             mAdapter.switchDataSet(infos);
@@ -204,6 +212,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         if (mSortBy == C.SORT_BY_UNSPECIFIED)
             mSortBy = preferences.getInt(C.KEY_SORT_BY, C.SORT_BY_NAME);
 
+        mSortAscending = preferences.getBoolean(C.KEY_SORT_BY_ASCENDING, false);
     }
 
     private boolean onBackPressed() {
@@ -262,12 +271,20 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         updateLastVisiblePosition();
         preferences.edit().putInt(C.KEY_SCROLL_Y, mLastVisiblePosition)
                 .putString(C.KEY_DIRECTORY, mDirectory.getAbsolutePath())
-                .putInt(C.KEY_SORT_BY, mSortBy).apply();
+                .putInt(C.KEY_SORT_BY, mSortBy)
+                .putBoolean(C.KEY_SORT_BY_ASCENDING, mSortAscending).apply();
     }
 
     public void sortBy(int sortBy) {
         mToolbar.hideOverflowMenu();
         mSortBy = sortBy;
+        updateRecyclerView(false);
+    }
+
+
+    public void sortByAscending(boolean isAscending) {
+        mToolbar.hideOverflowMenu();
+        mSortAscending = isAscending;
         updateRecyclerView(false);
     }
 
@@ -279,9 +296,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     public void updateRecyclerView(boolean isScrollTo) {
         ThreadUtils.postOnBackgroundThread(() -> {
-            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, null);
+            List<DocumentInfo> infos = null;
+            try {
+                infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
+                        mSortAscending,
+                        null);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            List<DocumentInfo> finalInfos = infos;
             ThreadUtils.postOnUiThread(() -> {
-                mAdapter.switchDataSet(infos);
+                mAdapter.switchDataSet(finalInfos);
                 mToolbar.setTitle(mDirectory.getName());
                 if (isScrollTo)
                     mLayoutManager.scrollToPosition(mLastVisiblePosition);
@@ -292,9 +317,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void updateRecyclerView(File dir) {
         ThreadUtils.postOnBackgroundThread(() -> {
             mDirectory = dir;
-            List<DocumentInfo> infos = getDocumentInfos(mDirectory, mSortBy, null);
+            List<DocumentInfo> infos = null;
+            try {
+                infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
+                        mSortAscending,
+                        null);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            List<DocumentInfo> finalInfos = infos;
             ThreadUtils.postOnUiThread(() -> {
-                mAdapter.switchDataSet(infos);
+                mAdapter.switchDataSet(finalInfos);
                 mToolbar.setTitle(mDirectory.getName());
 
             });

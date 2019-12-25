@@ -80,6 +80,9 @@
     <string name="sort_name">By name</string>
     <string name="copy_file_name">Copy FileName</string>
     <string name="add_to_archive">Add To Archive</string>
+    <string name="sort_by_ascending">By Ascending</string>
+    <string name="sort_by_descending">By Descending</string>
+
 
     <string name="sort_size">By size</string>
     <string name="titles">

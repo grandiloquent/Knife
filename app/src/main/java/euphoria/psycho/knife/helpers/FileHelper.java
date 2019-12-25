@@ -1,18 +1,18 @@
-package euphoria.psycho.helpers;
+package euphoria.psycho.knife.helpers;
 
 import android.util.Log;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.text.Collator;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -20,9 +20,8 @@ import euphoria.common.Strings;
 import euphoria.psycho.common.C;
 import euphoria.psycho.knife.DocumentInfo;
 
-public class FileHelpers {
-
-    private static final String TAG = "TAG/" + FileHelpers.class.getSimpleName();
+public class FileHelper {
+    private static final String TAG = "TAG/" + FileHelper.class.getSimpleName();
 
     private static DocumentInfo buildDocumentInfo(Path file) throws IOException {
         boolean isDirectory = Files.isDirectory(file);
@@ -39,6 +38,83 @@ public class FileHelpers {
             builder.setSize(Files.size(file));
         }
         return builder.build();
+    }
+
+    private static void checkDirectory(final File directory) {
+        if (!directory.exists()) {
+            throw new IllegalArgumentException(directory + " does not exist");
+        }
+        if (!directory.isDirectory()) {
+            throw new IllegalArgumentException(directory + " is not a directory");
+        }
+    }
+
+    private static int compareFileSize(Path path1, Path path2) throws IOException {
+        boolean a = Files.isDirectory(path1);
+        boolean b = Files.isDirectory(path2);
+
+        long size1 = 0;
+        if (a) {
+            size1 = 0;
+        } else {
+            size1 = Files.size(path1);
+        }
+
+        long size2 = 0;
+        if (b) {
+            size2 = 0;
+        } else {
+            size2 = Files.size(path2);
+        }
+        long result = size1 - size2;
+        if (result < 0) {
+            return -1;
+        } else if (result > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    private static int compareFileName(Path path1, Path path2) {
+
+        boolean a = Files.isDirectory(path1);
+        boolean b = Files.isDirectory(path2);
+
+
+        if (a == b) {
+            Collator collator = Collator.getInstance(Locale.CHINA);
+            return collator.compare(path1.getFileName().toString(),
+                    path2.getFileName().toString());
+        } else {
+            return -1;
+        }
+    }
+
+    private static int compareFileLastModified(Path path1, Path path2) throws IOException {
+
+        boolean a = Files.isDirectory(path1);
+        boolean b = Files.isDirectory(path2);
+
+
+        if (a == b) {
+            long result =
+                    Files.getLastModifiedTime(path1).toMillis()
+                            - Files.getLastModifiedTime(path2).toMillis();
+            if (result < 0) {
+                return -1;
+            } else if (result > 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+
+
+        } else if (a) {// 如果是目录 返回 -1 默认排在前面(升序)
+            return -1;
+        } else {
+            return 1;
+        }
     }
 
     private static int getType(Path file) {
@@ -90,11 +166,35 @@ public class FileHelpers {
         }
     }
 
-    public static List<DocumentInfo> listDocuments(String dir, int sortBy) throws IOException {
+    public static boolean isSymlink(final File file) throws IOException {
+        if (file == null) {
+            throw new NullPointerException("File must not be null");
+        }
+        return Files.isSymbolicLink(file.toPath());
+    }
+
+    public static List<DocumentInfo> listDocuments(String dir, int sortBy, boolean isAscending, FilenameFilter filenameFilter) throws IOException {
+        // https://github.com/apache/commons-io/tree/master/src/main/java/org/apache/commons/io/comparator
+        final int direction = isAscending ? 1 : -1;
+
         return Files.list(Paths.get(dir)).parallel()
                 .sorted(new Comparator<Path>() {
                     @Override
                     public int compare(Path o1, Path o2) {
+                        try {
+                            switch (sortBy) {
+                                case C.SORT_BY_SIZE:
+                                    return compareFileSize(o1, o2) * direction;
+
+                                case C.SORT_BY_DATE_MODIFIED:
+                                    return compareFileLastModified(o1, o2) * direction;
+                                default:
+                                    return compareFileName(o1, o2) * direction;
+                            }
+                        } catch (Exception ignored) {
+
+                        }
+
                         return 0;
                     }
                 }).map(path -> {
@@ -199,5 +299,40 @@ public class FileHelpers {
                         }
                     }
                 });
+    }
+
+    private static long sizeOf0(final File file) {
+        if (file.isDirectory()) {
+            return sizeOfDirectory0(file);
+        }
+        return file.length(); // will be 0 if file does not exist
+    }
+
+    public static long sizeOfDirectory(final File directory) {
+        checkDirectory(directory);
+        return sizeOfDirectory0(directory);
+    }
+
+    private static long sizeOfDirectory0(final File directory) {
+        final File[] files = directory.listFiles();
+        if (files == null) {  // null if security restricted
+            return 0L;
+        }
+        long size = 0;
+
+        for (final File file : files) {
+            try {
+                if (!isSymlink(file)) {
+                    size += sizeOf0(file); // internal method
+                    if (size < 0) {
+                        break;
+                    }
+                }
+            } catch (final IOException ioe) {
+                // Ignore exceptions caught when asking if a File is a symlink.
+            }
+        }
+
+        return size;
     }
 }
