@@ -179,6 +179,11 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.close_menu_id:
+                getActivity().finish();
+                return true;
+        }
         return false;
     }
 

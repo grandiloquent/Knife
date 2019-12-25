@@ -11,6 +11,7 @@ import android.widget.EditText;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.nio.file.Paths;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +37,8 @@ import euphoria.psycho.share.util.DialogUtils.DialogListener;
 import euphoria.psycho.share.util.FileUtils;
 import euphoria.psycho.share.util.MimeUtils;
 import euphoria.psycho.share.util.ThreadUtils;
+
+import static euphoria.psycho.knife.helpers.FileHelper.getType;
 
 
 public class DocumentUtils {
@@ -79,21 +82,6 @@ public class DocumentUtils {
         dlg.show();
     }
 
-    static DocumentInfo buildDocumentInfo(File file) {
-        DocumentInfo.Builder builder = new DocumentInfo.Builder()
-                .setFileName(file.getName())
-                .setLastModified(file.lastModified())
-                .setPath(file.getAbsolutePath())
-                .setType(getType(file));
-
-        if (file.isDirectory()) {
-            File[] fs = file.listFiles();
-            builder.setSize(fs == null ? 0 : fs.length);
-        } else {
-            builder.setSize(file.length());
-        }
-        return builder.build();
-    }
 
     public static void buildNewDirectoryDialog(Context context, DialogListener<CharSequence> listener) {
 
@@ -164,25 +152,17 @@ public class DocumentUtils {
         dlg.show();
     }
 
-    public static native void moveFilesByExtension(String dirPath, String destDirName);
-
     public static native long calculateDirectory(String dir);
-
-    public static native int deleteDirectories(String[] directories);
-
-    public static native void extractToDirectory(String filename, String directory);
-
-    public static native void deleteLessFiles(String fileName);
-
-    public static native String renderMarkdown(String text);
-
 
     public static native void createZipFromDirectory(String dir, String filename);
 
-    public static native void padFileNames(String dir, int paddingLeftLength);
+    public static native int deleteDirectories(String[] directories);
 
+    public static native void deleteLessFiles(String fileName);
 
-//    static List<DocumentInfo> getDocumentInfos(File dir, int sortBy, FilenameFilter filter) {
+    public static native void extractToDirectory(String filename, String directory);
+
+    //    static List<DocumentInfo> getDocumentInfos(File dir, int sortBy, FilenameFilter filter) {
 //
 //        File[] files;
 //        if (filter == null)
@@ -328,60 +308,12 @@ public class DocumentUtils {
         return mTreeUri;
     }
 
-    private static int getType(File file) {
-        if (file.isDirectory()) return C.TYPE_DIRECTORY;
-
-
-        String ext = Strings.substringAfterLast(file.getName(), ".");
-        if (ext == null) return C.TYPE_OTHER;
-        ext = ext.toLowerCase();
-
-        if (Files.isAudio(ext)) return C.TYPE_AUDIO;
-        if (Files.isVideo(ext)) return C.TYPE_VIDEO;
-
-        switch (ext) {
-
-            // https://developer.android.com/guide/appendix/media-formats.html
-
-            case "crdownload":
-                return C.TYPE_VIDEO;
-            case "txt":
-            case "css":
-            case "log":
-            case "js":
-            case "java":
-            case "xml":
-            case "htm":
-            case "html":
-            case "xhtml":
-            case "srt":
-            case "mht":
-            case "md":
-                return C.TYPE_TEXT;
-            case "pdf":
-                return C.TYPE_PDF;
-            case "apk":
-                return C.TYPE_APK;
-            case "zip":
-            case "rar":
-            case "gz":
-            case "epub":
-                return C.TYPE_ZIP;
-            case "bmp":
-            case "gif":
-            case "jpg":
-            case "png":
-            case "webp":
-                return C.TYPE_IMAGE;
-            default:
-                return C.TYPE_OTHER;
-        }
-    }
+    public static native void moveFilesByExtension(String dirPath, String destDirName);
 
     public static void openContent(Context context, String path, int backWhere) {
         openContent(context, new DocumentInfo.Builder()
                 .setPath(path)
-                .setType(getType(new File(path)))
+                .setType(getType(Paths.get(path)))
                 .build(), backWhere);
     }
 
@@ -437,6 +369,10 @@ public class DocumentUtils {
             context.startActivity(Intent.createChooser(intent, "打开"));
         }
     }
+
+    public static native void padFileNames(String dir, int paddingLeftLength);
+
+    public static native String renderMarkdown(String text);
 
     public static void selectAll(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
 

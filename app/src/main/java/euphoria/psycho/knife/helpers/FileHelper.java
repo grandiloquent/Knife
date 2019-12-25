@@ -5,6 +5,9 @@ import android.util.Log;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,6 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -23,7 +27,23 @@ import euphoria.psycho.knife.DocumentInfo;
 public class FileHelper {
     private static final String TAG = "TAG/" + FileHelper.class.getSimpleName();
 
-    private static DocumentInfo buildDocumentInfo(Path file) throws IOException {
+    public static List<DocumentInfo> searchDocumentInfo(String dir, String pattern) throws IOException {
+
+        Pattern p = Pattern.compile(pattern);
+        return Files.walk(Paths.get(dir), Integer.MAX_VALUE)
+                .filter(path -> p.matcher(path.getFileName().toString()).find())
+                .map(path -> {
+                    try {
+                        return buildDocumentInfo(path);
+                    } catch (Exception ignored) {
+
+                    }
+                    return null;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static DocumentInfo buildDocumentInfo(Path file) throws IOException {
         boolean isDirectory = Files.isDirectory(file);
 
         DocumentInfo.Builder builder = new DocumentInfo.Builder()
@@ -117,7 +137,7 @@ public class FileHelper {
         }
     }
 
-    private static int getType(Path file) {
+    public static int getType(Path file) {
 
 
         String ext = Strings.substringAfterLast(file.getFileName().toString(), ".");

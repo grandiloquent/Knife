@@ -25,6 +25,9 @@ import com.google.android.exoplayer2.util.Util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Formatter;
@@ -32,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -126,7 +130,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     };
     private ListMenuDelegate mListMenuDelegate;
     private DirectoryToolbar mToolbar;
-    ThumbnailProvider mThumbnailProvider;
+    private ThumbnailProvider mThumbnailProvider;
     private Bookmark mBookmark;
 
     public boolean clearSelections() {
@@ -238,35 +242,34 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     }
 
-    public boolean onSearch(View v, int keyCode, KeyEvent event) {
+    /*
+     * 输入法“搜索”键
+     * 正则表达式
+     * 搜索当前目录下的所有文件
+     * */
+    private boolean onSearch(View v, int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_UP) {
-            ThreadUtils.postOnBackgroundThread(() -> {
-                String value = mToolbar.getSearchEditText().getText().toString();
-                Pattern pattern = Pattern.compile(value);
-                Collection<File> collection = euphoria.psycho.share.util.FileUtils.getFiles(mDirectory, pathname -> {
-                    if (pathname.isDirectory() || pattern.matcher(pathname.getName()).find()) {
-                        return true;
+            String pattern = mToolbar.getSearchEditText().getText().toString();
+            try {
+                List<DocumentInfo> documentInfos = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return FileHelper.searchDocumentInfo(mDirectory.getAbsolutePath(), pattern);
+                    } catch (Exception ignored) {
                     }
-                    return false;
-                }, true);
-                List<DocumentInfo> documentInfos = new ArrayList<>();
-                File[] files = collection.toArray(new File[0]);
-                euphoria.psycho.share.util.FileUtils.sortByName(files, true);
-                for (File file : files) {
-
-                    documentInfos.add(DocumentUtils.buildDocumentInfo(file));
-
-
-                }
-                ThreadUtils.postOnUiThread(() -> {
-                    mAdapter.switchDataSet(documentInfos);
-                });
-            });
+                    return null;
+                }).get();
+                mAdapter.switchDataSet(documentInfos);
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
 
         }
         return false;
     }
 
+    /*
+     * 保存排序方式和当前目录
+     * */
     private void savePreferences() {
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
         updateLastVisiblePosition();
@@ -399,26 +402,20 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         });
     }
 
+    /*
+     * 复制文本文档内容
+     * */
     @Override
     public void copyContent(DocumentInfo documentInfo) {
-        try {
-            File sourceFile = new File(documentInfo.getPath());
-            String text = new String(euphoria.common.Files.readFully(sourceFile), "UTF-8");
 
-            ClipboardManager manager = (ClipboardManager) getContext().getSystemService(CLIPBOARD_SERVICE);
-            if (manager != null) {
-                manager.setPrimaryClip(ClipData.newPlainText(null, text));
-            }
-//            File dir = new File(sourceFile.getParentFile(), "Copied");
-//            if (!dir.isDirectory()) dir.mkdir();
-//            sourceFile.renameTo(new File(dir, sourceFile.getName()));
-//            updateRecyclerView(false);
+        try {
+            byte[] buffer = java.nio.file.Files.readAllBytes(Paths.get(documentInfo.getPath()));
+            Helper.setClipboardText(getContext(), new String(buffer, StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
+
 
     @Override
     public void copyFileName(DocumentInfo documentInfo) {
@@ -539,6 +536,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         updateRecyclerView(false);
     }
 
+
+    /*
+     * Activity
+     * onPause
+     * */
     @Override
     public void onPause() {
         super.onPause();
@@ -594,6 +596,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         });
     }
 
+    /*
+     * 重命名文件
+     * */
     @Override
     public void rename(DocumentInfo documentInfo) {
         DocumentUtils.buildRenameDialog(getContext(),
