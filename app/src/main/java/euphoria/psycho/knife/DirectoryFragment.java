@@ -8,7 +8,6 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -32,6 +31,7 @@ import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,6 +58,7 @@ import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
+import euphoria.psycho.knife.helpers.Helper;
 import euphoria.psycho.knife.util.FileUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
@@ -379,17 +380,14 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         }
         //transaction.setCustomAnimations(R.animator.dir_frozen, R.animator.dir_up);
         transaction.replace(R.id.container, fragment);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            transaction.commitNowAllowingStateLoss();
-        } else {
-            transaction.commit();
-        }
+        transaction.commitNowAllowingStateLoss();
     }
 
     @Override
     public void addToArchive(DocumentInfo documentInfo) {
         ProgressDialog dialog = MaterialProgressDialog.show(getContext(),
                 "", "正在压缩 " + documentInfo.getFileName());
+      
         Threads.postOnBackgroundThread(() -> {
             if (documentInfo.getType() == C.TYPE_DIRECTORY) {
                 DocumentUtils.createZipFromDirectory(documentInfo.getPath(),
@@ -425,15 +423,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void copyFileName(DocumentInfo documentInfo) {
-        Utilities.setClipboardText(getContext(), documentInfo.getFileName());
-
-        if (euphoria.common.Files.isSupportedImage(documentInfo.getFileName()) && documentInfo.getPath().contains("/Download/")) {
-
-            new File(documentInfo.getPath()).renameTo(new File(Environment.getExternalStorageDirectory(),
-                    "Browser/static/pictures/" + documentInfo.getFileName()));
+        Helper.setClipboardText(getContext(), documentInfo.getFileName());
 
 
-        }
     }
 
     @Override
@@ -637,54 +629,51 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                     long[] numbers = parseTimespan(editText);
                     if (numbers != null) {
 
-                        if (VERSION.SDK_INT >= VERSION_CODES.JELLY_BEAN_MR2) {
+                        try {
+                            StringBuilder formatBuilder = new StringBuilder();
+                            Formatter formatter = new Formatter(formatBuilder, Locale.getDefault());
 
-                            try {
-                                StringBuilder formatBuilder = new StringBuilder();
-                                Formatter formatter = new Formatter(formatBuilder, Locale.getDefault());
+                            File sourceFile = new File(documentInfo.getPath());
 
-                                File sourceFile = new File(documentInfo.getPath());
+                            String fileName = Files.getFileNameWithoutExtension(documentInfo.getFileName());
+                            String ext = Files.getExtension(documentInfo.getFileName());
+                            if (ext.length() > 0) ext = ext.substring(1);
 
-                                String fileName = Files.getFileNameWithoutExtension(documentInfo.getFileName());
-                                String ext = Files.getExtension(documentInfo.getFileName());
-                                if (ext.length() > 0) ext = ext.substring(1);
+                            final File destinationFile = FileUtils.buildUniqueFileWithExtension(
+                                    sourceFile.getParentFile(),
+                                    String.format("%s_%s_%s", fileName,
+                                            Util.getStringForTime(formatBuilder, formatter, numbers[0]).replaceAll(":", "-"),
+                                            Util.getStringForTime(formatBuilder, formatter, numbers[1]).replaceAll(":", "-")
+                                    ),
+                                    ext
+                            );
 
-                                final File destinationFile = FileUtils.buildUniqueFileWithExtension(
-                                        sourceFile.getParentFile(),
-                                        String.format("%s_%s_%s", fileName,
-                                                Util.getStringForTime(formatBuilder, formatter, numbers[0]).replaceAll(":", "-"),
-                                                Util.getStringForTime(formatBuilder, formatter, numbers[1]).replaceAll(":", "-")
-                                        ),
-                                        ext
-                                );
+                            VideoUtils.startTrim(sourceFile,
+                                    destinationFile,
+                                    numbers[0], numbers[1], new OnTrimVideoListener() {
+                                        @Override
+                                        public void cancelAction() {
 
-                                VideoUtils.startTrim(sourceFile,
-                                        destinationFile,
-                                        numbers[0], numbers[1], new OnTrimVideoListener() {
-                                            @Override
-                                            public void cancelAction() {
+                                        }
 
-                                            }
+                                        @Override
+                                        public void getResult(Uri uri) {
+                                            euphoria.common.Contexts.triggerMediaScanner(getContext(), destinationFile);
+                                            updateRecyclerView(false);
+                                        }
 
-                                            @Override
-                                            public void getResult(Uri uri) {
-                                                euphoria.common.Contexts.triggerMediaScanner(getContext(), destinationFile);
-                                                updateRecyclerView(false);
-                                            }
+                                        @Override
+                                        public void onError(String message) {
 
-                                            @Override
-                                            public void onError(String message) {
+                                        }
 
-                                            }
+                                        @Override
+                                        public void onTrimStarted() {
 
-                                            @Override
-                                            public void onTrimStarted() {
-
-                                            }
-                                        });
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                                        }
+                                    });
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     } else {
                         Toast.makeText(getContext(), "0:0", Toast.LENGTH_LONG).show();

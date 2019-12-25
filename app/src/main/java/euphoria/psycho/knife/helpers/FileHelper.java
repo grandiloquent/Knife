@@ -124,13 +124,29 @@ public class FileHelper {
         if (ext == null) return C.TYPE_OTHER;
         ext = ext.toLowerCase();
 
-        if (euphoria.common.Files.isAudio(ext)) return C.TYPE_AUDIO;
-        if (euphoria.common.Files.isVideo(ext)) return C.TYPE_VIDEO;
-
         switch (ext) {
 
             // https://developer.android.com/guide/appendix/media-formats.html
-
+            case "aac":
+            case "flac":
+            case "imy":
+            case "m4a":
+            case "mid":
+            case "mp3":
+            case "mxmf":
+            case "ogg":
+            case "ota":
+            case "rtttl":
+            case "rtx":
+            case "wav":
+            case "xmf":
+                return C.TYPE_AUDIO;
+            case "3gp":
+            case "mkv":
+            case "mp4":
+            case "ts":
+            case "webm":
+            case "vm":
             case "crdownload":
                 return C.TYPE_VIDEO;
             case "txt":
