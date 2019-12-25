@@ -49,22 +49,22 @@ public class FileHelper {
         }
     }
 
-    private static int compareFileSize(Path path1, Path path2) throws IOException {
-        boolean a = Files.isDirectory(path1);
-        boolean b = Files.isDirectory(path2);
+    private static int compareFileSize(DocumentInfo path1, DocumentInfo path2) {
+        boolean a = path1.getType() == C.TYPE_DIRECTORY;
+        boolean b = path2.getType() == C.TYPE_DIRECTORY;
 
         long size1 = 0;
         if (a) {
             size1 = 0;
         } else {
-            size1 = Files.size(path1);
+            size1 = path1.getSize();
         }
 
         long size2 = 0;
         if (b) {
             size2 = 0;
         } else {
-            size2 = Files.size(path2);
+            size2 = path2.getSize();
         }
         long result = size1 - size2;
         if (result < 0) {
@@ -76,31 +76,31 @@ public class FileHelper {
         }
     }
 
-    private static int compareFileName(Path path1, Path path2) {
+    private static int compareFileName(DocumentInfo path1, DocumentInfo path2) {
 
-        boolean a = Files.isDirectory(path1);
-        boolean b = Files.isDirectory(path2);
+        boolean a = path1.getType() == C.TYPE_DIRECTORY;
+        boolean b = path2.getType() == C.TYPE_DIRECTORY;
 
 
         if (a == b) {
             Collator collator = Collator.getInstance(Locale.CHINA);
-            return collator.compare(path1.getFileName().toString(),
-                    path2.getFileName().toString());
+            return collator.compare(path1.getFileName(),
+                    path2.getFileName());
         } else {
             return -1;
         }
     }
 
-    private static int compareFileLastModified(Path path1, Path path2) throws IOException {
+    private static int compareFileLastModified(DocumentInfo path1, DocumentInfo path2) {
 
-        boolean a = Files.isDirectory(path1);
-        boolean b = Files.isDirectory(path2);
+        boolean a = path1.getType() == C.TYPE_DIRECTORY;
+        boolean b = path2.getType() == C.TYPE_DIRECTORY;
 
 
         if (a == b) {
             long result =
-                    Files.getLastModifiedTime(path1).toMillis()
-                            - Files.getLastModifiedTime(path2).toMillis();
+                    path1.getLastModified()
+                            - path2.getLastModified();
             if (result < 0) {
                 return -1;
             } else if (result > 0) {
@@ -178,30 +178,27 @@ public class FileHelper {
         final int direction = isAscending ? 1 : -1;
 
         return Files.list(Paths.get(dir)).parallel()
-                .sorted(new Comparator<Path>() {
-                    @Override
-                    public int compare(Path o1, Path o2) {
-                        try {
-                            switch (sortBy) {
-                                case C.SORT_BY_SIZE:
-                                    return compareFileSize(o1, o2) * direction;
-
-                                case C.SORT_BY_DATE_MODIFIED:
-                                    return compareFileLastModified(o1, o2) * direction;
-                                default:
-                                    return compareFileName(o1, o2) * direction;
-                            }
-                        } catch (Exception ignored) {
-
-                        }
-
-                        return 0;
-                    }
-                }).map(path -> {
+                .map(path -> {
                     try {
                         return buildDocumentInfo(path);
                     } catch (IOException e) {
                         return null;
+                    }
+                }).sorted(new Comparator<DocumentInfo>() {
+                    @Override
+                    public int compare(DocumentInfo o1, DocumentInfo o2) {
+
+                        switch (sortBy) {
+                            case C.SORT_BY_SIZE:
+                                return compareFileSize(o1, o2) * direction;
+
+                            case C.SORT_BY_DATE_MODIFIED:
+                                return compareFileLastModified(o1, o2) * direction;
+                            default:
+                                return compareFileName(o1, o2) * direction;
+                        }
+
+
                     }
                 }).collect(Collectors.toList());
 
