@@ -22,3 +22,5 @@
 ## 第三方类库
 
 - https://github.com/kuba--/zip
+- https://github.com/NanoHttpd/nanohttpd
+
