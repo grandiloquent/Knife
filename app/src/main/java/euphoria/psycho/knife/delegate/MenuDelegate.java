@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Collator;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,17 +40,17 @@ import euphoria.psycho.knife.DocumentInfo;
 import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.OperationManager;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.share.util.ThreadUtils;
 
 public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
+    private static final String TAG = "TAG/" + MenuDelegate.class.getSimpleName();
     private final DirectoryFragment mFragment;
 
     public MenuDelegate(DirectoryFragment fragment) {
         mFragment = fragment;
 
     }
-
-    private static final String TAG = "TAG/" + MenuDelegate.class.getSimpleName();
 
     private void actionDeleteBy(File directory, Context context) {
         Path start = Paths.get(directory.getAbsolutePath());
@@ -195,6 +197,46 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
         });
     }
 
+    private void deleteEmptyDirectories() {
+        try {
+            Files.list(Paths.get(mFragment.getDirectory().getPath())).parallel().filter(p -> {
+                try {
+                    return Files.isDirectory(p)
+                            && FileHelper.isEmptyDirectory(p);
+                } catch (Exception ignored) {
+                    return false;
+                }
+            }).forEach(new Consumer<Path>() {
+                @Override
+                public void accept(Path path) {
+                    try {
+                        Files.delete(path);
+                    } catch (Exception ignored) {
+                    }
+                }
+            });
+            mFragment.updateRecyclerView(false);
+
+        } catch (Exception ignored) {
+
+        }
+
+    }
+
+    private void moveFiles(Context context, File directory) {
+
+
+        new AlertDialog.Builder(context)
+                .setMessage("根据文件扩展名移动文件")
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+
+                    DocumentUtils.moveFilesByExtension(directory.getAbsolutePath(),
+                            "Extensions");
+                    mFragment.updateRecyclerView(false);
+                }).show();
+
+    }
+
     private void renameByRegex(Context context, File directory) {
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_rename_by_regex, null);
         EditText find = view.findViewById(R.id.find);
@@ -211,20 +253,6 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
                         File dst = new File(directory, file.getName().replaceAll(f, r));
                         file.renameTo(dst);
                     }
-                    mFragment.updateRecyclerView(false);
-                }).show();
-
-    }
-
-    private void moveFiles(Context context, File directory) {
-
-
-        new AlertDialog.Builder(context)
-                .setMessage("根据文件扩展名移动文件")
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-
-                    DocumentUtils.moveFilesByExtension(directory.getAbsolutePath(),
-                            "Extensions");
                     mFragment.updateRecyclerView(false);
                 }).show();
 
@@ -350,9 +378,13 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
                 renameByRegex(mFragment.getContext(), mFragment.getDirectory());
                 break;
+            case R.id.action_delete_empty_directories:
+                deleteEmptyDirectories();
+                break;
             case R.id.action_move_files:
                 moveFiles(mFragment.getContext(), mFragment.getDirectory());
                 break;
+
 
         }
         return true;

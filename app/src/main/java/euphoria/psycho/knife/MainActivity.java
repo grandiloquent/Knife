@@ -16,15 +16,9 @@ public class MainActivity extends BaseActivity {
     private static final String TAG = "TAG/" + MainActivity.class.getSimpleName();
 
     private void handleIntent() {
-        Intent intent = getIntent();
-
-            DirectoryFragment.show(getSupportFragmentManager());
+        DirectoryFragment.show(getSupportFragmentManager());
     }
 
-
-    private void showDownloadFragment() {
-        BaseFragment.show(new DownloadFragment(), getSupportFragmentManager(), R.id.container, null);
-    }
 
     @Override
     protected void initialize() {
@@ -35,12 +29,12 @@ public class MainActivity extends BaseActivity {
 //            Log.e(TAG, "initialize: " + documentFile.isDirectory()
 //                    + "\n" + documentFile.getUri().toString());
 //        }
-       if( euphoria.psycho.knife.util.FileUtils.hasSDCardPath()) {
-           String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
-
-           if (treeUri == null)
-               Documents.requestTreeUri(this, REQUEST_CODE_PERMISSION);
-       }
+//        if (euphoria.psycho.knife.util.FileUtils.hasSDCardPath()) {
+//            String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
+//
+//            if (treeUri == null)
+//                Documents.requestTreeUri(this, REQUEST_CODE_PERMISSION);
+//        }
         // showVideoFragment();
         // handleIntent();
 

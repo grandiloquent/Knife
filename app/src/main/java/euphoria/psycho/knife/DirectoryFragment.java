@@ -1,15 +1,11 @@
 package euphoria.psycho.knife;
 
 import android.app.ProgressDialog;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -26,10 +22,7 @@ import com.google.android.exoplayer2.util.Util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
@@ -72,7 +65,6 @@ import euphoria.psycho.knife.video.VideoActivity;
 import euphoria.psycho.share.util.ContextUtils;
 import euphoria.psycho.share.util.ThreadUtils;
 
-import static android.content.Context.CLIPBOARD_SERVICE;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_SIZE;
@@ -133,12 +125,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private ThumbnailProvider mThumbnailProvider;
     private Bookmark mBookmark;
 
-    public boolean clearSelections() {
+    public void clearSelections() {
         if (mSelectionDelegate.getSelectedItems().size() > 0) {
             mSelectionDelegate.clearSelection();
-            return true;
         }
-        return false;
     }
 
     public Bookmark getBookmark() {
@@ -608,7 +598,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                     String newFileName = charSequence.toString();
                     File src = new File(documentInfo.getPath());
                     File target = new File(src.getParentFile(), newFileName);
-
                     if (!target.exists()) {
                         src.renameTo(target);
                         updateRecyclerView(false);
@@ -616,6 +605,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 });
     }
 
+    /*
+     * 分割视频文件
+     * 以正则表达式匹配 00:00:00
+     * */
     @Override
     public void trimVideo(DocumentInfo documentInfo) {
 
@@ -662,7 +655,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
                                         @Override
                                         public void getResult(Uri uri) {
-                                            euphoria.common.Contexts.triggerMediaScanner(getContext(), destinationFile);
+                                            Helper.triggerMediaScanner(Objects.requireNonNull(getContext()), destinationFile);
                                             updateRecyclerView(false);
                                         }
 

@@ -78,7 +78,9 @@
             android:title="@string/bookmark_action_bar_close"
             app:iconTint="@color/dark_mode_tint"
             app:showAsAction="ifRoom" />
-
+        <item
+            android:id="@+id/action_delete_empty_directories"
+            android:title="删除空文件夹" />
         <item
             android:id="@+id/action_calculate_directory"
             android:title="统计内存容量" />
@@ -94,6 +96,7 @@
         <item
             android:id="@+id/action_rename_by_regex"
             android:title="重命名" />
+
     </group>
 
 </menu>

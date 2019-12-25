@@ -5,6 +5,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
@@ -67,6 +68,15 @@ public class FileHelper {
         if (!directory.isDirectory()) {
             throw new IllegalArgumentException(directory + " is not a directory");
         }
+    }
+
+    public static boolean isEmptyDirectory(final Path directory) throws IOException {
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory)) {
+            if (directoryStream.iterator().hasNext()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static int compareFileSize(DocumentInfo path1, DocumentInfo path2) {

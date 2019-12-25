@@ -1,4 +1,4 @@
-package euphoria.common;
+package euphoria.psycho.knife;
 
 import android.app.Activity;
 import android.content.ClipData;
@@ -16,6 +16,8 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.io.File;
+
+import euphoria.common.Strings;
 
 public class Contexts {
 
@@ -106,10 +108,5 @@ public class Contexts {
     public static void toast(Context context, String message) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show();
     }
-    public static void triggerMediaScanner(Context context, File file) {
-        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        intent.setData(Uri.fromFile(file));
-        //intent.putExtra(ACTION_SCAN_EXTERNAL, true);
-        context.sendBroadcast(intent);
-    }
+
 }
