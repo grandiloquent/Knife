@@ -335,7 +335,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         });
     }
 
-    public static long[] parseTimespan(EditText editText) {
+    private static long[] parseTimespan(EditText editText) {
         Pattern pattern = Pattern.compile("(\\d+:){1,}\\d+");
 
         Matcher matcher = pattern.matcher(editText.getText());
@@ -352,7 +352,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             }
         }
         if (count == 1) {
-            results[0] = 0;
             results[1] = Strings.parseDuration(numbers[0]);
         } else if (count == 2) {
             results[0] = Strings.parseDuration(numbers[0]);
@@ -387,7 +386,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void addToArchive(DocumentInfo documentInfo) {
         ProgressDialog dialog = MaterialProgressDialog.show(getContext(),
                 "", "正在压缩 " + documentInfo.getFileName());
-      
+
         Threads.postOnBackgroundThread(() -> {
             if (documentInfo.getType() == C.TYPE_DIRECTORY) {
                 DocumentUtils.createZipFromDirectory(documentInfo.getPath(),
@@ -493,7 +492,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 musicService.setDataAndType(Uri.fromFile(new File(documentInfo.getPath())), "audio/*");
 
 
-                this.getActivity().startActivity(Intent.createChooser(musicService, "音乐"));
+                Objects.requireNonNull(this.getActivity()).startActivity(Intent.createChooser(musicService, "音乐"));
 
 //                Intent musicService = new Intent(this.getActivity(), MusicService.class);
 //                musicService.setAction(MusicService.ACTION_PLAY);
