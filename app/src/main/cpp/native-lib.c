@@ -99,26 +99,25 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 #define HTML_RENDER_FLAGS (HTML_USE_XHTML)
 
 JNIEXPORT jstring JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_renderMarkdown(JNIEnv* env, jclass type, jstring text_)
-{
-    const char* text = (*env)->GetStringUTFChars(env, text_, 0);
+Java_euphoria_psycho_knife_DocumentUtils_renderMarkdown(JNIEnv *env, jclass type, jstring text_) {
+    const char *text = (*env)->GetStringUTFChars(env, text_, 0);
     struct sd_callbacks callbacks;
     struct html_renderopt options;
     sdhtml_renderer(&callbacks, &options, HTML_RENDER_FLAGS);
-    struct sd_markdown* markdown = sd_markdown_new(
-        MKDEXT_TABLES | MKDEXT_AUTOLINK | MKDEXT_FENCED_CODE, 16, &callbacks,
-        &options);
-    struct buf* output_buf;
+    struct sd_markdown *markdown = sd_markdown_new(
+            MKDEXT_TABLES | MKDEXT_AUTOLINK | MKDEXT_FENCED_CODE, 16, &callbacks,
+            &options);
+    struct buf *output_buf;
     output_buf = bufnew(128);
     //result = kno_make_string(NULL,output_buf->size,output_buf->data);
     sd_markdown_render(
-        output_buf,
-        (const uint8_t*)(text),
-        strlen(text),
-        markdown);
+            output_buf,
+            (const uint8_t *) (text),
+            strlen(text),
+            markdown);
     sd_markdown_free(markdown);
 
-    const char* p = "<!DOCTYPE html>\n"
+    const char *p = "<!DOCTYPE html>\n"
                     "<html>\n"
                     "<head>\n"
                     "    <meta charset=utf-8>\n"
@@ -131,7 +130,7 @@ Java_euphoria_psycho_knife_DocumentUtils_renderMarkdown(JNIEnv* env, jclass type
                     "%s"
                     "</body>\n"
                     "</html>";
-    char* buf = malloc(output_buf->size + strlen(p));
+    char *buf = malloc(output_buf->size + strlen(p));
 
     sprintf(buf, p, output_buf->data);
     bufrelease(output_buf);
@@ -144,19 +143,16 @@ Java_euphoria_psycho_knife_DocumentUtils_renderMarkdown(JNIEnv* env, jclass type
     (*env)->ReleaseStringUTFChars(env, text_, text);
     return (*env)->NewStringUTF(env, buf);
 }
+
 JNIEXPORT jlong JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_calculateDirectory(JNIEnv* env, jclass type,
-    jstring dir_)
-{
-    const char* dir = (*env)->GetStringUTFChars(env, dir_, 0);
-    int dirfd = open(dir, O_DIRECTORY, O_RDONLY);
-    if (dirfd < 0)
-    {
+Java_euphoria_psycho_knife_DocumentUtils_calculateDirectory(JNIEnv *env, jclass type,
+                                                            jstring dir_) {
+    const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
+    int dirfd = open(dir, O_DIRECTORY | O_CLOEXEC, O_RDONLY);
+    if (dirfd < 0) {
         (*env)->ReleaseStringUTFChars(env, dir_, dir);
         return -1;
-    }
-    else
-    {
+    } else {
         int64_t res = calculate_dir_size(dirfd);
         (*env)->ReleaseStringUTFChars(env, dir_, dir);
         return res;
@@ -164,19 +160,16 @@ Java_euphoria_psycho_knife_DocumentUtils_calculateDirectory(JNIEnv* env, jclass 
 }
 
 JNIEXPORT jint JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_deleteDirectories(JNIEnv* env, jclass type,
-    jobjectArray directories)
-{
+Java_euphoria_psycho_knife_DocumentUtils_deleteDirectories(JNIEnv *env, jclass type,
+                                                           jobjectArray directories) {
     int count = (*env)->GetArrayLength(env, directories);
     int res = 0;
-    for (int i = 0; i < count; i++)
-    {
-        jstring dir_ = (jstring)(*env)->GetObjectArrayElement(env, directories, i);
-        const char* dir = (*env)->GetStringUTFChars(env, dir_, 0);
+    for (int i = 0; i < count; i++) {
+        jstring dir_ = (jstring) (*env)->GetObjectArrayElement(env, directories, i);
+        const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
         //LOGI("directory %s", dir);
         int r = unlink_recursive(dir);
-        if (r)
-        {
+        if (r) {
             LOGE("Failed delete directory:%s. %d\n", dir, errno);
         }
         if (!res)
@@ -187,23 +180,21 @@ Java_euphoria_psycho_knife_DocumentUtils_deleteDirectories(JNIEnv* env, jclass t
 }
 
 JNIEXPORT void JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_extractToDirectory(JNIEnv* env, jclass type,
-    jstring filename_, jstring directory_)
-{
-    const char* filename = (*env)->GetStringUTFChars(env, filename_, 0);
-    const char* directory = (*env)->GetStringUTFChars(env, directory_, 0);
+Java_euphoria_psycho_knife_DocumentUtils_extractToDirectory(JNIEnv *env, jclass type,
+                                                            jstring filename_, jstring directory_) {
+    const char *filename = (*env)->GetStringUTFChars(env, filename_, 0);
+    const char *directory = (*env)->GetStringUTFChars(env, directory_, 0);
     zip_extract(filename, directory, NULL, NULL);
     (*env)->ReleaseStringUTFChars(env, filename_, filename);
     (*env)->ReleaseStringUTFChars(env, directory_, directory);
 }
 
 JNIEXPORT void JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_moveFilesByExtension(JNIEnv* env, jclass type,
-    jstring dirPath_,
-    jstring destDirName_)
-{
-    const char* dirPath = (*env)->GetStringUTFChars(env, dirPath_, 0);
-    const char* destDirName = (*env)->GetStringUTFChars(env, destDirName_, 0);
+Java_euphoria_psycho_knife_DocumentUtils_moveFilesByExtension(JNIEnv *env, jclass type,
+                                                              jstring dirPath_,
+                                                              jstring destDirName_) {
+    const char *dirPath = (*env)->GetStringUTFChars(env, dirPath_, 0);
+    const char *destDirName = (*env)->GetStringUTFChars(env, destDirName_, 0);
     int result = move_files(dirPath, destDirName);
     LOGE("moveFilesByExtension:%s. %s %d\n", dirPath, destDirName, result);
 
@@ -212,15 +203,13 @@ Java_euphoria_psycho_knife_DocumentUtils_moveFilesByExtension(JNIEnv* env, jclas
 }
 
 JNIEXPORT void JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_deleteLessFiles(JNIEnv* env, jclass type,
-    jstring fileName_)
-{
-    const char* fileName = (*env)->GetStringUTFChars(env, fileName_, 0);
+Java_euphoria_psycho_knife_DocumentUtils_deleteLessFiles(JNIEnv *env, jclass type,
+                                                         jstring fileName_) {
+    const char *fileName = (*env)->GetStringUTFChars(env, fileName_, 0);
 
-    const char* p = fileName + strlen(fileName);
+    const char *p = fileName + strlen(fileName);
     int n = 0;
-    while (*(--p))
-    {
+    while (*(--p)) {
         if (*p == '/')
             break;
         n++;
@@ -229,21 +218,18 @@ Java_euphoria_psycho_knife_DocumentUtils_deleteLessFiles(JNIEnv* env, jclass typ
     n = strlen(fileName) - n - 1;
 
     int i = 0;
-    while (i < n)
-    {
+    while (i < n) {
         tmp[i] = fileName[i];
         i++;
     }
     tmp[n] = 0;
-    char* fn = strrchr(fileName, '/');
+    char *fn = strrchr(fileName, '/');
 
-    char* argz = 0;
+    char *argz = 0;
     size_t argz_len = 0;
-    if (list_files_by_dir(tmp, &argz, &argz_len) == 0)
-    {
-        char* f = 0;
-        while ((f = argz_next(argz, argz_len, f)))
-        {
+    if (list_files_by_dir(tmp, &argz, &argz_len) == 0) {
+        char *f = 0;
+        while ((f = argz_next(argz, argz_len, f))) {
             remove(f);
             if (strcmp(strrchr(f, '/'), fn) == 0)
                 break;
@@ -253,35 +239,32 @@ Java_euphoria_psycho_knife_DocumentUtils_deleteLessFiles(JNIEnv* env, jclass typ
 }
 
 JNIEXPORT void JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_padFileNames(JNIEnv* env, jclass type,
-    jstring dir_, jint paddingLeftLength)
-{
-    const char* dir = (*env)->GetStringUTFChars(env, dir_, 0);
+Java_euphoria_psycho_knife_DocumentUtils_padFileNames(JNIEnv *env, jclass type,
+                                                      jstring dir_, jint paddingLeftLength) {
+    const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
     LOGE("%s\n", dir);
-    rename_files(dir, paddingLeftLength);
+    rename_files(dir, (size_t) paddingLeftLength);
     (*env)->ReleaseStringUTFChars(env, dir_, dir);
 }
 
 JNIEXPORT void JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_createZipFromDirectory(JNIEnv* env, jclass type,
-    jstring dir_, jstring filename_)
-{
-    const char* dir = (*env)->GetStringUTFChars(env, dir_, 0);
-    const char* filename = (*env)->GetStringUTFChars(env, filename_, 0);
-    struct zip_t* zip = zip_open(filename, ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
+Java_euphoria_psycho_knife_DocumentUtils_createZipFromDirectory(JNIEnv *env, jclass type,
+                                                                jstring dir_, jstring filename_) {
+    const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
+    const char *filename = (*env)->GetStringUTFChars(env, filename_, 0);
+    struct zip_t *zip = zip_open(filename, ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
 
     size_t cap = 128;
     struct files list = {
-        .files_name = malloc(sizeof(char*) * cap),
-        .capacity = cap,
-        .index = 0,
+            .files_name = malloc(sizeof(char *) * cap),
+            .capacity = cap,
+            .index = 0,
     };
 
-    char* p = strdup(dir);
+    char *p = strdup(dir);
 
     list_directory(p, &list);
-    for (size_t i = 0; i < list.index; i++)
-    {
+    for (size_t i = 0; i < list.index; i++) {
 
         zip_entry_open(zip, *(list.files_name + i) + strlen(dir) + 1);
         zip_entry_fwrite(zip, *(list.files_name + i));
