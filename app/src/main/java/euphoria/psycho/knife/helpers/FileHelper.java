@@ -1,28 +1,35 @@
 package euphoria.psycho.knife.helpers;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.Collator;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import euphoria.common.Strings;
+import euphoria.common.Threads;
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.widget.MaterialProgressDialog;
 import euphoria.psycho.knife.DocumentInfo;
 
 public class FileHelper {
@@ -380,4 +387,83 @@ public class FileHelper {
 
         return size;
     }
+
+    public static void deleteDocuments(Context context, DocumentInfo[] documentInfos) {
+
+        ProgressDialog dialog = MaterialProgressDialog.show(context, "删除", "");
+
+        long totalSize = Arrays.stream(documentInfos)
+                .map(document -> {
+                    try {
+                        return CompletableFuture.supplyAsync(() -> {
+                            if (document.getType() != C.TYPE_DIRECTORY) {
+                                try {
+                                    Threads.postOnUiThread(() -> {
+                                        dialog.setMessage(document.getPath());
+                                    });
+                                    Files.delete(Paths.get(document.getPath()));
+                                    return document.getSize();
+                                } catch (IOException e) {
+                                    return 0L;
+                                }
+                            } else {
+                                try {
+                                    DeleteVisitor deleteVisitor = new DeleteVisitor(dialog);
+                                    Files.walkFileTree(Paths.get(document.getPath()), deleteVisitor);
+                                    return deleteVisitor.getTotalSize();
+                                } catch (IOException e) {
+                                    return 0L;
+                                }
+                            }
+                        }).get();
+                    } catch (ExecutionException | InterruptedException e) {
+                        return 0L;
+                    }
+                }).mapToLong(Long::longValue).sum();
+        dialog.dismiss();
+        Toast.makeText(context, String.format("总共释放 %s 空间", euphoria.common.Files.formatFileSize(totalSize)), Toast.LENGTH_SHORT).show();
+
+    }
+
+
+    private static class DeleteVisitor extends SimpleFileVisitor<Path> {
+
+        private long mTotalSize = 0L;
+        private final ProgressDialog mProgressDialog;
+
+        private DeleteVisitor(ProgressDialog progressDialog) {
+            mProgressDialog = progressDialog;
+        }
+
+
+        public long getTotalSize() {
+            return mTotalSize;
+        }
+
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            super.preVisitDirectory(dir, attrs);
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            if (isEmptyDirectory(dir)) Files.deleteIfExists(dir);
+            Threads.postOnUiThread(() -> {
+                mProgressDialog.setMessage(dir.toAbsolutePath().toString());
+            });
+            return super.postVisitDirectory(dir, exc);
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            mTotalSize += Files.size(file);
+            Files.deleteIfExists(file);
+            Threads.postOnUiThread(() -> {
+                mProgressDialog.setMessage(file.toAbsolutePath().toString());
+            });
+            return FileVisitResult.CONTINUE;
+        }
+    }
 }
+

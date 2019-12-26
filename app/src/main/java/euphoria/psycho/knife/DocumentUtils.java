@@ -28,6 +28,7 @@ import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.Job;
 import euphoria.psycho.common.base.Job.Listener;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
+import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.video.VideoActivity;
 import euphoria.psycho.share.util.ClipboardUtils;
 import euphoria.psycho.share.util.CollectionUtils;
@@ -64,17 +65,8 @@ public class DocumentUtils {
                 .setTitle(R.string.dialog_delete_title)
                 .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
                     dialog.dismiss();
-                    ThreadUtils.postOnBackgroundThread(new DeleteFileJob(context, new Listener() {
-                        @Override
-                        public void onFinished(Job job) {
-                            ThreadUtils.postOnUiThread(() -> callback.accept(true));
-                        }
-
-                        @Override
-                        public void onStart(Job job) {
-
-                        }
-                    }, documentInfos));
+                    FileHelper.deleteDocuments(context, documentInfos);
+                    callback.accept(true);
 
                 }))
                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
