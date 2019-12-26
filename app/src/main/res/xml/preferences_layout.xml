@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="服务器">
+        <EditTextPreference
+
+            android:key="ssh_server_address"
+            android:title="地址" />
+        <EditTextPreference
+            android:defaultValue="root"
+            android:key="ssh_username"
+            android:title="用户名" />
+        <EditTextPreference
+            android:key="ssh_password"
+            android:title="密码" />
+    </PreferenceCategory>
+</PreferenceScreen>

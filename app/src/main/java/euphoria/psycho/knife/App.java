@@ -53,7 +53,7 @@ public class App extends BaseApp {
 //        });
         FileLogger.getLogger(getApplicationContext());
         Contexts.setContext(this);
-        Crashs.getInstance().init(this, "发生了错误，详情请查看日记。", "");
+        //Crashs.getInstance().init(this, "发生了错误，详情请查看日记。", "");
     }
 
     public static class Status {

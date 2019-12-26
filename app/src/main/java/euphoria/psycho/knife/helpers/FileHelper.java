@@ -35,6 +35,27 @@ import euphoria.psycho.knife.DocumentInfo;
 public class FileHelper {
     private static final String TAG = "TAG/" + FileHelper.class.getSimpleName();
 
+
+    public static String copyDirectoryStructure(String dir) throws IOException {
+        Path dirPath = Paths.get(dir);
+
+        return Files.list(dirPath)
+                .sorted((o1, o2) -> {
+                    boolean a1 = Files.isDirectory(o1);
+                    boolean a2 = Files.isDirectory(o2);
+                    if (a1 == a2) {
+                        return o1.getFileName().compareTo(o2.getFileName());
+                    } else if (a1) {
+                        return -1;
+                    } else {
+                        return -1;
+                    }
+                })
+                .map(path -> path.getFileName().toString())
+                .collect(Collectors.joining("\n"));
+    }
+
+
     public static List<DocumentInfo> searchDocumentInfo(String dir, String pattern) throws IOException {
 
         Pattern p = Pattern.compile(pattern);

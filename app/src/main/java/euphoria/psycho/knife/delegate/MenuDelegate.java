@@ -41,6 +41,7 @@ import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.OperationManager;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.helpers.FileHelper;
+import euphoria.psycho.knife.helpers.Helper;
 import euphoria.psycho.share.util.ThreadUtils;
 
 public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
@@ -187,6 +188,14 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_copy_directory_structure:
+                try {
+                    Helper.setClipboardText(mFragment.getContext(),
+                            FileHelper.copyDirectoryStructure(mFragment.getDirectory().getAbsolutePath()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return true;
             case R.id.close_menu_id:
                 showBottomSheet();
                 return true;
@@ -240,33 +249,12 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
             case R.id.action_sort_by_ascending:
                 mFragment.sortByAscending(true);
                 break;
+
             case R.id.action_sort_by_descending:
                 mFragment.sortByAscending(false);
                 break;
 
-            case R.id.action_refresh:
-                mFragment.updateRecyclerView(false);
-                break;
-            case R.id.action_move_images:
-                new AlertDialog.Builder(mFragment.getContext())
-                        .setMessage("如果文件名包含连续数字，且长度小于3，则在数字左侧填充0字符，直到其长度等于3。\n有可能破坏文件结构。\n确定要执行此操作吗？")
-                        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                            DocumentUtils.padFileNames(mFragment.getDirectory().getAbsolutePath(), 3);
-                            mFragment.updateRecyclerView(false);
-                            dialog.dismiss();
-                        })
-                        .show();
-                //                try {
-//                    if (StorageUtils.isSDCardFile(mFragment.getDirectory())) {
-//                        FileHelpers.moveFilesByKeywords(mFragment.getDirectory().getAbsolutePath());
-//                        mFragment.updateRecyclerView(false);
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                Utils.moveFiles(mFragment.getContext(), mFragment.getDirectory());
-//                mFragment.updateRecyclerView(false);
-                break;
+
             case R.id.action_calculate_directory:
                 calculateDirectories(mFragment.getContext(), mFragment.getDirectory());
                 break;
