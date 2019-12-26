@@ -116,8 +116,10 @@ public class FileHelper {
             Collator collator = Collator.getInstance(Locale.CHINA);
             return collator.compare(path1.getFileName(),
                     path2.getFileName());
-        } else {
+        } else if (a) {
             return -1;
+        } else {
+            return 1;
         }
     }
 

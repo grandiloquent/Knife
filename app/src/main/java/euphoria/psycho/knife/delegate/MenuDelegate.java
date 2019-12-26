@@ -52,109 +52,7 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
     }
 
-    private void actionDeleteBy(File directory, Context context) {
-        Path start = Paths.get(directory.getAbsolutePath());
-
-        Stream<Path> stream = null;
-        try {
-            stream = java.nio.file.Files.walk(start, Integer.MAX_VALUE);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (stream == null) return;
-        List<String> collect = stream
-                .filter(path -> path.toFile().isFile())
-                .map(p -> p.toAbsolutePath().toString())
-                .sorted(new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        return o1.length() - o2.length();
-                    }
-                })
-                .collect(Collectors.toList());
-        List<String> keepList = new ArrayList<>();
-        List<String> deleteList = new ArrayList<>();
-
-        for (String p : collect) {
-            String fileName = Strings.substringAfterLast(p, '/');
-//            boolean found = false;
-//            for (String k : keepList) {
-//                if (fileName.equals(Strings.substringAfterLast(k, '/'))) {
-//                    deleteList.add(p);
-//                    found = true;
-//                    break;
-//                }
-//            }
-            // if (!found) keepList.add(p);
-            if (keepList.stream().anyMatch(x -> Strings.substringAfterLast(x, "/").equals(fileName))) {
-                deleteList.add(p);
-            } else {
-                keepList.add(p);
-            }
-
-        }
-        deleteList.forEach(p -> {
-            new File(p).delete();
-
-            Log.e(TAG, "Debug: actionDeleteBy, " + p);
-
-        });
-
-
-//        List<String> files = Files.getFilesRecursively(directory);
-//        List<String> findFiles = new ArrayList<>();
-//
-//        Collections.sort(files, (o1, o2) ->
-//
-//                Integer.compare(o1.length(), o2.length())
-//        );
-//        while (files.size() > 0) {
-//            String path = files.remove(0);
-//            String fileName = Files.getFileName(path);
-//            for (String f : files) {
-//                if (Files.getFileName(f).equals(fileName)) {
-//                    findFiles.add(f);
-//                }
-//            }
-//
-//        }
-//        ContentResolver contentResolver = context.getContentResolver();
-//        String treeUri = StorageUtils.getTreeUri(context);
-//        for (String f : findFiles) {
-//            if (!new File(f).delete()) {
-//                StorageUtils.deleteFile(contentResolver, new File(f), treeUri);
-//            }
-//        }
-//
-//        if (VERSION.SDK_INT >= VERSION_CODES.N) {
-//            String text = Files.countFileNames(directory);
-//            Contexts.setText(text);
-//        }
-
-//        File pattern = new File(Environment.getExternalStorageDirectory(), "目录.txt");
-//        if (pattern.isFile()) {
-//            List<String> patterns = euphoria.psycho.knife.util.FileUtils.readAllLines(pattern);
-//            File[] files = directory.listFiles(new FileFilter() {
-//                @Override
-//                public boolean accept(File pathname) {
-//                    if (pathname.isFile() && patterns.indexOf(StringUtils.substringBeforeLast(pathname.getName(), ".")) != -1)
-//                        return true;
-//                    return false;
-//                }
-//            });
-//            ContentResolver contentResolver = context.getContentResolver();
-//            String treeUri = StorageUtils.getTreeUri(context);
-//
-//            for (File f :
-//                    files) {
-//                if (!f.delete()) {
-//                    StorageUtils.deleteFile(contentResolver, f, treeUri);
-//                }
-//
-//            }
-//        }
-    }
-
+    
     private void calculateDirectories(Context context, File directory) {
         final File[] dirList = directory.listFiles(pathname -> {
             if (pathname.isDirectory()) return true;
@@ -345,9 +243,7 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
             case R.id.action_sort_by_descending:
                 mFragment.sortByAscending(false);
                 break;
-            case R.id.action_delete_by:
-                actionDeleteBy(mFragment.getDirectory(), mFragment.getContext());
-                break;
+
             case R.id.action_refresh:
                 mFragment.updateRecyclerView(false);
                 break;

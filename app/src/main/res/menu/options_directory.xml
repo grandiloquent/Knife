@@ -69,9 +69,7 @@
                     android:title="@string/sort_by_descending" />
             </menu>
         </item>
-        <item
-            android:id="@+id/action_delete_by"
-            android:title="删除"></item>
+
         <item
             android:id="@+id/close_menu_id"
             android:icon="@drawable/ic_action_menu"
