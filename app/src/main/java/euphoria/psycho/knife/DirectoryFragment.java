@@ -22,6 +22,7 @@ import com.google.android.exoplayer2.util.Util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Formatter;
 import java.util.List;
@@ -81,7 +82,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private File mDirectory;
     private int mLastVisiblePosition;
     private LinearLayoutManager mLayoutManager;
-    private RecyclerView mRecyclerView;
     private BottomSheet mBottomSheet;
     //    private OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
 //        @Override
@@ -97,32 +97,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private SelectionDelegate mSelectionDelegate;
     private int mSortBy = C.SORT_BY_UNSPECIFIED;
     private boolean mSortAscending = false;
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
 
-
-            String search = (String) msg.obj;
-            List<DocumentInfo> infos = null;
-            try {
-                infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
-                        mSortAscending,
-                        search != null ? (dir, name) -> {
-                            if (name.contains(search)) return true;
-                            return false;
-                        } : null);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            mAdapter.switchDataSet(infos);
-
-        }
-    };
     private ListMenuDelegate mListMenuDelegate;
     private DirectoryToolbar mToolbar;
     private ThumbnailProvider mThumbnailProvider;
+    // 快捷方式
     private Bookmark mBookmark;
 
     public void clearSelections() {
@@ -538,10 +517,29 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
-    public void onSearchTextChanged(String query) {
+    public void onSearchTextChanged(final String query) {
 
-        mHandler.removeMessages(MSG_SEARCH);
-        mHandler.obtainMessage(MSG_SEARCH, query).sendToTarget();
+
+        try {
+            mAdapter.switchDataSet(CompletableFuture.supplyAsync(() -> {
+
+                List<DocumentInfo> infos = null;
+                try {
+                    infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
+                            mSortAscending,
+                            query != null ? (dir, name) -> {
+                                return name.contains(query);
+                            } : null);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return infos;
+            }).get());
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     @Override
@@ -560,7 +558,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mContainer = view.findViewById(R.id.container);
         mContainer.initializeEmptyView(
                 VectorDrawableCompat.create(
-                        getActivity().getResources(),
+                        Objects.requireNonNull(getActivity()).getResources(),
                         R.drawable.downloads_big,
                         getActivity().getTheme()),
                 R.string.directory_ui_empty, R.string.directory_no_results);
@@ -568,9 +566,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mSelectionDelegate = new SelectionDelegate();
         mSelectionDelegate.addObserver(this);
         mAdapter = new DocumentsAdapter(this, mSelectionDelegate);
-        mRecyclerView = mContainer.initializeRecyclerView(mAdapter);
-        mRecyclerView.getItemAnimator().setChangeDuration(0);
-        mLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        RecyclerView recyclerView = mContainer.initializeRecyclerView(mAdapter);
+        Objects.requireNonNull(recyclerView.getItemAnimator()).setChangeDuration(0);
+        mLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
 
         //
 
@@ -594,14 +592,21 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         DocumentUtils.buildRenameDialog(getContext(),
                 documentInfo.getFileName(),
                 charSequence -> {
-                    if (charSequence == null) return;
-                    String newFileName = charSequence.toString();
-                    File src = new File(documentInfo.getPath());
-                    File target = new File(src.getParentFile(), newFileName);
-                    if (!target.exists()) {
-                        src.renameTo(target);
-                        updateRecyclerView(false);
+                    // 如果输入的新文件名为空 终止
+                    if (Strings.isNullOrWhiteSpace(charSequence)) return;
+                    String fileName = Files.getValidFileName(charSequence.toString().trim(), ' ');
+                    Path targetDirectory = Paths.get(mDirectory.getAbsolutePath());
+                    Path targetFile = targetDirectory.resolve(fileName);
+                    // 如果存在相同的文件名 终止
+                    if (!java.nio.file.Files.exists(targetFile)) {
+                        try {
+                            java.nio.file.Files.move(Paths.get(documentInfo.getPath()), targetFile);
+                            updateRecyclerView(false);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
+
                 });
     }
 
@@ -613,7 +618,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void trimVideo(DocumentInfo documentInfo) {
 
         final EditText editText = new EditText(getContext());
-        new Builder(this.getContext())
+        new Builder(Objects.requireNonNull(this.getContext()))
                 .setView(editText)
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
 //                        VideoClip videoClip = new VideoClip();

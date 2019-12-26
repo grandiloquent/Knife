@@ -52,7 +52,7 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
     }
 
-    
+
     private void calculateDirectories(Context context, File directory) {
         final File[] dirList = directory.listFiles(pathname -> {
             if (pathname.isDirectory()) return true;
