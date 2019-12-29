@@ -45,7 +45,6 @@ public class ContextHelper {
             }
             case C.TYPE_EPUB: {
                 items.add(new Item(context, R.string.format_file_name, true));
-                items.add(new Item(context, R.string.extract, true));
             }
             case C.TYPE_ZIP: {
                 items.add(new Item(context, R.string.extract, true));

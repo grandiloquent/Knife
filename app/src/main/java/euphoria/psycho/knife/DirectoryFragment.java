@@ -46,6 +46,7 @@ import euphoria.common.Files;
 import euphoria.common.Strings;
 import euphoria.common.Threads;
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.Log;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.widget.MaterialProgressDialog;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
@@ -77,6 +78,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
         SelectableListToolbar.SearchDelegate {
     private static final int MSG_SEARCH = 0;
+    private static final String TAG = "TAG/" + DirectoryFragment.class.getSimpleName();
     private DocumentsAdapter mAdapter;
     private SelectableListLayout mContainer;
     private File mDirectory;
@@ -97,7 +99,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     private SelectionDelegate mSelectionDelegate;
     private int mSortBy = C.SORT_BY_UNSPECIFIED;
     private boolean mSortAscending = false;
-
     private ListMenuDelegate mListMenuDelegate;
     private DirectoryToolbar mToolbar;
     private ThumbnailProvider mThumbnailProvider;
@@ -254,13 +255,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         updateRecyclerView(false);
     }
 
-
     public void sortByAscending(boolean isAscending) {
         mToolbar.hideOverflowMenu();
         mSortAscending = isAscending;
         updateRecyclerView(false);
     }
-
 
     private void updateLastVisiblePosition() {
 
@@ -385,7 +384,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         }
     }
 
-
     @Override
     public void copyFileName(DocumentInfo documentInfo) {
         Helper.setClipboardText(getContext(), documentInfo.getFileName());
@@ -404,6 +402,9 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void formatFileName(DocumentInfo documentInfo) {
+
+        Log.e(TAG, "Error: formatFileName, " + documentInfo.getPath());
+
         DocumentUtils.formatEpubFileName(documentInfo.getPath());
         updateRecyclerView(false);
     }

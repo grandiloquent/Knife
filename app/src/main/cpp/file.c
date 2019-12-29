@@ -396,9 +396,6 @@ int rename_files(const char *dir, size_t pad_len) {
     return 0;
 }
 
-static inline int64_t stat_size(struct stat *s) {
-    return s->st_blocks * 512;
-}
 
 int unlink_recursive(const char *name) {
     struct stat st;

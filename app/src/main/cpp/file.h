@@ -9,6 +9,10 @@
 typedef int error_t;
 #endif
 
+static inline int64_t stat_size(struct stat *s) {
+    return s->st_blocks * 512;
+}
+
 struct files
 {
     char** files_name;
@@ -29,7 +33,6 @@ int move_files(const char *dfd, const char *dir_name);
 
 int64_t calculate_dir_size(int dfd);
 
-int64_t stat_size(struct stat *s);
 
 int unlink_recursive(const char *name);
 int
