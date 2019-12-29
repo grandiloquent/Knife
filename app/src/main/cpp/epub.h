@@ -73,6 +73,7 @@ int parse_opf(const char *path, const char *buf) {
         strcat(name, "/");
         strcat(name, tmp);
 
+        // 释放
         free(dir);
         free(title);
     } else {
