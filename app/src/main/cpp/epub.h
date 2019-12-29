@@ -17,12 +17,14 @@ static inline char *strip(char *buf) {
 
     char *tmp = buf;
     char c;
-    while (c = *tmp) {
+    while ((c = *tmp)) {
+        // 移除副标题
         if (c == end1 || c == end2) {
             *tmp = 0;
             break;
         }
-        for (size_t i = 0; i++; i < len) {
+        // 用空格替换在Windows 系统中作为文件名的非法字符
+        for (size_t i = 0; i < len; i++) {
             if (c == cs[i]) {
                 *tmp = ' ';
             }
@@ -30,21 +32,31 @@ static inline char *strip(char *buf) {
         tmp++;
     }
 
+    // 移除首尾空白
     buf = trim(buf);
 
     return buf;
 }
 
 int parse_opf(const char *path, const char *buf) {
+
+    // 新路径
     char *name = (char *) malloc(MAX_PATH);
     memset(name, 0, MAX_PATH);
 
+    // 获取 Epub 标题
     char *title = between(buf, "<dc:title", "</dc:title>");
+
     if (title != NULL) {
+        // 格式化 Epub 标题
         strip(title);
 
         char *tmp = title;
+        // 移除 > 字符
         tmp++;
+
+        // 获取目录路径
+
         char *dir = strdup(path);
         size_t dir_len = strlen(path);
 
@@ -55,15 +67,20 @@ int parse_opf(const char *path, const char *buf) {
                 break;
             }
         }
+
+        // 连接文件名
         strcat(name, dir);
         strcat(name, "/");
         strcat(name, tmp);
+
         free(dir);
         free(title);
     } else {
         free(name);
         return -1;
     }
+
+    // 获取 Epub 作者
     char *creator = between(buf, "<dc:creator", "</dc:creator>");
 
     if (creator != NULL) {
@@ -87,21 +104,25 @@ int parse_opf(const char *path, const char *buf) {
     int rc = rename(path, (const char *) name);
 
     //struct stat s;stat(path, &s),
-    LOGE("%s %s %s\n", strerror(errno), path, name);
+    // LOGE("%s %s %s\n", strerror(errno), path, name);
+
     free(name);
-    return 0;
+    return rc;
 }
 
 void pretty_name(const char *path) {
     unsigned char *buf = NULL;
 
+    // 加载 Epub 文件
     struct zip_t *zip = zip_open(path, 0, 'r');
-    if (!zip) {
+    if (zip == NULL) {
         printf("%s\n", "zip_open failed");
         return;
     }
+
+    // 获取文件数目
     int i, n = zip_total_entries(zip);
-    int found = 0;
+
     for (i = 0; i < n; ++i) {
         zip_entry_openbyindex(zip, i);
         {
@@ -109,17 +130,20 @@ void pretty_name(const char *path) {
                 continue;
         }
         const char *name = zip_entry_name(zip);
-        if (!found && ends_with(name, ".opf")) {
 
-            size_t bufSize = zip_entry_size(zip);
+        // 加载元数据文件
+        if (ends_with(name, ".opf")) {
+
+            size_t bufSize = (size_t) zip_entry_size(zip);
+            //!!! 分配内存
             buf = (unsigned char *) calloc(sizeof(unsigned char), bufSize);
             zip_entry_noallocread(zip, (void *) buf, bufSize);
-
-            found = 1;
-        }
-        zip_entry_close(zip);
-        if (found)
+            zip_entry_close(zip);
             break;
+
+        } else {
+            zip_entry_close(zip);
+        }
     }
     zip_close(zip);
     parse_opf(path, (const char *) buf);
