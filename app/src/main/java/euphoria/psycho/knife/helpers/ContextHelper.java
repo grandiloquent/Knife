@@ -6,11 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import euphoria.psycho.common.C;
+import euphoria.psycho.common.Log;
 import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.knife.DocumentInfo;
 import euphoria.psycho.knife.R;
 
 public class ContextHelper {
+    private static final String TAG = "TAG/" + ContextHelper.class.getSimpleName();
+
     public static Item[] generateListMenu(Context context, DocumentInfo documentInfo) {
         List<Item> items = new ArrayList<>();
 
@@ -45,9 +48,14 @@ public class ContextHelper {
             }
             case C.TYPE_EPUB: {
                 items.add(new Item(context, R.string.format_file_name, true));
+                items.add(new Item(context, R.string.extract, true));
+
+                break;
             }
             case C.TYPE_ZIP: {
                 items.add(new Item(context, R.string.extract, true));
+
+
                 break;
             }
         }
