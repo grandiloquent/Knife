@@ -12,6 +12,7 @@ public class C {
     public static final int TYPE_WORD = 8;
     public static final int TYPE_ZIP = 9;
     public static final int TYPE_IMAGE = 10;
+    public static final int TYPE_EPUB = 11;
 
     public static final boolean DEBUG = true;
     public static final String EXTRA_DIRECTORY = "directory";

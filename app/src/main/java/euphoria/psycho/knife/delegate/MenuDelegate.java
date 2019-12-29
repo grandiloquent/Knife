@@ -53,6 +53,57 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
     }
 
+    private void actionCalculateDirectory() {
+        calculateDirectories(mFragment.getContext(), mFragment.getDirectory());
+    }
+
+    private void actionCopyDirectoryStructure() {
+        try {
+            Helper.setClipboardText(mFragment.getContext(),
+                    FileHelper.copyDirectoryStructure(mFragment.getDirectory().getAbsolutePath()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void actionDeleteEmptyDirectories() {
+    }
+
+    private void actionMoveFiles() {
+    }
+
+    private void actionMoveImages() {
+    }
+
+    private void actionRefresh() {
+    }
+
+    private void actionRenameByRegex() {
+    }
+
+    private void actionSelectAll() {
+    }
+
+    private void actionSelectSameType() {
+    }
+
+    private void actionSortByAscending() {
+    }
+
+    private void actionSortByDate() {
+    }
+
+    private void actionSortByDescending() {
+    }
+
+    private void actionSortByName() {
+    }
+
+    private void actionSortBySize() {
+    }
+
+    private void bookmarkMenuId() {
+    }
 
     private void calculateDirectories(Context context, File directory) {
         final File[] dirList = directory.listFiles(pathname -> {
@@ -96,6 +147,10 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
         });
     }
 
+    private void closeMenuId() {
+        mFragment.getBottomSheet().showDialog();
+    }
+
     private void deleteEmptyDirectories() {
         try {
             Files.list(Paths.get(mFragment.getDirectory().getPath())).parallel().filter(p -> {
@@ -136,6 +191,9 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
     }
 
+    private void normalMenuGroup() {
+    }
+
     private void renameByRegex(Context context, File directory) {
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_rename_by_regex, null);
         EditText find = view.findViewById(R.id.find);
@@ -155,6 +213,27 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
                     mFragment.updateRecyclerView(false);
                 }).show();
 
+    }
+
+    private void searchMenuId() {
+    }
+
+    private void selectionModeCopyMenuId() {
+    }
+
+    private void selectionModeCutMenuId() {
+    }
+
+    private void selectionModeDeleteMenuId() {
+        List<DocumentInfo> documentInfos = mFragment.getSelectionDelegate().getSelectedItemsAsList();
+        DocumentUtils.buildDeleteDialog(mFragment.getActivity(), aBoolean -> {
+            mFragment.clearSelections();
+            mFragment.updateRecyclerView(false);
+        }, documentInfos.toArray(new DocumentInfo[0]));
+
+    }
+
+    private void selectionModeMenuGroup() {
     }
 
     private void showBookmark() {
@@ -181,33 +260,22 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
                 .show();
     }
 
-    private void showBottomSheet() {
-        mFragment.getBottomSheet().showDialog();
+
+    private void sortMenuId() {
     }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_copy_directory_structure:
-                try {
-                    Helper.setClipboardText(mFragment.getContext(),
-                            FileHelper.copyDirectoryStructure(mFragment.getDirectory().getAbsolutePath()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                actionCopyDirectoryStructure();
                 return true;
             case R.id.close_menu_id:
-                showBottomSheet();
+                closeMenuId();
                 return true;
 
             case R.id.selection_mode_delete_menu_id:
-
-                List<DocumentInfo> documentInfos = mFragment.getSelectionDelegate().getSelectedItemsAsList();
-                DocumentUtils.buildDeleteDialog(mFragment.getActivity(), aBoolean -> {
-                    mFragment.clearSelections();
-                    mFragment.updateRecyclerView(false);
-                }, documentInfos.toArray(new DocumentInfo[0]));
-
+                selectionModeDeleteMenuId();
                 break;
             case R.id.selection_mode_copy_menu_id:
 
@@ -256,7 +324,7 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
 
             case R.id.action_calculate_directory:
-                calculateDirectories(mFragment.getContext(), mFragment.getDirectory());
+                actionCalculateDirectory();
                 break;
             case R.id.action_rename_by_regex:
 

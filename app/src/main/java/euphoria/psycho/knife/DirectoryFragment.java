@@ -403,6 +403,12 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     @Override
+    public void formatFileName(DocumentInfo documentInfo) {
+        DocumentUtils.formatEpubFileName(documentInfo.getPath());
+        updateRecyclerView(false);
+    }
+
+    @Override
     public ListMenuDelegate getListMenuDelegate() {
 
         if (mListMenuDelegate == null) {
@@ -504,7 +510,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void onEndSearch() {
         updateRecyclerView(false);
     }
-
 
     /*
      * Activity

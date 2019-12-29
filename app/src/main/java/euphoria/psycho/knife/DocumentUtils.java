@@ -144,6 +144,8 @@ public class DocumentUtils {
         dlg.show();
     }
 
+    public static native void formatEpubFileName(String path);
+
     public static native long calculateDirectory(String dir);
 
     public static native void createZipFromDirectory(String dir, String filename);

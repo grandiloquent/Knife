@@ -72,6 +72,7 @@
     <string name="select_items">Select items</string>
     <string name="share">Share</string>
     <string name="extract">Extract...</string>
+    <string name="format_file_name">Format FileName</string>
     <string name="share_link_title">Share</string>
     <string name="copy_content">复制内容</string>
 

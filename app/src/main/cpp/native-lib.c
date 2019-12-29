@@ -9,6 +9,7 @@
 #include "str.h"
 #include "markdown/markdown.h"
 #include "markdown/html.h"
+#include "epub.h"
 
 #define LOGI(...) \
     ((void)__android_log_print(ANDROID_LOG_INFO, "main::", __VA_ARGS__))
@@ -187,6 +188,15 @@ Java_euphoria_psycho_knife_DocumentUtils_extractToDirectory(JNIEnv *env, jclass 
     zip_extract(filename, directory, NULL, NULL);
     (*env)->ReleaseStringUTFChars(env, filename_, filename);
     (*env)->ReleaseStringUTFChars(env, directory_, directory);
+}
+
+JNIEXPORT void JNICALL
+Java_euphoria_psycho_knife_DocumentUtils_formatEpubFileName(JNIEnv *env, jclass type,
+                                                            jstring path_) {
+
+const char *path=(*env)->GetStringUTFChars(env,path_,0);
+pretty_name(path);
+    (*env)->ReleaseStringUTFChars(env, path_, path);
 }
 
 JNIEXPORT void JNICALL

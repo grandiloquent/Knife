@@ -229,8 +229,9 @@ public class FileHelper {
             case "zip":
             case "rar":
             case "gz":
-            case "epub":
                 return C.TYPE_ZIP;
+            case "epub":
+                return C.TYPE_EPUB;
             case "bmp":
             case "gif":
             case "jpg":

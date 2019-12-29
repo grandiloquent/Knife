@@ -25,6 +25,7 @@ public interface DocumentActionDelegate extends BaseActionDelegate<DocumentInfo>
 
     void rename(DocumentInfo documentInfo);
 
+    void formatFileName(DocumentInfo documentInfo);
 
     void trimVideo(DocumentInfo documentInfo);
 
