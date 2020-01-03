@@ -3,15 +3,21 @@ package euphoria.psycho.knife.download;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.knife.DocumentUtils;
+import euphoria.psycho.knife.DocumentUtils.Consumer;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
@@ -19,12 +25,12 @@ import euphoria.psycho.share.util.ContextUtils;
 
 public class DownloadManager implements DownloadObserver {
 
-    private final CopyOnWriteArrayList<DownloadObserver> mObservers = new CopyOnWriteArrayList<>();
+    private final Set<DownloadObserver> mObservers = new HashSet<>();
     private Context mContext;
     private ExecutorService mExecutor;
     private AppCompatActivity mActivity;
     private DownloadDatabase mDatabase;
-    private CopyOnWriteArrayList<TaskRecord> mTaskRecords = new CopyOnWriteArrayList<>();
+    private final Set<TaskRecord> mTaskRecords = new HashSet<>();
     private DownloadAdapter mAdapter;
     private boolean mIsInitialize;
     private ThumbnailProvider mThumbnailProvider;
@@ -39,20 +45,16 @@ public class DownloadManager implements DownloadObserver {
     }
 
     public void addObserver(DownloadObserver observer) {
-        if (mObservers.indexOf(observer) == -1)
+        synchronized (mObservers) {
             mObservers.add(observer);
-    }
-
-    public void removeObserver(DownloadObserver observer) {
-        int index = mObservers.indexOf(observer);
-        if (index != -1) {
-            mObservers.remove(index);
         }
     }
 
     private void broadcastProgress(DownloadInfo downloadInfo) {
-        for (DownloadObserver observer : mObservers) {
-            observer.updateProgress(downloadInfo);
+        synchronized (mObservers) {
+            for (DownloadObserver observer : mObservers) {
+                observer.updateProgress(downloadInfo);
+            }
         }
     }
 
@@ -71,39 +73,34 @@ public class DownloadManager implements DownloadObserver {
 
     void delete(DownloadInfo downloadInfo) {
 
-        int index = lookupTask(downloadInfo._id);
-        if (index != -1) {
-            FileLogger.log("TAG/DownloadManager", "delete: " + "表中包含此任务的键");
 
-            DownloadThread thread = mTaskRecords.get(index).thread;
-            if (thread != null) {
-                thread.stopDownload();
-            } else {
-                FileLogger.log("TAG/DownloadManager", "delete: " +
-                        "表中包含此任务的键,但未找到对应的线程");
-            }
+        synchronized (mTaskRecords) {
+            filter(downloadInfo, taskRecord -> taskRecord.thread.stopDownload());
+
+            mDatabase.delete(downloadInfo);
 
         }
 
-        mDatabase.delete(downloadInfo);
-//        File downloadFile = new File(downloadInfo.filePath);
-//        if (downloadFile.isFile()) downloadFile.delete();
-        for (DownloadObserver observer : mObservers) {
-            observer.deleted(downloadInfo);
+        synchronized (mObservers) {
+            mObservers.remove(downloadInfo);
+            for (DownloadObserver observer : mObservers) {
+                observer.deleted(downloadInfo);
+            }
+
         }
 
 
     }
 
     public void fullUpdate() {
-        if (mTaskRecords.isEmpty()) return;
-        for (TaskRecord taskRecord : mTaskRecords) {
+        synchronized (mTaskRecords) {
+            if (mTaskRecords.isEmpty()) return;
+            for (TaskRecord taskRecord : mTaskRecords) {
 
 
-            Log.e("TAG/DownloadManager", "fullUpdate: ");
-
-            if (mAdapter != null)
-                mAdapter.fullUpdate(taskRecord.info);
+                if (mAdapter != null)
+                    mAdapter.fullUpdate(taskRecord.info);
+            }
         }
     }
 
@@ -111,21 +108,21 @@ public class DownloadManager implements DownloadObserver {
         return mDatabase;
     }
 
-    private int lookupTask(long id) {
-        int length = mTaskRecords.size();
-        for (int i = 0; i < length; i++) {
-            if (mTaskRecords.get(i).id == id) return i;
-        }
-        return -1;
+    public boolean isInitialize() {
+        return mIsInitialize;
     }
+
+    public void setInitialize(boolean initialize) {
+
+        mIsInitialize = initialize;
+    }
+
 
     private void onFinished(DownloadInfo downloadInfo) {
 
-        mDatabase.update(downloadInfo);
-        int index = lookupTask(downloadInfo._id);
-
-        if (index != -1) {
-            mTaskRecords.remove(index);
+        synchronized (mTaskRecords) {
+            mDatabase.update(downloadInfo);
+            filter(downloadInfo, t -> t.thread.stopDownload());
         }
 
 
@@ -138,20 +135,8 @@ public class DownloadManager implements DownloadObserver {
 
     void pause(DownloadInfo downloadInfo) {
 
-
-        int index = lookupTask(downloadInfo._id);
-
-        if (index != -1) {
-            DownloadThread thread = mTaskRecords.get(index).thread;
-            if (thread != null) {
-                thread.stopDownload();
-            }
-        } else {
-            FileLogger.log("TAG/DownloadManager", "[异常] [pause]: "
-                    + "\n 停止任务列表中的指定任务"
-                    + "\n 目标任务的ID = " + downloadInfo._id
-                    + "\n 任务列表种包含的任务数 = " + mTaskRecords.size());
-
+        synchronized (mTaskRecords) {
+            filter(downloadInfo, t -> t.thread.stopDownload());
         }
 
 
@@ -164,25 +149,29 @@ public class DownloadManager implements DownloadObserver {
         return mThumbnailProvider;
     }
 
+    public void removeObserver(DownloadObserver observer) {
+        synchronized (mObservers) {
+            mObservers.remove(observer);
+        }
+    }
+
     void resume(DownloadInfo downloadInfo) {
 
-        int index = lookupTask(downloadInfo._id);
+        synchronized (mTaskRecords) {
+            if (mTaskRecords.stream().filter(t -> t.id == downloadInfo._id).findAny().orElse(null) == null) {
+                DownloadThread thread = new DownloadThread(downloadInfo, this);
+                TaskRecord taskRecord = new TaskRecord();
+                taskRecord.id = downloadInfo._id;
+                taskRecord.thread = thread;
+                taskRecord.info = downloadInfo;
+                mTaskRecords.add(taskRecord);
+                mExecutor.submit(thread);
+                downloadInfo.status = DownloadStatus.PENDING;
 
-        if (index != -1) {
-            FileLogger.log("TAG/DownloadManager", "任务列表中已包含此任务 id = " + downloadInfo._id);
-            return;
+                broadcastProgress(downloadInfo);
+            }
         }
 
-        DownloadThread thread = new DownloadThread(downloadInfo, this);
-        TaskRecord taskRecord = new TaskRecord();
-        taskRecord.id = downloadInfo._id;
-        taskRecord.thread = thread;
-        taskRecord.info = downloadInfo;
-        mTaskRecords.add(taskRecord);
-        mExecutor.submit(thread);
-        downloadInfo.status = DownloadStatus.PENDING;
-
-        broadcastProgress(downloadInfo);
 
     }
 
@@ -194,15 +183,6 @@ public class DownloadManager implements DownloadObserver {
 
     public void setAdapter(DownloadAdapter adapter) {
         mAdapter = adapter;
-    }
-
-    public boolean isInitialize() {
-        return mIsInitialize;
-    }
-
-    public void setInitialize(boolean initialize) {
-
-        mIsInitialize = initialize;
     }
 
     private void startService() {
@@ -224,6 +204,13 @@ public class DownloadManager implements DownloadObserver {
     public void retried(DownloadInfo downloadInfo) {
 
 
+    }
+
+    private void filter(DownloadInfo downloadInfo, Consumer<TaskRecord> c) {
+        mTaskRecords.stream()
+                .filter(t -> downloadInfo._id == t.id)
+                .findFirst()
+                .ifPresent(c::accept);
     }
 
     @Override
@@ -261,6 +248,7 @@ public class DownloadManager implements DownloadObserver {
         broadcastProgress(downloadInfo);
 
     }
+
 
     @Override
     public void updateStatus(DownloadInfo downloadInfo) {
