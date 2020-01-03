@@ -216,6 +216,8 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
     }
 
     private void searchMenuId() {
+        mFragment.getToolbar().showSearchView();
+        mFragment.getSelectableListLayout().onStartSearch();
     }
 
     private void selectionModeCopyMenuId() {
@@ -284,9 +286,7 @@ public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
 
                 break;
             case R.id.search_menu_id:
-
-                mFragment.getToolbar().showSearchView();
-                mFragment.getSelectableListLayout().onStartSearch();
+                searchMenuId();
                 return true;
             case R.id.action_select_same_type:
                 DocumentUtils.selectSameTypes(mFragment.getSelectionDelegate(), mFragment.getDocumentsAdapter());

@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -250,11 +251,12 @@ public class FileHelper {
         return Files.isSymbolicLink(file.toPath());
     }
 
-    public static List<DocumentInfo> listDocuments(String dir, int sortBy, boolean isAscending, FilenameFilter filenameFilter) throws IOException {
+    public static List<DocumentInfo> listDocuments(String dir, int sortBy, boolean isAscending, Function<Path, Boolean> filter) throws IOException {
         // https://github.com/apache/commons-io/tree/master/src/main/java/org/apache/commons/io/comparator
         final int direction = isAscending ? 1 : -1;
 
         return Files.list(Paths.get(dir)).parallel()
+                .filter(path -> filter == null ? true : filter.apply(path))
                 .map(path -> {
                     try {
                         return buildDocumentInfo(path);

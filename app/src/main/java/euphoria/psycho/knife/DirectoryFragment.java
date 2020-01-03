@@ -538,23 +538,33 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void onSearchTextChanged(final String query) {
 
 
+//        Pattern pattern = null;
+//        try {
+//            pattern = Pattern.compile(query);
+//        } catch (Exception ignored) {
+//            return;
+//        }
+
         try {
             mAdapter.switchDataSet(CompletableFuture.supplyAsync(() -> {
+
 
                 List<DocumentInfo> infos = null;
                 try {
                     infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
                             mSortAscending,
-                            query != null ? (dir, name) -> {
-                                return name.contains(query);
-                            } : null);
+                            path -> path.getFileName().toString().contains(query));
                 } catch (IOException e) {
-                    e.printStackTrace();
+
+
                 }
+
                 return infos;
             }).get());
         } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
+
+            Log.e(TAG, "Error: onSearchTextChanged, " + e.getMessage() + " " + e.getCause());
+
         }
 
 

@@ -26,11 +26,11 @@ import euphoria.psycho.share.util.ContextUtils;
 public class DownloadManager implements DownloadObserver {
 
     private final Set<DownloadObserver> mObservers = new HashSet<>();
+    private final Set<TaskRecord> mTaskRecords = new HashSet<>();
     private Context mContext;
     private ExecutorService mExecutor;
     private AppCompatActivity mActivity;
     private DownloadDatabase mDatabase;
-    private final Set<TaskRecord> mTaskRecords = new HashSet<>();
     private DownloadAdapter mAdapter;
     private boolean mIsInitialize;
     private ThumbnailProvider mThumbnailProvider;
@@ -92,6 +92,13 @@ public class DownloadManager implements DownloadObserver {
 
     }
 
+    private void filter(DownloadInfo downloadInfo, Consumer<TaskRecord> c) {
+        mTaskRecords.stream()
+                .filter(t -> downloadInfo._id == t.id)
+                .findFirst()
+                .ifPresent(c::accept);
+    }
+
     public void fullUpdate() {
         synchronized (mTaskRecords) {
             if (mTaskRecords.isEmpty()) return;
@@ -117,7 +124,6 @@ public class DownloadManager implements DownloadObserver {
         mIsInitialize = initialize;
     }
 
-
     private void onFinished(DownloadInfo downloadInfo) {
 
         synchronized (mTaskRecords) {
@@ -136,7 +142,10 @@ public class DownloadManager implements DownloadObserver {
     void pause(DownloadInfo downloadInfo) {
 
         synchronized (mTaskRecords) {
-            filter(downloadInfo, t -> t.thread.stopDownload());
+            filter(downloadInfo, t -> {
+                t.thread.stopDownload();
+                mTaskRecords.remove(t);
+            });
         }
 
 
@@ -204,13 +213,6 @@ public class DownloadManager implements DownloadObserver {
     public void retried(DownloadInfo downloadInfo) {
 
 
-    }
-
-    private void filter(DownloadInfo downloadInfo, Consumer<TaskRecord> c) {
-        mTaskRecords.stream()
-                .filter(t -> downloadInfo._id == t.id)
-                .findFirst()
-                .ifPresent(c::accept);
     }
 
     @Override

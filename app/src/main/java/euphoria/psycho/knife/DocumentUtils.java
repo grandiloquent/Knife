@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -245,17 +246,13 @@ public class DocumentUtils {
         if (infos.size() < 1) return;
         String extension = Strings.substringAfterLast(infos.get(0).getFileName(), ".");
         if (extension == null) return;
-        List<DocumentInfo> infoList = adapter.getInfos();
-
-        Set<DocumentInfo> documentInfoSet = new HashSet<>();
-        for (DocumentInfo info : infoList) {
-            if (info.getFileName().endsWith(extension)) {
-                documentInfoSet.add(info);
 
 
-            }
-        }
-        delegate.setSelectedItems(documentInfoSet);
+        delegate.setSelectedItems(adapter.getInfos()
+                .stream()
+                .filter(i -> i.getFileName().
+                        endsWith(extension))
+                .collect(Collectors.toSet()));
     }
 
     public static void shareDocument(Context context, DocumentInfo documentInfo) {
