@@ -38,6 +38,26 @@ static inline char *strip(char *buf) {
     return buf;
 }
 
+char *move(char *s, char c) {
+    size_t len = strlen(s);
+    if (len == 0)return s;
+    size_t i;
+    int j = -1;
+    for (i = 0; i < len; i++) {
+        if (s[i] == c) {
+            j = i;
+            break;
+        }
+    }
+    if (j == -1)return s;
+    size_t k = len - j - 1;
+    for (i = 0; i < k; i++) {
+        s[i] = s[++j];
+    }
+    s[k] = 0;
+    return s;
+}
+
 int parse_opf(const char *path, const char *buf) {
 
     // 新路径
@@ -49,13 +69,11 @@ int parse_opf(const char *path, const char *buf) {
 
     if (title != NULL) {
         // 格式化 Epub 标题
-        strip(title);
 
-        char *tmp = title;
-        // 移除 > 字符
-        tmp++;
 
+        move(title, '>');
         // 获取目录路径
+        strip(title);
 
         char *dir = strdup(path);
         size_t dir_len = strlen(path);
@@ -71,7 +89,7 @@ int parse_opf(const char *path, const char *buf) {
         // 连接文件名
         strcat(name, dir);
         strcat(name, "/");
-        strcat(name, tmp);
+        strcat(name, title);
 
         // 释放
         free(dir);
@@ -85,18 +103,7 @@ int parse_opf(const char *path, const char *buf) {
     char *creator = between(buf, "<dc:creator", "</dc:creator>");
 
     if (creator != NULL) {
-        char *tmp = creator;
-        size_t i = 0;
-        while (*tmp) {
-            if (*tmp == '>') {
-                i++;
-                tmp++;
-                break;
-            }
-            i++;
-            tmp++;
-        }
-        memmove(creator, tmp, i);
+        move(creator, '>');
         strcat(name, " - ");
         strcat(name, creator);
         free(creator);

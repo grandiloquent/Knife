@@ -403,9 +403,21 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void formatFileName(DocumentInfo documentInfo) {
 
-        Log.e(TAG, "Error: formatFileName, " + documentInfo.getPath());
+//        Log.e(TAG, "Error: formatFileName, " + documentInfo.getPath());
+//
+//        DocumentUtils.formatEpubFileName(documentInfo.getPath());
+//        updateRecyclerView(false);
 
-        DocumentUtils.formatEpubFileName(documentInfo.getPath());
+        try {
+            java.nio.file.Files.list(Paths.get(documentInfo.getPath()).getParent())
+                    .filter(path -> java.nio.file.Files.isRegularFile(path)
+                            && path.getFileName().toString().endsWith(".epub"))
+                    .forEach(path ->
+                            DocumentUtils.formatEpubFileName(path.toAbsolutePath().toString())
+                    );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         updateRecyclerView(false);
     }
 

@@ -12,7 +12,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -139,10 +141,24 @@ public class DownloadFragment extends BaseFragment implements OnMenuItemClickLis
         else {
 
             ThreadUtils.postOnBackgroundThread(() -> {
+                DownloadManager.instance().getDatabase().queryPendingTask().stream().filter(i -> {
+                    if (i.status == DownloadStatus.COMPLETED) {
+
+                        return !new File(i.filePath).exists();
+                        // i.status = DownloadStatus.PAUSED;
+                    }
+                    return false;
+                }).forEach(i -> DownloadManager.instance().getDatabase().delete(i));
+
                 List<DownloadInfo> downloadInfos = DownloadManager.instance().getDatabase().queryPendingTask();
+
+
                 for (DownloadInfo i : downloadInfos) {
-                    if (i.status == DownloadStatus.PENDING) {
+                    if (i.status != DownloadStatus.COMPLETED
+                            && i.status != DownloadStatus.PAUSED) {
                         i.status = DownloadStatus.PAUSED;
+
+                        // i.status = DownloadStatus.PAUSED;
                     }
                 }
                 ThreadUtils.postOnUiThread(() -> {
