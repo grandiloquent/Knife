@@ -37,10 +37,6 @@ public class BottomSheetDelegate {
             case R.drawable.ic_action_file_download:
                 mFragment.updateRecyclerView(new File(Environment.getExternalStorageDirectory(), "Download"));
                 break;
-//            case R.drawable.ic_action_photo:
-//                Intent pictureIntent = new Intent(mFragment.getContext(), PhotoViewActivity.class);
-//                mFragment.getContext().startActivity(pictureIntent);
-//                break;
             case R.drawable.ic_phonelink_blue_24px:
                 Intent serverIntent = new Intent(mFragment.getContext(), FileServerActivity.class);
                 mFragment.getContext().startActivity(serverIntent);

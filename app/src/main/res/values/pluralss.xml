@@ -1,9 +1,5 @@
 <resources>
-  <plurals name="delete_error_notification_title">
-    <item quantity="one">Couldn\u2019t delete <xliff:g example="1" id="count" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$d</xliff:g> item</item>
-    <item quantity="other">Couldn\u2019t delete <xliff:g example="2" id="count" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$d</xliff:g> items</item>
-  </plurals>
-  <plurals name="selected_items">
+    <plurals name="selected_items">
     <item quantity="other">%d selected</item>
     <item quantity="one">1 selected</item>
   </plurals>

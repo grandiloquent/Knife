@@ -43,9 +43,7 @@ public class BottomSheet {
             mRecyclerView.setLayoutManager(new GridLayoutManager(mContext, 4));
             mBottomSheetAdapter = new BottomSheetAdapter(mListener, new Pair[]{
                     Pair.create(R.drawable.ic_action_storage, mContext.getString(R.string.menu_internal_storage)),
-                    Pair.create(R.drawable.ic_action_sd_card, mContext.getString(R.string.menu_sd_card)),
                     Pair.create(R.drawable.ic_action_file_download, "Download"),
-                    Pair.create(R.drawable.ic_action_photo, "Picture"),
                     Pair.create(R.drawable.ic_create_new_folder_blue_24px,
                             mContext.getString(R.string.menu_create_new_directory)),
                     Pair.create(R.drawable.ic_file_download_blue_24px, mContext.getString(R.string.menu_download_tools)),
@@ -64,8 +62,6 @@ public class BottomSheet {
 
 
     }
-
-
 
 
     public interface OnClickListener {

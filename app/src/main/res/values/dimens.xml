@@ -22,9 +22,6 @@
     <dimen name="menu_negative_software_vertical_offset">0.0dip</dimen>
     <dimen name="modern_toolbar_background_corner_radius">24.0dip</dimen>
     <dimen name="modern_toolbar_background_size">40.0dip</dimen>
-    <dimen name="photo_crop_stroke_width">1dip</dimen>
-    <dimen name="photo_crop_width">280dip</dimen>
-    <dimen name="photo_page_margin">32dip</dimen>
     <dimen name="search_toolbar_modern_bg_lateral_inset">8.0dip</dimen>
     <dimen name="search_toolbar_modern_bg_top_bottom_inset">8.0dip</dimen>
     <dimen name="selectable_list_action_bar_end_padding">6.0dip</dimen>

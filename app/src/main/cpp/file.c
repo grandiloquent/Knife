@@ -499,6 +499,7 @@ int CopyFile(const char *filename_in, const char *filename_out) {
     free(buf);
     fclose(fin);
     fclose(fout);
+    return 0;
 }
 
 

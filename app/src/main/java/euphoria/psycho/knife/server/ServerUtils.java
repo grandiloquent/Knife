@@ -1,6 +1,5 @@
 package euphoria.psycho.knife.server;
 
-import org.apache.commons.io.IOUtils;
 import org.nanohttpd.protocols.http.IHTTPSession;
 
 import java.io.File;
@@ -96,7 +95,7 @@ Range: <unit>=<range-start>-<range-end>, <range-start>-<range-end>, <range-start
 
 
         try (FileOutputStream os = new FileOutputStream(dstFile)) {
-            IOUtils.copy(is, os);
+            Files.copy(is, os);
 
         } catch (Exception e) {
             e.printStackTrace();

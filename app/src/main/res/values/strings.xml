@@ -20,9 +20,7 @@
     <string name="bookmark_action_bar_close">Menu</string>
     <string name="channel_name_directory">Files</string>
     <string name="delete">Delete</string>
-    <string name="delete_notification_title">Deleting files</string>
     <string name="add_bookmark">Add Bookmark</string>
-    <string name="delete_preparing">Preparing...</string>
     <string name="dialog_delete_message">Are you sure delete %1$s ?</string>
     <string name="dialog_delete_task">Are you sure you want delete the task %1$s ?</string>
     <string name="dialog_delete_title">Ask</string>
@@ -43,18 +41,14 @@
     <string name="download_notification_retry">On the %1$s retry</string>
     <string name="download_started">Downloading…</string>
     <string name="download_title">Download</string>
-    <string name="failed">Couldn\'t load image</string>
     <string name="hide_info">Hide Info</string>
     <string name="menu_create_new_directory">New Directory</string>
     <string name="menu_download_tools">Download Tools</string>
     <string name="menu_internal_storage">Internal Storage</string>
-    <string name="menu_sd_card">SD Card</string>
     <string name="menu_connect_pc">Connect PC</string>
     <string name="menu_sort">Sort by</string>
     <string name="message_success_insert_download_task">Successfully added the download task \n%1$s\n from the clipboard.</string>
     <string name="notification_touch_for_details">Tap to view details</string>
-    <string name="photo_view_count">
-    <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" id="current_pos">%d</xliff:g> of <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" id="count">%d</xliff:g></string>
     <string name="properties">Properties</string>
     <string name="remaining_duration_days">%1$d days left</string>
     <string name="remaining_duration_hours">%1$d hours left</string>
@@ -86,9 +80,5 @@
 
 
     <string name="sort_size">By size</string>
-    <string name="titles">
-    <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" id="title">%s</xliff:g>, <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" id="subtitle">%s</xliff:g></string>
     <string name="trim_video">Trim Video</string>
-    <string name="delete_progress">
-    <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" example="3" id="count">%1$d</xliff:g> / <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" example="5" id="totalCount">%2$d</xliff:g></string>
 </resources>
