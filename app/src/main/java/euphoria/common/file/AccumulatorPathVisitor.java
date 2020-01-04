@@ -27,7 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.commons.io.file.Counters.PathCounters;
+import euphoria.common.file.Counters.PathCounters;
 
 /**
  * Accumulates normalized paths during visitation.
@@ -87,7 +87,7 @@ public class AccumulatorPathVisitor extends CountingPathVisitor {
 
     /**
      * Gets the list of visited directories.
-     * 
+     *
      * @return the list of visited directories.
      */
     public List<Path> getDirList() {
@@ -96,7 +96,7 @@ public class AccumulatorPathVisitor extends CountingPathVisitor {
 
     /**
      * Gets the list of visited files.
-     * 
+     *
      * @return the list of visited files.
      */
     public List<Path> getFileList() {
@@ -114,9 +114,9 @@ public class AccumulatorPathVisitor extends CountingPathVisitor {
     /**
      * Relativizes each directory path with {@link Path#relativize(Path)} against the given {@code parent}, optionally
      * sorting the result.
-     * 
-     * @param parent A parent path
-     * @param sort Whether to sort
+     *
+     * @param parent     A parent path
+     * @param sort       Whether to sort
      * @param comparator How to sort, null uses default sorting.
      * @return A new list
      */
@@ -127,9 +127,9 @@ public class AccumulatorPathVisitor extends CountingPathVisitor {
     /**
      * Relativizes each file path with {@link Path#relativize(Path)} against the given {@code parent}, optionally
      * sorting the result.
-     * 
-     * @param parent A parent path
-     * @param sort Whether to sort
+     *
+     * @param parent     A parent path
+     * @param sort       Whether to sort
      * @param comparator How to sort, null uses default sorting.
      * @return A new list
      */

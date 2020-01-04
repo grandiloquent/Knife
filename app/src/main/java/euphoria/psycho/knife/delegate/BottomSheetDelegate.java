@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.R;
@@ -37,7 +36,6 @@ public class BottomSheetDelegate {
                 mFragment.updateRecyclerView(Environment.getExternalStorageDirectory());
                 break;
             case R.drawable.ic_action_sd_card:
-                mFragment.updateRecyclerView(new File(FileUtils.getSDCardPath()));
                 break;
             case R.drawable.ic_action_file_download:
                 mFragment.updateRecyclerView(new File(Environment.getExternalStorageDirectory(), "Download"));

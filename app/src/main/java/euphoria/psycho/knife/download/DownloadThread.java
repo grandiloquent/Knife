@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
-import euphoria.psycho.common.FileUtils;
+import euphoria.common.Files;
 import euphoria.psycho.common.log.FileLogger;
 
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
@@ -274,8 +274,8 @@ public class DownloadThread extends Thread {
 
             throw e;
         } finally {
-            if (in != null) FileUtils.closeSilently(in);
-            if (out != null) FileUtils.closeSilently(out);
+            if (in != null) Files.closeSilently(in);
+            if (out != null) Files.closeSilently(out);
         }
     }
 

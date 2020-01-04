@@ -397,12 +397,23 @@ int rename_files(const char *dir, size_t pad_len) {
 }
 
 
-int unlink_recursive(const char *name) {
+///////////////////////////
+int Delete(const char *fullPath) {
+    struct stat s;
+    if (stat(fullPath, &s) != 0)return -1;
+    if (!S_ISDIR(s.st_mode)) {
+        return unlink(fullPath);
+    } else {
+        return DeleteDirectory(fullPath);
+    }
+}
+
+int DeleteDirectory(const char *name) {
     struct stat st;
-    DIR *dir;
+    DIR *dir = NULL;
     struct dirent *de;
     int fail = 0;
-    if (lstat(name, &st) < 0) return -1;
+    if (stat(name, &st) < 0) return -1;
     if (!S_ISDIR(st.st_mode))
         return unlink(name);
     dir = opendir(name);
@@ -414,7 +425,7 @@ int unlink_recursive(const char *name) {
         if (!strcmp(de->d_name, "..") || !strcmp(de->d_name, "."))
             continue;
         sprintf(dn, "%s/%s", name, de->d_name);
-        if (unlink_recursive(dn) < 0) {
+        if (DeleteDirectory(dn) < 0) {
             fail = 1;
             break;
         }
@@ -429,4 +440,149 @@ int unlink_recursive(const char *name) {
     if (closedir(dir) < 0)
         return -1;
     return rmdir(name);
+}
+
+char *GetDirectoryName(char *fullPath) {
+    return SubstringBeforeLast(fullPath, '/');
+}
+
+char *GetExtension(char *fileName) {
+    return SubstringBeforeLast(fileName, '.');
+}
+
+char *GetFileName(char *fullPath) {
+    return SubstringAfterLast(fullPath, '/');
+}
+
+char *GetInvalidFileName(char *fileName, char substitute) {
+    static char invalidFileNameChars[] = {'\"', '<', '>', '|', ':', '*', '?', '\\', '/'};
+    char *tmp = fileName;
+    char c;
+    while ((c = *tmp)) {
+        for (size_t i = 0; i < 10; i++) {
+            if (c == invalidFileNameChars[i]) {
+                *tmp = substitute;
+            }
+        }
+        tmp++;
+    }
+    return fileName;
+}
+
+int IsDirectory(const char *fullPath) {
+    struct stat s;
+    return stat(fullPath, &s) != -1 && S_ISDIR(s.st_mode);
+}
+
+
+int CopyFile(const char *filename_in, const char *filename_out) {
+    FILE *fin, *fout;
+    size_t len;
+    void *buf;
+    fin = fopen(filename_in, "rbe");
+    if (fin == NULL) {
+        return -1;
+    }
+    fout = fopen(filename_out, "wbe");
+    if (fout == NULL) {
+        fclose(fin);
+        return -1;
+    }
+    //We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
+    // The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
+    // improvement in Copy performance.
+    size_t buf_size = 81920;
+    buf = malloc(buf_size);
+    while ((len = fread(buf, 1, buf_size, fin)) > 0) {
+        fwrite(buf, 1, len, fout);
+    }
+    free(buf);
+    fclose(fin);
+    fclose(fout);
+}
+
+
+int CopyDirectory(const char *fullPath, const char *dst, size_t len) {
+    struct stat st;
+    if (stat(dst, &st) != 0)mkdir(dst, 0777);
+
+    DIR *dir = NULL;
+    struct dirent *de;
+
+    dir = opendir(fullPath);
+    if (dir == NULL)
+        return -1;
+    errno = 0;
+
+    int dir_len = strlen(fullPath);
+    char buf[PATH_MAX];
+    if (len == dir_len)
+        buf[0] = 0;
+    else {
+        for (size_t i = len + 1, j = 0; i < dir_len; i++) {
+            buf[j++] = fullPath[i];
+            printf("%c\n", fullPath[i]);
+        }
+        buf[dir_len - len - 1] = '/';
+        buf[dir_len - len] = 0;
+    }
+
+    while ((de = readdir(dir)) != NULL) {
+        char dn[PATH_MAX];
+        char fn[PATH_MAX];
+        memset(fn, 0, PATH_MAX);
+        if (!strcmp(de->d_name, "..") || !strcmp(de->d_name, "."))
+            continue;
+        sprintf(dn, "%s/%s", fullPath, de->d_name);
+        if (stat(dn, &st) < 0) return -1;
+        if (S_ISDIR(st.st_mode)) {
+            sprintf(fn, "%s/%s%s", dst, buf, de->d_name);
+            CopyDirectory(dn, fn, len);
+            printf("%s\n", fn);
+        } else {
+
+
+            sprintf(fn, "%s/%s", dst, de->d_name);
+            printf("%s\n", fn);
+            CopyFile(dn, fn);
+        }
+        errno = 0;
+    }
+    closedir(dir);
+    return 0;
+}
+
+
+int MoveFile(const char *src, const char *fileName) {
+    char t[strlen(src) + 1 + strlen(fileName)];
+    strcpy(t, src);
+    // 0 Success
+    return rename(src, fileName);
+}
+
+char *SubstringAfterLast(char *s, char delimiter) {
+    size_t j = strlen(s);
+    size_t len = j;
+    while (--j) {
+        if (*(s + j) == delimiter) {
+            break;
+        }
+    }
+    if (j + 1 == len)return s;
+    j++;
+    char *t = s + j;
+    memmove(s, t, strlen(t));
+    *(s + len - j) = 0;
+    return s;
+}
+
+char *SubstringBeforeLast(char *s, char delimiter) {
+    size_t j = strlen(s);
+    while (--j) {
+        if (*(s + j) == delimiter) {
+            *(s + j) = 0;
+            break;
+        }
+    }
+    return s;
 }

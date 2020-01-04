@@ -412,22 +412,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 .setTitle(R.string.dialog_delete_title)
                 .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
                     dialog.dismiss();
-
-                    try {
-                        boolean result = CompletableFuture.supplyAsync(() -> {
-                            Path path = Paths.get(documentInfo.getPath());
-                            try {
-                                PathUtils.delete(path);
-                                return true;
-                            } catch (IOException e) {
-                                return false;
-                            }
-                        }).get();
-                        if (result) mAdapter.removeItem(documentInfo);
-                    } catch (ExecutionException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
+                    DocumentUtils.deleteFileSystem(documentInfo.getPath());
+                    mAdapter.removeItem(documentInfo);
                 }))
                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
 

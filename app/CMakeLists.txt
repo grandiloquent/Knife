@@ -5,7 +5,10 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-add_subdirectory(src/main/cpp/markdown)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Werror")
+
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -UNDEBUG -lstdc++fs")
 
 
 # Creates and names a library, sets it as either STATIC
@@ -52,7 +55,6 @@ target_link_libraries( # Specifies the target library.
         native-lib
 
         libminzip
-		markdown
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})

@@ -34,7 +34,6 @@ import java.util.Map;
 
 import euphoria.common.Files;
 import euphoria.common.Strings;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.util.MimeUtils;
 
 
@@ -135,7 +134,7 @@ public class WebServer extends NanoHTTPD {
                 int sortBy = ServerUtils.getIntFromMap(parameters, "sort", 0);
                 return generateDirectoryPage(file, sortBy);
             } else if (file.isFile()) {
-                String ext = FileUtils.getExtension(file.getName());
+                String ext = Files.getExtension(file.getName());
                 switch (ext) {
                     case "mp4":
                         return handleVideo(file, headers);
@@ -367,7 +366,7 @@ public class WebServer extends NanoHTTPD {
 
     private static void addHeaderForFile(Response response, File file) {
         response.addHeader(ServerUtils.HTTP_ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-        String ext = FileUtils.getExtension(file.getName());
+        String ext = Files.getExtension(file.getName());
 
         if (ext == null) return;
         switch (ext.toLowerCase()) {

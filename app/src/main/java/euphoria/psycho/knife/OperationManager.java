@@ -8,12 +8,16 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 
 import androidx.appcompat.app.AlertDialog;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
 import euphoria.psycho.knife.util.ThreadUtils;
 
@@ -69,7 +73,6 @@ public class OperationManager {
         String treeUri = null;
 
 
-
         for (DocumentInfo documentInfo : mSource) {
             File srcFile = new File(documentInfo.getPath());
             if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;
@@ -84,27 +87,38 @@ public class OperationManager {
         }
 
         File targetDirectory = mFragment.getDirectory();
-        Context context = mFragment.getContext();
-
-        List<File> files = new ArrayList<>();
-        for (DocumentInfo documentInfo : mSource) {
-            files.add(new File(documentInfo.getPath()));
+        ForkJoinPool customThreadPool = new ForkJoinPool(2);
+        try {
+            customThreadPool.submit(() -> mSource.parallelStream().forEach(s -> {
+                DocumentUtils.moveFile(s.getPath(), new File(targetDirectory, s.getFileName()).getAbsolutePath());
+            })).get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
         }
+        //Due to how ForkJoin pool works tasks will be submitted to the same pool which was used to execute parent task
 
-        View view = LayoutInflater.from(mFragment.getContext())
-                .inflate(R.layout.dialog_move_progress, null);
 
-        final TextView message = view.findViewById(R.id.line1);
-
-        final AlertDialog dialog = new AlertDialog.Builder(mFragment.getContext())
-                .setView(view).show();
-
+//        Context context = mFragment.getContext();
+//
+//        List<File> files = new ArrayList<>();
+//        for (DocumentInfo documentInfo : mSource) {
+//            files.add(new File(documentInfo.getPath()));
+//        }
+//
+//        View view = LayoutInflater.from(mFragment.getContext())
+//                .inflate(R.layout.dialog_move_progress, null);
+//
+//        final TextView message = view.findViewById(R.id.line1);
+//
+//        final AlertDialog dialog = new AlertDialog.Builder(mFragment.getContext())
+//                .setView(view).show();
+//
 //        for (DocumentInfo documentInfo : mSource) {
 //            File srcFile = new File(documentInfo.getPath());
 //            if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;
-//            FileUtils.moveFile(context, srcFile, targetDirectory);
+////            FileUtils.moveFile(context, srcFile, targetDirectory);
 //        }
-//        if (mListener != null) mListener.onFinished(true);
+        if (mListener != null) mListener.onFinished(true);
     }
 
     public void setSource(List<DocumentInfo> source, boolean isCopy) {

@@ -7,14 +7,9 @@
 #include <stdio.h>
 #include "file.h"
 #include "str.h"
-#include "markdown/markdown.h"
-#include "markdown/html.h"
 #include "epub.h"
 
-#define LOGI(...) \
-    ((void)__android_log_print(ANDROID_LOG_INFO, "main::", __VA_ARGS__))
-#define LOGE(...) \
-    ((void)__android_log_print(ANDROID_LOG_ERROR, "main::", __VA_ARGS__))
+
 
 /*
 static pthread_key_t mThreadKey;
@@ -99,55 +94,10 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 // |HTML_ESCAPE|HTML_SAFELINK
 #define HTML_RENDER_FLAGS (HTML_USE_XHTML)
 
-JNIEXPORT jstring JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_renderMarkdown(JNIEnv *env, jclass type, jstring text_) {
-    const char *text = (*env)->GetStringUTFChars(env, text_, 0);
-    struct sd_callbacks callbacks;
-    struct html_renderopt options;
-    sdhtml_renderer(&callbacks, &options, HTML_RENDER_FLAGS);
-    struct sd_markdown *markdown = sd_markdown_new(
-            MKDEXT_TABLES | MKDEXT_AUTOLINK | MKDEXT_FENCED_CODE, 16, &callbacks,
-            &options);
-    struct buf *output_buf;
-    output_buf = bufnew(128);
-    //result = kno_make_string(NULL,output_buf->size,output_buf->data);
-    sd_markdown_render(
-            output_buf,
-            (const uint8_t *) (text),
-            strlen(text),
-            markdown);
-    sd_markdown_free(markdown);
-
-    const char *p = "<!DOCTYPE html>\n"
-                    "<html>\n"
-                    "<head>\n"
-                    "    <meta charset=utf-8>\n"
-                    "    <meta http-equiv=X-UA-Compatible content=\"chrome=1\">\n"
-                    "    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no\">\n"
-
-                    "    <link rel=stylesheet href=app.css>\n"
-                    "</head>\n"
-                    "<body>\n"
-                    "%s"
-                    "</body>\n"
-                    "</html>";
-    char *buf = malloc(output_buf->size + strlen(p));
-
-    sprintf(buf, p, output_buf->data);
-    bufrelease(output_buf);
-    //    FILE *f = fopen(outFile, "w");
-    //    fputs(buf, f);
-    //    fflush(f);
-    //    fclose(f);
-    //    free(buf);
-
-    (*env)->ReleaseStringUTFChars(env, text_, text);
-    return (*env)->NewStringUTF(env, buf);
-}
 
 JNIEXPORT jlong JNICALL
 Java_euphoria_psycho_knife_DocumentUtils_calculateDirectory(JNIEnv *env, jclass type,
-                                                            jstring dir_) {
+                                                             jstring dir_) {
     const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
     int dirfd = open(dir, O_DIRECTORY | O_CLOEXEC, O_RDONLY);
     if (dirfd < 0) {
@@ -160,25 +110,6 @@ Java_euphoria_psycho_knife_DocumentUtils_calculateDirectory(JNIEnv *env, jclass 
     }
 }
 
-JNIEXPORT jint JNICALL
-Java_euphoria_psycho_knife_DocumentUtils_deleteDirectories(JNIEnv *env, jclass type,
-                                                           jobjectArray directories) {
-    int count = (*env)->GetArrayLength(env, directories);
-    int res = 0;
-    for (int i = 0; i < count; i++) {
-        jstring dir_ = (jstring) (*env)->GetObjectArrayElement(env, directories, i);
-        const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
-        //LOGI("directory %s", dir);
-        int r = unlink_recursive(dir);
-        if (r) {
-            LOGE("Failed delete directory:%s. %d\n", dir, errno);
-        }
-        if (!res)
-            res = r;
-        (*env)->ReleaseStringUTFChars(env, dir_, dir);
-    }
-    return res;
-}
 
 JNIEXPORT void JNICALL
 Java_euphoria_psycho_knife_DocumentUtils_extractToDirectory(JNIEnv *env, jclass type,
@@ -194,8 +125,8 @@ JNIEXPORT void JNICALL
 Java_euphoria_psycho_knife_DocumentUtils_formatEpubFileName(JNIEnv *env, jclass type,
                                                             jstring path_) {
 
-const char *path=(*env)->GetStringUTFChars(env,path_,0);
-pretty_name(path);
+    const char *path = (*env)->GetStringUTFChars(env, path_, 0);
+    pretty_name(path);
     (*env)->ReleaseStringUTFChars(env, path_, path);
 }
 
@@ -286,4 +217,29 @@ Java_euphoria_psycho_knife_DocumentUtils_createZipFromDirectory(JNIEnv *env, jcl
     zip_close(zip);
     (*env)->ReleaseStringUTFChars(env, dir_, dir);
     (*env)->ReleaseStringUTFChars(env, filename_, filename);
+}
+
+JNIEXPORT jint JNICALL
+Java_euphoria_psycho_knife_DocumentUtils_deleteFileSystem(JNIEnv *env, jclass clazz,
+                                                          jstring full_path_) {
+    const char *full_path = (*env)->GetStringUTFChars(env, full_path_, 0);
+    int result = Delete(full_path);
+    (*env)->ReleaseStringUTFChars(env, full_path_, full_path);
+
+    return result;
+}
+
+JNIEXPORT jint JNICALL
+Java_euphoria_psycho_knife_DocumentUtils_moveFile(JNIEnv *env, jclass clazz, jstring source_,
+                                                  jstring target_) {
+
+    const char *source = (*env)->GetStringUTFChars(env, source_, 0);
+    const char *target = (*env)->GetStringUTFChars(env, target_, 0);
+
+    int result = rename(source, target);
+
+    (*env)->ReleaseStringUTFChars(env, source_, source);
+    (*env)->ReleaseStringUTFChars(env, target_, target);
+
+    return result;
 }

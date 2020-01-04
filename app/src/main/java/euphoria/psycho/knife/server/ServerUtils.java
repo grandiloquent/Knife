@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import euphoria.psycho.common.FileUtils;
+import euphoria.common.Files;
 import euphoria.psycho.knife.util.MimeUtils;
 
 /*
@@ -283,7 +283,7 @@ Range: <unit>=<range-start>-<range-end>, <range-start>-<range-end>, <range-start
     }
 
     public static String getMimeType(String name, String defType) {
-        String ext = FileUtils.getExtension(name);
+        String ext = Files.getExtension(name);
         if (ext != null) return MimeUtils.guessMimeTypeFromExtension(ext);
         return defType;
     }

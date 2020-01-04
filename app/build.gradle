@@ -12,7 +12,7 @@ android {
         ndk.abiFilters 'armeabi-v7a'
         externalNativeBuild {
             cmake {
-                cppFlags ""
+//                arguments '-DANDROID_STL=c++_static'
             }
         }
         javaCompileOptions {

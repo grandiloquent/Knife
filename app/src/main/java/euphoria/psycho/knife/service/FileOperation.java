@@ -135,7 +135,7 @@ public abstract class FileOperation implements Parcelable {
         Job createJob(Context service, Job.Listener listener, String id) {
             switch (getOpType()) {
                 case OPERATION_DELETE:
-                    return new DeleteJob(service, id, listener,getSource());
+                    return null;
             }
             return null;
         }

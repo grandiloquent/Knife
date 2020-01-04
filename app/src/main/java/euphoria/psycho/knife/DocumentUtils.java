@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
+import euphoria.common.Files;
 import euphoria.common.Strings;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.helpers.ContextHelper;
 import euphoria.psycho.knife.helpers.FileHelper;
@@ -135,28 +135,26 @@ public class DocumentUtils {
         dlg.show();
     }
 
-    public static native void formatEpubFileName(String path);
-
     public static native long calculateDirectory(String dir);
 
     public static native void createZipFromDirectory(String dir, String filename);
 
-    public static native int deleteDirectories(String[] directories);
+    public static native int moveFile(String source, String target);
+
+
+    public static native int deleteFileSystem(String fullPath);
+
 
     public static native void deleteLessFiles(String fileName);
 
     public static native void extractToDirectory(String filename, String directory);
 
+    public static native void formatEpubFileName(String path);
+
     static ColorStateList getIconForegroundColorList(Context context) {
         return AppCompatResources.getColorStateList(context, R.color.white_mode_tint);
     }
 
-    public static String getTreeUri() {
-        if (mTreeUri == null) {
-            mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
-        }
-        return mTreeUri;
-    }
 
     public static native void moveFilesByExtension(String dirPath, String destDirName);
 
@@ -222,7 +220,6 @@ public class DocumentUtils {
 
     public static native void padFileNames(String dir, int paddingLeftLength);
 
-    public static native String renderMarkdown(String text);
 
     public static void selectAll(SelectionDelegate<DocumentInfo> delegate, DocumentsAdapter adapter) {
 
@@ -248,7 +245,7 @@ public class DocumentUtils {
     public static void shareDocument(Context context, DocumentInfo documentInfo) {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
-        String extension = FileUtils.getExtension(documentInfo.getFileName());
+        String extension = Files.getExtension(documentInfo.getFileName());
         shareIntent.setType(MimeUtils.guessMimeTypeFromExtension(extension));
         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(documentInfo.getPath())));
         context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_link_title)));
