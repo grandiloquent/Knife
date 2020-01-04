@@ -3,6 +3,7 @@ package euphoria.psycho.knife.helpers;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Notification.Builder;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ClipData;
@@ -25,8 +26,6 @@ import euphoria.psycho.common.C;
 import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.knife.DocumentInfo;
 import euphoria.psycho.knife.R;
-
-import android.app.Notification.Builder;
 
 public class ContextHelper {
     private static final String TAG = "TAG/" + ContextHelper.class.getSimpleName();

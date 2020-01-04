@@ -45,7 +45,6 @@ import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.common.Files;
 import euphoria.common.Strings;
 import euphoria.common.Threads;
-import euphoria.common.file.PathUtils;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.base.BaseActivity;

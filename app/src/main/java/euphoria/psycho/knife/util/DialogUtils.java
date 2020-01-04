@@ -6,8 +6,6 @@ import android.content.Context;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
 
-import euphoria.psycho.knife.R;
-
 
 public class DialogUtils {
 

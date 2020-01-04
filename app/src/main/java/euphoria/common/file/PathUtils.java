@@ -17,6 +17,8 @@
 
 package euphoria.common.file;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -40,8 +42,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.apache.commons.io.IOUtils;
 
 import euphoria.common.file.Counters.PathCounters;
 

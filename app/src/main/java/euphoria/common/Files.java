@@ -34,7 +34,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import androidx.annotation.RequiresApi;
-import euphoria.psycho.common.Log;
 
 import static euphoria.common.Strings.substringBeforeLast;
 

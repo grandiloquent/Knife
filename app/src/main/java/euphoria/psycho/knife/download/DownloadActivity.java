@@ -3,7 +3,6 @@ package euphoria.psycho.knife.download;
 import android.content.Intent;
 
 import androidx.annotation.Nullable;
-import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.BaseActivity;
 import euphoria.psycho.common.base.BaseFragment;
 import euphoria.psycho.knife.R;

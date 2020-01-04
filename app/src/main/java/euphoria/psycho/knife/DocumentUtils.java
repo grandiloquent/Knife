@@ -24,7 +24,6 @@ import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.helpers.ContextHelper;
 import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.util.CollectionUtils;
-import euphoria.psycho.knife.util.ContextUtils;
 import euphoria.psycho.knife.util.DialogUtils;
 import euphoria.psycho.knife.util.DialogUtils.DialogListener;
 import euphoria.psycho.knife.util.MimeUtils;

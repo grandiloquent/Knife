@@ -2,24 +2,16 @@ package euphoria.psycho.knife;
 
 import android.app.Activity;
 import android.content.Context;
-import android.net.Uri;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 
-import androidx.appcompat.app.AlertDialog;
 import euphoria.psycho.common.widget.FloatingActionButton;
-import euphoria.psycho.knife.util.ThreadUtils;
 
 public class OperationManager {
     private FloatingActionButton mPaste;

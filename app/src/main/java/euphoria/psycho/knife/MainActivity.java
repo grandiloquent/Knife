@@ -3,7 +3,6 @@ package euphoria.psycho.knife;
 import android.content.Intent;
 
 import androidx.annotation.Nullable;
-import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.BaseActivity;
 
 public class MainActivity extends BaseActivity {
