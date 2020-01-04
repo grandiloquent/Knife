@@ -8,8 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
-import euphoria.psycho.share.cache.BlobCache;
-import euphoria.psycho.share.util.Utils;
+import euphoria.psycho.knife.util.Utils;
 
 public class Bookmarker {
     private static final String TAG = "Bookmarker";

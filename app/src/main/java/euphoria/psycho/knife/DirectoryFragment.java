@@ -1,6 +1,7 @@
 package euphoria.psycho.knife;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
@@ -8,8 +9,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +34,7 @@ import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -45,6 +45,7 @@ import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.common.Files;
 import euphoria.common.Strings;
 import euphoria.common.Threads;
+import euphoria.common.file.PathUtils;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.common.base.BaseActivity;
@@ -52,20 +53,20 @@ import euphoria.psycho.common.widget.MaterialProgressDialog;
 import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectableListToolbar;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
-import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
+import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.helpers.Helper;
+import euphoria.psycho.knife.util.ContextUtils;
 import euphoria.psycho.knife.util.FileUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
 import euphoria.psycho.knife.util.VideoUtils;
 import euphoria.psycho.knife.util.VideoUtils.OnTrimVideoListener;
 import euphoria.psycho.knife.video.VideoActivity;
-import euphoria.psycho.share.util.ContextUtils;
-import euphoria.psycho.share.util.ThreadUtils;
 
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
 import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
@@ -353,6 +354,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         transaction.commitNowAllowingStateLoss();
     }
 
+    /*添加压缩文件*/
     @Override
     public void addToArchive(DocumentInfo documentInfo) {
         ProgressDialog dialog = MaterialProgressDialog.show(getContext(),
@@ -378,12 +380,16 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
         try {
             byte[] buffer = java.nio.file.Files.readAllBytes(Paths.get(documentInfo.getPath()));
-            Helper.setClipboardText(getContext(), new String(buffer, StandardCharsets.UTF_8));
+            Contexts.setText(new String(buffer, StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /*
+     * 复制文件名
+     * 仅文件名，不包括目录路径
+     * */
     @Override
     public void copyFileName(DocumentInfo documentInfo) {
         Helper.setClipboardText(getContext(), documentInfo.getFileName());
@@ -394,9 +400,39 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void delete(DocumentInfo documentInfo) {
 
-        DocumentUtils.buildDeleteDialog(getContext(), aBoolean -> {
-            if (aBoolean) mAdapter.removeItem(documentInfo);
-        }, documentInfo);
+        Context context = Objects.requireNonNull(getContext());
+        String description = documentInfo.getFileName();
+
+//        if (documentInfos.length > 1) {
+//            description += " 等 " + documentInfos.length + " 个文件";
+//        }
+        AlertDialog dlg = new AlertDialog.Builder(context)
+                .setTitle(R.string.dialog_delete_title)
+                .setMessage(context.getString(R.string.dialog_delete_message, description))
+                .setTitle(R.string.dialog_delete_title)
+                .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
+                    dialog.dismiss();
+
+                    try {
+                        boolean result = CompletableFuture.supplyAsync(() -> {
+                            Path path = Paths.get(documentInfo.getPath());
+                            try {
+                                PathUtils.delete(path);
+                                return true;
+                            } catch (IOException e) {
+                                return false;
+                            }
+                        }).get();
+                        if (result) mAdapter.removeItem(documentInfo);
+                    } catch (ExecutionException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }))
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss()).create();
+
+        dlg.show();
+
 
     }
 
@@ -534,6 +570,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         savePreferences();
     }
 
+    /*过滤文件列表*/
     @Override
     public void onSearchTextChanged(final String query) {
 
@@ -718,6 +755,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 }).show();
     }
 
+    /*解压ZIP压缩文件*/
     @Override
     public void unzip(DocumentInfo documentInfo) {
         if (Pattern.compile("\\.(?:zip|epub)$").matcher(documentInfo.getFileName()).find()) {
@@ -732,10 +770,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             updateRecyclerView(false);
             return;
         }
-        ThreadUtils.postOnBackgroundThread(() -> {
-            UnZipJob job = new UnZipJob(Throwable::printStackTrace);
-            job.unzip(documentInfo.getPath());
-            ThreadUtils.postOnUiThread(() -> updateRecyclerView(true));
-        });
+
     }
 }

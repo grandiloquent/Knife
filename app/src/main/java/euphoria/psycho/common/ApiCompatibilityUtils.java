@@ -50,7 +50,7 @@ import java.io.UnsupportedEncodingException;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.widget.ImageViewCompat;
-import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 
 /**
  * Utility class to use new APIs that were added after ICS (API level 14).

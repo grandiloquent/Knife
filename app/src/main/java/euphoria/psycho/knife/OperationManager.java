@@ -15,8 +15,7 @@ import java.util.List;
 import androidx.appcompat.app.AlertDialog;
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.FloatingActionButton;
-import euphoria.psycho.knife.util.StorageUtils;
-import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 
 public class OperationManager {
     private FloatingActionButton mPaste;
@@ -69,15 +68,11 @@ public class OperationManager {
 
         String treeUri = null;
 
-        Uri uri = FileUtils.getTreeUri();
 
-        if (uri != null)
-            treeUri = uri.toString();
 
         for (DocumentInfo documentInfo : mSource) {
             File srcFile = new File(documentInfo.getPath());
             if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;
-            StorageUtils.copyFile(context, srcFile, targetDirectory, treeUri);
         }
         if (mListener != null) mListener.onFinished(true);
     }
@@ -104,27 +99,6 @@ public class OperationManager {
         final AlertDialog dialog = new AlertDialog.Builder(mFragment.getContext())
                 .setView(view).show();
 
-        MoveFilesTask moveFilesTask = new MoveFilesTask(context,
-                files.toArray(new File[0]),
-                targetDirectory,
-                DocumentUtils.getTreeUri(),
-                new MoveFilesTask.Listener() {
-                    @Override
-                    public void onFinished(List<File> failedFiles) {
-                        ThreadUtils.postOnUiThread(() -> {
-                            dialog.dismiss();
-                            if (mListener != null) mListener.onFinished(true);
-                        });
-                    }
-
-                    @Override
-                    public void onUpdateProgress(File srcFile) {
-                        ThreadUtils.postOnUiThread(() -> {
-                            message.setText(srcFile.getName());
-                        });
-                    }
-                });
-        ThreadUtils.postOnBackgroundThread(moveFilesTask);
 //        for (DocumentInfo documentInfo : mSource) {
 //            File srcFile = new File(documentInfo.getPath());
 //            if (srcFile.getParent().equals(targetDirectory.getAbsolutePath())) continue;

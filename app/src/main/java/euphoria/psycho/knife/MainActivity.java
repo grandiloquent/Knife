@@ -3,12 +3,8 @@ package euphoria.psycho.knife;
 import android.content.Intent;
 
 import androidx.annotation.Nullable;
-import euphoria.common.Documents;
 import euphoria.psycho.common.C;
 import euphoria.psycho.common.base.BaseActivity;
-import euphoria.psycho.common.base.BaseFragment;
-import euphoria.psycho.knife.download.DownloadFragment;
-import euphoria.psycho.share.util.ContextUtils;
 
 public class MainActivity extends BaseActivity {
 
@@ -50,9 +46,6 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_PERMISSION && resultCode == RESULT_OK) {
-            Documents.keepPermission(this, data);
-            ContextUtils.getAppSharedPreferences().edit().putString(C.KEY_TREE_URI, data.getDataString()).apply();
-        }
+
     }
 }

@@ -15,8 +15,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import euphoria.common.Files;
 import euphoria.psycho.common.Callback;
-import euphoria.psycho.share.util.BitmapUtils;
-import euphoria.psycho.share.util.IconUtils;
 
 public class ThumbnailUtils {
 

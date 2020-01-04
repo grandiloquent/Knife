@@ -57,23 +57,14 @@ dependencies {
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview:1.1.0-beta04'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
+    implementation 'androidx.recyclerview:recyclerview:1.2.0-alpha01'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta4'
     implementation 'com.googlecode.mp4parser:isoparser:1.1.22'
-    implementation 'com.google.android.material:material:1.1.0-alpha03'
+    implementation 'com.google.android.material:material:1.2.0-alpha03'
     implementation 'com.google.protobuf:protobuf-lite:3.0.1'
-    // https://mvnrepository.com/artifact/org.mp4parser/muxer
-// https://mvnrepository.com/artifact/org.jsoup/jsoup
     implementation "org.jsoup:jsoup:1.12.1"
-// https://mvnrepository.com/artifact/com.itextpdf/itextpdf
-    //implementation group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.16'
-    implementation 'com.tom_roush:pdfbox-android:1.8.10.1'
-    //implementation 'com.github.barteksc:pdfium-android:1.9.0'
-    implementation 'org.apache.commons:commons-compress:1.18'
-    implementation "com.google.android.exoplayer:exoplayer:2.9.2"
-    //implementation "com.github.bumptech.glide:glide:4.9.0"
-    // implementation "org.apache.ftpserver:ftpserver-core:1.1.1"
-    implementation project(':share')
-    // protobuf files("ext/")
+    implementation "com.google.android.exoplayer:exoplayer:2.9.5"
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.19'
+
 }
 

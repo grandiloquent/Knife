@@ -14,14 +14,12 @@ import euphoria.psycho.knife.R;
 public class DeleteJob extends Job {
 
     final List<String> mSource;
-    final String mTreeUri;
     private long mDeletedContentLength = 0L;
     private volatile int mDocsProcessed = 0;
 
     public DeleteJob(Context context, String id, Listener listener, List<String> source) {
         super(context, id, listener, FileOperationService.OPERATION_DELETE);
         mSource = source;
-        mTreeUri = FileUtils.getTreeUri().toString();
 
     }
 

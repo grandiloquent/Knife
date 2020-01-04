@@ -5,23 +5,17 @@ import android.content.Intent;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import euphoria.psycho.common.Log;
-import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.DocumentUtils.Consumer;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.util.ContextUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
-import euphoria.psycho.share.util.ContextUtils;
 
 public class DownloadManager implements DownloadObserver {
 

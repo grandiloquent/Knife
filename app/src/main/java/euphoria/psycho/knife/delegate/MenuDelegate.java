@@ -22,19 +22,15 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.widget.Toolbar;
 import euphoria.common.Strings;
 import euphoria.common.Threads;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.Log;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.DocumentInfo;
 import euphoria.psycho.knife.DocumentUtils;
@@ -42,7 +38,7 @@ import euphoria.psycho.knife.OperationManager;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.helpers.Helper;
-import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 
 public class MenuDelegate implements Toolbar.OnMenuItemClickListener {
     private static final String TAG = "TAG/" + MenuDelegate.class.getSimpleName();

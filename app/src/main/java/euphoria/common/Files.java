@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -34,14 +35,14 @@ import java.util.zip.ZipInputStream;
 
 import androidx.annotation.RequiresApi;
 import euphoria.psycho.common.Log;
-import euphoria.psycho.share.util.ThreadUtils;
 
 import static euphoria.common.Strings.substringBeforeLast;
 
 public class Files {
-
     public static final int DEFAULT_BUFFER_SIZE = 4096;
     public static final String NORMAL_AUDIO_FORMAT = "3gp|aac|flac|gsm|imy|m4a|mid|mkv|mp3|mp4|mxmf|ogg|ota|rtttl|rtx|ts|wav|xmf";
+    public static final long ONE_KB = 1024;
+    public static final long ONE_MB = ONE_KB * ONE_KB;
     public static final String SUPPORT_AUDIO_FORMAT = "aac|flac|m4a|mp3|ogg|wav";
     public static final String SUPPORT_VIDEO_FORMAT = "3gp|mkv|mp4|ts|webm";
     private static final char AltDirectorySeparatorChar = '/';
@@ -49,6 +50,7 @@ public class Files {
     private static final long COPY_CHECKPOINT_BYTES = 524288;
     private static final char DirectorySeparatorChar = '\\';
     private static final boolean ENABLE_COPY_OPTIMIZATIONS = true;
+    private static final long FILE_COPY_BUFFER_SIZE = ONE_MB * 30;
     private static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE - 8;
     private static final String TAG = "TAG/" + Files.class.getSimpleName();
     private static final char VolumeSeparatorChar = ':';
@@ -264,8 +266,7 @@ public class Files {
 
     }
 
-    public static File createDirectoryIfNotExists(String path) {
-        File dir = new File(path);
+    public static File createDirectoryIfNotExists(File dir) {
          /*
 
          Tests whether the file denoted by this abstract pathname is a
@@ -365,6 +366,41 @@ public class Files {
         }
 
         return null;
+    }
+
+    private static void doCopyFile(final File srcFile, final File destFile, final boolean preserveFileDate)
+            throws IOException {
+        if (destFile.exists() && destFile.isDirectory()) {
+            throw new IOException("Destination '" + destFile + "' exists but is a directory");
+        }
+
+        try (FileInputStream fis = new FileInputStream(srcFile);
+             FileChannel input = fis.getChannel();
+             FileOutputStream fos = new FileOutputStream(destFile);
+             FileChannel output = fos.getChannel()) {
+            final long size = input.size(); // TODO See IO-386
+            long pos = 0;
+            long count = 0;
+            while (pos < size) {
+                final long remain = size - pos;
+                count = remain > FILE_COPY_BUFFER_SIZE ? FILE_COPY_BUFFER_SIZE : remain;
+                final long bytesCopied = output.transferFrom(input, pos, count);
+                if (bytesCopied == 0) { // IO-385 - can happen if file is truncated after caching the size
+                    break; // ensure we don't loop forever
+                }
+                pos += bytesCopied;
+            }
+        }
+
+        final long srcLen = srcFile.length(); // TODO See IO-386
+        final long dstLen = destFile.length(); // TODO See IO-386
+        if (srcLen != dstLen) {
+            throw new IOException("Failed to copy full contents from '" +
+                    srcFile + "' to '" + destFile + "' Expected length: " + srcLen + " Actual: " + dstLen);
+        }
+        if (preserveFileDate) {
+            destFile.setLastModified(srcFile.lastModified());
+        }
     }
 
     private static boolean extensionMatch(String[] extensions, String fileName) {
@@ -518,7 +554,6 @@ public class Files {
         return null;
     }
 
-
     public static List<String> getFilesRecursively(File dir) {
         List<String> ls = new ArrayList<String>();
         for (File fObj : dir.listFiles()) {
@@ -531,6 +566,30 @@ public class Files {
         }
 
         return ls;
+    }
+
+    public static File getUniqueFile(File src) {
+        if (!src.isFile()) return src;
+        int dotIndex = src.getName().lastIndexOf('.');
+        String name = "";
+        String ext = "";
+        int count = 1;
+        if (dotIndex != -1) {
+            ext = src.getName().substring(dotIndex);
+            name = src.getName().substring(0, dotIndex);
+        } else {
+            name = src.getName();
+        }
+        File parentFile = src.getParentFile();
+        File dstFile = new File(parentFile, name + " (" + count + ")" + ext);
+        while (dstFile.isFile()) {
+            if (++count > 32) {
+                throw new IllegalStateException();
+            }
+            dstFile = new File(parentFile, name + " (" + count + ")" + ext);
+
+        }
+        return dstFile;
     }
 
     public static String getValidFileName(String value, char c) {
@@ -967,8 +1026,6 @@ public class Files {
         return null;
     }
 
-
-
     public static String readToEnd(InputStream inputStream, String charsetName) {
         try {
          /*
@@ -1075,23 +1132,6 @@ public class Files {
         }
         return null;
 
-    }
-
-    /**
-     * Delete the given File and (if it's a directory) everything within it.
-     */
-    public static void recursivelyDeleteFile(File currentFile) {
-        ThreadUtils.assertOnBackgroundThread();
-        if (currentFile.isDirectory()) {
-            File[] files = currentFile.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    recursivelyDeleteFile(file);
-                }
-            }
-        }
-
-        if (!currentFile.delete()) Log.e(TAG, "Failed to delete: " + currentFile);
     }
 
     public static long sizeOfDirectory(File directory) {

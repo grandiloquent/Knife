@@ -10,35 +10,26 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.nio.file.Paths;
-import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.content.res.AppCompatResources;
-import euphoria.common.Files;
 import euphoria.common.Strings;
 import euphoria.psycho.common.C;
-import euphoria.psycho.common.base.Job;
-import euphoria.psycho.common.base.Job.Listener;
+import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
+import euphoria.psycho.knife.helpers.ContextHelper;
 import euphoria.psycho.knife.helpers.FileHelper;
+import euphoria.psycho.knife.util.CollectionUtils;
+import euphoria.psycho.knife.util.ContextUtils;
+import euphoria.psycho.knife.util.DialogUtils;
+import euphoria.psycho.knife.util.DialogUtils.DialogListener;
+import euphoria.psycho.knife.util.MimeUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 import euphoria.psycho.knife.video.VideoActivity;
-import euphoria.psycho.share.util.ClipboardUtils;
-import euphoria.psycho.share.util.CollectionUtils;
-import euphoria.psycho.share.util.ContextUtils;
-import euphoria.psycho.share.util.DialogUtils;
-import euphoria.psycho.share.util.DialogUtils.DialogListener;
-import euphoria.psycho.share.util.FileUtils;
-import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.share.util.ThreadUtils;
 
 import static euphoria.psycho.knife.helpers.FileHelper.getType;
 
@@ -80,11 +71,10 @@ public class DocumentUtils {
 
         EditText editText = new EditText(context);
         editText.setMaxLines(1);
-        editText.setHint(context.getString(euphoria.psycho.share.R.string.hint_new_folder_hint));
         editText.requestFocus();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context)
-                .setTitle(euphoria.psycho.share.R.string.dialog_title_new_folder)
+                .setTitle("新建文件夹")
                 .setView(editText)
                 .setPositiveButton(android.R.string.ok, ((dialog, which) -> {
                     dialog.dismiss();
@@ -283,7 +273,7 @@ public class DocumentUtils {
                         .setTitle(R.string.dialog_properties_title)
                         .setAdapter(new ArrayAdapter<>(context, R.layout.dialog_properties, R.id.line1, properties),
                                 (dialog, which) -> {
-                                    ClipboardUtils.writeToClipboard(context, properties.get(which));
+                                    ContextHelper.writeToClipboard(context, properties.get(which));
                                 }).show();
 
             });

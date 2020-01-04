@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import euphoria.psycho.share.util.FileUtils;
-import euphoria.psycho.share.util.MimeUtils;
+import euphoria.psycho.common.FileUtils;
+import euphoria.psycho.knife.util.MimeUtils;
 
 /*
 https://referencesource.microsoft.com/#System.Web/StaticFileHandler.cs

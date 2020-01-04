@@ -1,7 +1,7 @@
 package euphoria.psycho.knife.download;
 
 
-import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 
 public class DownloadObserverImpl implements DownloadObserver {
     private final DownloadAdapter mAdapter;

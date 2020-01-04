@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
@@ -14,8 +13,6 @@ import android.os.Environment;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
-
-import java.io.File;
 
 import euphoria.common.Strings;
 

@@ -5,9 +5,11 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -26,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import euphoria.common.Strings;
 import euphoria.common.Threads;
@@ -35,43 +39,6 @@ import euphoria.psycho.knife.DocumentInfo;
 
 public class FileHelper {
     private static final String TAG = "TAG/" + FileHelper.class.getSimpleName();
-
-
-    public static String copyDirectoryStructure(String dir) throws IOException {
-        Path dirPath = Paths.get(dir);
-
-        return Files.list(dirPath)
-                .sorted((o1, o2) -> {
-                    boolean a1 = Files.isDirectory(o1);
-                    boolean a2 = Files.isDirectory(o2);
-                    if (a1 == a2) {
-                        return o1.getFileName().compareTo(o2.getFileName());
-                    } else if (a1) {
-                        return -1;
-                    } else {
-                        return -1;
-                    }
-                })
-                .map(path -> path.getFileName().toString())
-                .collect(Collectors.joining("\n"));
-    }
-
-
-    public static List<DocumentInfo> searchDocumentInfo(String dir, String pattern) throws IOException {
-
-        Pattern p = Pattern.compile(pattern);
-        return Files.walk(Paths.get(dir), Integer.MAX_VALUE)
-                .filter(path -> p.matcher(path.getFileName().toString()).find())
-                .map(path -> {
-                    try {
-                        return buildDocumentInfo(path);
-                    } catch (Exception ignored) {
-
-                    }
-                    return null;
-                })
-                .collect(Collectors.toList());
-    }
 
     public static DocumentInfo buildDocumentInfo(Path file) throws IOException {
         boolean isDirectory = Files.isDirectory(file);
@@ -99,13 +66,47 @@ public class FileHelper {
         }
     }
 
-    public static boolean isEmptyDirectory(final Path directory) throws IOException {
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory)) {
-            if (directoryStream.iterator().hasNext()) {
-                return false;
+    private static int compareFileLastModified(DocumentInfo path1, DocumentInfo path2) {
+
+        boolean a = path1.getType() == C.TYPE_DIRECTORY;
+        boolean b = path2.getType() == C.TYPE_DIRECTORY;
+
+
+        if (a == b) {
+            long result =
+                    path1.getLastModified()
+                            - path2.getLastModified();
+            if (result < 0) {
+                return -1;
+            } else if (result > 0) {
+                return 1;
+            } else {
+                return 0;
             }
+
+
+        } else if (a) {// 如果是目录 返回 -1 默认排在前面(升序)
+            return -1;
+        } else {
+            return 1;
         }
-        return true;
+    }
+
+    private static int compareFileName(DocumentInfo path1, DocumentInfo path2) {
+
+        boolean a = path1.getType() == C.TYPE_DIRECTORY;
+        boolean b = path2.getType() == C.TYPE_DIRECTORY;
+
+
+        if (a == b) {
+            Collator collator = Collator.getInstance(Locale.CHINA);
+            return collator.compare(path1.getFileName(),
+                    path2.getFileName());
+        } else if (a) {
+            return -1;
+        } else {
+            return 1;
+        }
     }
 
     private static int compareFileSize(DocumentInfo path1, DocumentInfo path2) {
@@ -135,46 +136,142 @@ public class FileHelper {
         }
     }
 
-    private static int compareFileName(DocumentInfo path1, DocumentInfo path2) {
+    public static String copyDirectoryStructure(String dir) throws IOException {
+        Path dirPath = Paths.get(dir);
 
-        boolean a = path1.getType() == C.TYPE_DIRECTORY;
-        boolean b = path2.getType() == C.TYPE_DIRECTORY;
-
-
-        if (a == b) {
-            Collator collator = Collator.getInstance(Locale.CHINA);
-            return collator.compare(path1.getFileName(),
-                    path2.getFileName());
-        } else if (a) {
-            return -1;
-        } else {
-            return 1;
-        }
+        return Files.list(dirPath)
+                .sorted((o1, o2) -> {
+                    boolean a1 = Files.isDirectory(o1);
+                    boolean a2 = Files.isDirectory(o2);
+                    if (a1 == a2) {
+                        return o1.getFileName().compareTo(o2.getFileName());
+                    } else if (a1) {
+                        return -1;
+                    } else {
+                        return -1;
+                    }
+                })
+                .map(path -> path.getFileName().toString())
+                .collect(Collectors.joining("\n"));
     }
 
-    private static int compareFileLastModified(DocumentInfo path1, DocumentInfo path2) {
+    public static void deleteDocuments(Context context, DocumentInfo[] documentInfos) {
 
-        boolean a = path1.getType() == C.TYPE_DIRECTORY;
-        boolean b = path2.getType() == C.TYPE_DIRECTORY;
+        ProgressDialog dialog = MaterialProgressDialog.show(context, "删除", "");
 
+        long totalSize = Arrays.stream(documentInfos)
+                .map(document -> {
+                    try {
+                        return CompletableFuture.supplyAsync(() -> {
+                            if (document.getType() != C.TYPE_DIRECTORY) {
+                                try {
+                                    Threads.postOnUiThread(() -> {
+                                        dialog.setMessage(document.getPath());
+                                    });
+                                    Files.delete(Paths.get(document.getPath()));
+                                    return document.getSize();
+                                } catch (IOException e) {
+                                    return 0L;
+                                }
+                            } else {
+                                try {
+                                    DeleteVisitor deleteVisitor = new DeleteVisitor(dialog);
+                                    Files.walkFileTree(Paths.get(document.getPath()), deleteVisitor);
+                                    return deleteVisitor.getTotalSize();
+                                } catch (IOException e) {
+                                    return 0L;
+                                }
+                            }
+                        }).get();
+                    } catch (ExecutionException | InterruptedException e) {
+                        return 0L;
+                    }
+                }).mapToLong(Long::longValue).sum();
+        dialog.dismiss();
+        Toast.makeText(context, String.format("总共释放 %s 空间", euphoria.common.Files.formatFileSize(totalSize)), Toast.LENGTH_SHORT).show();
 
-        if (a == b) {
-            long result =
-                    path1.getLastModified()
-                            - path2.getLastModified();
-            if (result < 0) {
-                return -1;
-            } else if (result > 0) {
-                return 1;
+    }
+
+    public static void exactInputStream(InputStream inputStream, File dstDir) throws IOException {
+        ZipInputStream zis = new ZipInputStream(inputStream);
+
+        ZipEntry entry;
+        while ((entry = zis.getNextEntry()) != null) {
+            if (entry.isDirectory()) {
+                File dir = new File(dstDir, entry.getName());
+                if (!dir.exists()) dir.mkdirs();
             } else {
-                return 0;
+                File dstFile = new File(dstDir, entry.getName());
+                if (!dstFile.isFile()) {
+                    byte[] buffer = new byte[1024 * 4];
+                    int count;
+                    try (FileOutputStream os = new FileOutputStream(dstFile)) {
+                        while ((count = zis.read(buffer)) != -1) {
+                            os.write(buffer, 0, count);
+                        }
+                    }
+
+                }
             }
 
 
-        } else if (a) {// 如果是目录 返回 -1 默认排在前面(升序)
-            return -1;
-        } else {
-            return 1;
+        }
+
+    }
+
+    public static String getMimeTypeForIntent(String fileName) {
+
+        String ext = Strings.substringAfterLast(fileName, ".");
+        if (ext == null) return "application/*";
+        ext = ext.toLowerCase();
+
+        switch (ext) {
+            case "aac":
+            case "flac":
+            case "imy":
+            case "m4a":
+            case "mid":
+            case "mp3":
+            case "mxmf":
+            case "ogg":
+            case "ota":
+            case "rtttl":
+            case "rtx":
+            case "wav":
+            case "xmf":
+                return "";
+            // https://developer.android.com/guide/appendix/media-formats.html
+            case "3gp":
+            case "mkv":
+            case "mp4":
+            case "ts":
+            case "webm":
+                return "";
+            case "txt":
+            case "css":
+            case "log":
+            case "js":
+            case "java":
+            case "xml":
+            case "htm":
+            case "srt":
+                return "";
+            case "pdf":
+                return "";
+            case "apk":
+                return "";
+            case "zip":
+            case "rar":
+            case "gz":
+                return "";
+            case "bmp":
+            case "gif":
+            case "jpg":
+            case "png":
+            case "webp":
+                return "image/*";
+            default:
+                return "";
         }
     }
 
@@ -244,11 +341,54 @@ public class FileHelper {
         }
     }
 
+    public static String getValidFilName(String fileName, char replaceChar) {
+        StringBuilder stringBuilder = new StringBuilder(fileName.length());
+        for (int i = 0; i < fileName.length(); i++) {
+            if (isValidFatFilenameChar(fileName.charAt(i))) {
+                stringBuilder.append(fileName.charAt(i));
+
+            } else {
+                stringBuilder.append(replaceChar);
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+    public static boolean isEmptyDirectory(final Path directory) throws IOException {
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory)) {
+            if (directoryStream.iterator().hasNext()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static boolean isSymlink(final File file) throws IOException {
         if (file == null) {
             throw new NullPointerException("File must not be null");
         }
         return Files.isSymbolicLink(file.toPath());
+    }
+
+    private static boolean isValidFatFilenameChar(char c) {
+        if ((0x00 <= c && c <= 0x1f)) {
+            return false;
+        }
+        switch (c) {
+            case '"':
+            case '*':
+            case '/':
+            case ':':
+            case '<':
+            case '>':
+            case '?':
+            case '\\':
+            case '|':
+            case 0x7F:
+                return false;
+            default:
+                return true;
+        }
     }
 
     public static List<DocumentInfo> listDocuments(String dir, int sortBy, boolean isAscending, Function<Path, Boolean> filter) throws IOException {
@@ -377,6 +517,22 @@ public class FileHelper {
                 });
     }
 
+    public static List<DocumentInfo> searchDocumentInfo(String dir, String pattern) throws IOException {
+
+        Pattern p = Pattern.compile(pattern);
+        return Files.walk(Paths.get(dir), Integer.MAX_VALUE)
+                .filter(path -> p.matcher(path.getFileName().toString()).find())
+                .map(path -> {
+                    try {
+                        return buildDocumentInfo(path);
+                    } catch (Exception ignored) {
+
+                    }
+                    return null;
+                })
+                .collect(Collectors.toList());
+    }
+
     private static long sizeOf0(final File file) {
         if (file.isDirectory()) {
             return sizeOfDirectory0(file);
@@ -412,48 +568,10 @@ public class FileHelper {
         return size;
     }
 
-    public static void deleteDocuments(Context context, DocumentInfo[] documentInfos) {
-
-        ProgressDialog dialog = MaterialProgressDialog.show(context, "删除", "");
-
-        long totalSize = Arrays.stream(documentInfos)
-                .map(document -> {
-                    try {
-                        return CompletableFuture.supplyAsync(() -> {
-                            if (document.getType() != C.TYPE_DIRECTORY) {
-                                try {
-                                    Threads.postOnUiThread(() -> {
-                                        dialog.setMessage(document.getPath());
-                                    });
-                                    Files.delete(Paths.get(document.getPath()));
-                                    return document.getSize();
-                                } catch (IOException e) {
-                                    return 0L;
-                                }
-                            } else {
-                                try {
-                                    DeleteVisitor deleteVisitor = new DeleteVisitor(dialog);
-                                    Files.walkFileTree(Paths.get(document.getPath()), deleteVisitor);
-                                    return deleteVisitor.getTotalSize();
-                                } catch (IOException e) {
-                                    return 0L;
-                                }
-                            }
-                        }).get();
-                    } catch (ExecutionException | InterruptedException e) {
-                        return 0L;
-                    }
-                }).mapToLong(Long::longValue).sum();
-        dialog.dismiss();
-        Toast.makeText(context, String.format("总共释放 %s 空间", euphoria.common.Files.formatFileSize(totalSize)), Toast.LENGTH_SHORT).show();
-
-    }
-
-
     private static class DeleteVisitor extends SimpleFileVisitor<Path> {
 
-        private long mTotalSize = 0L;
         private final ProgressDialog mProgressDialog;
+        private long mTotalSize = 0L;
 
         private DeleteVisitor(ProgressDialog progressDialog) {
             mProgressDialog = progressDialog;
@@ -465,18 +583,18 @@ public class FileHelper {
         }
 
         @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-            super.preVisitDirectory(dir, attrs);
-            return FileVisitResult.CONTINUE;
-        }
-
-        @Override
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
             if (isEmptyDirectory(dir)) Files.deleteIfExists(dir);
             Threads.postOnUiThread(() -> {
                 mProgressDialog.setMessage(dir.toAbsolutePath().toString());
             });
             return super.postVisitDirectory(dir, exc);
+        }
+
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            super.preVisitDirectory(dir, attrs);
+            return FileVisitResult.CONTINUE;
         }
 
         @Override

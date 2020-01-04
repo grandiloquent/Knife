@@ -17,9 +17,10 @@ import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.knife.helpers.ContextHelper;
 import euphoria.psycho.knife.helpers.IconHelper;
+import euphoria.psycho.knife.util.ThreadUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailRequest;
-import euphoria.psycho.share.util.ThreadUtils;
-import euphoria.psycho.share.util.Utils;
+import euphoria.psycho.knife.util.Utils;
+
 
 public class DocumentView extends SelectableItemView<DocumentInfo> implements ListMenuButton.Delegate, ThumbnailRequest {
 

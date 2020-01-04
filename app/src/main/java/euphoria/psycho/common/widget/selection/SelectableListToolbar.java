@@ -41,7 +41,7 @@ import euphoria.psycho.common.widget.NumberRollView;
 import euphoria.psycho.common.widget.TintedDrawable;
 import euphoria.psycho.common.widget.selection.SelectionDelegate.SelectionObserver;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.share.util.ColorUtils;
+import euphoria.psycho.knife.util.ColorUtils;
 
 
 public class SelectableListToolbar<E>

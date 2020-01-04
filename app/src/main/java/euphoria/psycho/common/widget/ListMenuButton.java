@@ -2,7 +2,6 @@ package euphoria.psycho.common.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -170,7 +169,7 @@ public class ListMenuButton
 
     @Override
     public void onPreLayoutChange(
-            boolean positionBelow, int x, int y, int width, int height, Rect anchorRect) {
+            boolean positionBelow) {
         mPopupMenu.setAnimationStyle(
                 positionBelow ? R.style.OverflowMenuAnim : R.style.OverflowMenuAnimBottom);
     }

@@ -6,7 +6,7 @@ import android.util.SparseArray;
 
 import euphoria.psycho.common.C;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.share.util.ContextUtils;
+import euphoria.psycho.knife.util.ContextUtils;
 
 public class IconHelper {
 

@@ -5,16 +5,18 @@ import android.os.Environment;
 import android.util.Pair;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.DirectoryFragment;
 import euphoria.psycho.knife.DocumentUtils;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.download.DownloadActivity;
-import euphoria.psycho.knife.photo.PhotoViewActivity;
+import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.server.FileServerActivity;
-import euphoria.psycho.knife.util.StorageUtils;
-import euphoria.psycho.share.util.DialogUtils.DialogListener;
+import euphoria.psycho.knife.util.DialogUtils.DialogListener;
 
 public class BottomSheetDelegate {
     private DirectoryFragment mFragment;
@@ -40,10 +42,10 @@ public class BottomSheetDelegate {
             case R.drawable.ic_action_file_download:
                 mFragment.updateRecyclerView(new File(Environment.getExternalStorageDirectory(), "Download"));
                 break;
-            case R.drawable.ic_action_photo:
-                Intent pictureIntent = new Intent(mFragment.getContext(), PhotoViewActivity.class);
-                mFragment.getContext().startActivity(pictureIntent);
-                break;
+//            case R.drawable.ic_action_photo:
+//                Intent pictureIntent = new Intent(mFragment.getContext(), PhotoViewActivity.class);
+//                mFragment.getContext().startActivity(pictureIntent);
+//                break;
             case R.drawable.ic_phonelink_blue_24px:
                 Intent serverIntent = new Intent(mFragment.getContext(), FileServerActivity.class);
                 mFragment.getContext().startActivity(serverIntent);
@@ -62,11 +64,10 @@ public class BottomSheetDelegate {
                     @Override
                     public void ok(CharSequence charSequence) {
                         if (charSequence == null) return;
-                        String name = euphoria.psycho.share.util.FileUtils.getValidFilName(charSequence.toString(), ' ');
-                        if (StorageUtils.createDirectory(mFragment.getContext(),
-                                mFragment.getDirectory(), name.trim(), DocumentUtils.getTreeUri())) {
-                            mFragment.updateRecyclerView(false);
-                        }
+                        String name = FileHelper.getValidFilName(charSequence.toString(), ' ');
+                        euphoria.common.Files.createDirectoryIfNotExists(new File(mFragment.getDirectory(), name.trim()));
+
+                        mFragment.updateRecyclerView(false);
 
                     }
                 });

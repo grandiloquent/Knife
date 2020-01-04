@@ -19,7 +19,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import androidx.annotation.IntDef;
-import euphoria.psycho.common.ApiCompatibilityUtils;
 import euphoria.psycho.common.annotations.VisibleForTesting;
 import euphoria.psycho.common.structure.ObserverList;
 
@@ -34,16 +33,11 @@ public class AnchoredPopupWindow implements OnTouchListener, RectProvider.Observ
     public interface LayoutObserver {
         /**
          * Called immediately before the popup layout changes.
-         *
          * @param positionBelow Whether the popup is positioned below its anchor rect.
-         * @param x             The x position for the popup.
-         * @param y             The y position for the popup.
-         * @param width         The width of the popup.
-         * @param height        The height of the popup.
-         * @param anchorRect    The {@link Rect} used to anchor the popup.
+         *
          */
         void onPreLayoutChange(
-                boolean positionBelow, int x, int y, int width, int height, Rect anchorRect);
+                boolean positionBelow);
     }
 
     /**
@@ -219,13 +213,6 @@ public class AnchoredPopupWindow implements OnTouchListener, RectProvider.Observ
     }
 
     /**
-     * @return Whether the popup is currently showing.
-     */
-    public boolean isShowing() {
-        return mPopupWindow.isShowing();
-    }
-
-    /**
      * Sets the {@link LayoutObserver} for this AnchoredPopupWindow.
      *
      * @param layoutObserver The observer to be notified of layout changes.
@@ -235,70 +222,11 @@ public class AnchoredPopupWindow implements OnTouchListener, RectProvider.Observ
     }
 
     /**
-     * @param onTouchListener A callback for all touch events being dispatched to the popup.
-     * @see PopupWindow#setTouchInterceptor(OnTouchListener)
-     */
-    public void setTouchInterceptor(OnTouchListener onTouchListener) {
-        mTouchListener = onTouchListener;
-    }
-
-    /**
      * @param onDismissListener A listener to be called when the popup is dismissed.
      * @see PopupWindow#setOnDismissListener(OnDismissListener)
      */
     public void addOnDismissListener(OnDismissListener onDismissListener) {
         mDismissListeners.addObserver(onDismissListener);
-    }
-
-    /**
-     * @param onDismissListener The listener to remove and not call when the popup is dismissed.
-     * @see PopupWindow#setOnDismissListener(OnDismissListener)
-     */
-    public void removeOnDismissListener(OnDismissListener onDismissListener) {
-        mDismissListeners.removeObserver(onDismissListener);
-    }
-
-    /**
-     * @param dismiss Whether or not to dismiss this popup when the screen is tapped.  This will
-     *                happen for both taps inside and outside the popup.  The default is
-     *                {@code false}.
-     */
-    public void setDismissOnTouchInteraction(boolean dismiss) {
-        mDismissOnTouchInteraction = dismiss;
-        mPopupWindow.setOutsideTouchable(mDismissOnTouchInteraction);
-    }
-
-    /**
-     * If set to true, popup will be notified when an outside touch happens.
-     * It is not the equivalent of closing the popup on all touch events. The user can
-     * still interact with the popup by sending inside touch events.
-     * If set to false, the popup won't be notified about the outside touch event.
-     *
-     * @param touchable Whether or not to notify the popup when an outside touch
-     *                  happens. The default is {@code false}.
-     */
-    public void setOutsideTouchable(boolean touchable) {
-        mPopupWindow.setOutsideTouchable(touchable);
-    }
-
-    /**
-     * Sets the preferred vertical orientation of the popup with respect to the anchor Rect such as
-     * above or below the anchor.  This should be called before the popup is shown.
-     *
-     * @param orientation The vertical orientation preferred.
-     */
-    public void setPreferredVerticalOrientation(@VerticalOrientation int orientation) {
-        mPreferredVerticalOrientation = orientation;
-    }
-
-    /**
-     * Sets the preferred horizontal orientation of the popup with respect to the anchor Rect such
-     * as centered with respect to the anchor.  This should be called before the popup is shown.
-     *
-     * @param orientation The horizontal orientation preferred.
-     */
-    public void setPreferredHorizontalOrientation(@HorizontalOrientation int orientation) {
-        mPreferredHorizontalOrientation = orientation;
     }
 
     /**
@@ -311,29 +239,12 @@ public class AnchoredPopupWindow implements OnTouchListener, RectProvider.Observ
     }
 
     /**
-     * If set to true, orientation will be updated everytime that the {@link OnRectChanged} is
-     * called.
-     */
-    public void setUpdateOrientationOnChange(boolean updateOrientationOnChange) {
-        mUpdateOrientationOnChange = updateOrientationOnChange;
-    }
-
-    /**
      * Changes the focusability of the popup. See {@link PopupWindow#setFocusable(boolean)}.
      *
      * @param focusable True if the popup is focusable, false otherwise.
      */
     public void setFocusable(boolean focusable) {
         mPopupWindow.setFocusable(focusable);
-    }
-
-    /**
-     * Sets the margin for the popup window.  This should be called before the popup is shown.
-     *
-     * @param margin The margin in pixels.
-     */
-    public void setMargin(int margin) {
-        mMarginPx = margin;
     }
 
     /**
@@ -363,22 +274,6 @@ public class AnchoredPopupWindow implements OnTouchListener, RectProvider.Observ
      */
     public void setVerticalOverlapAnchor(boolean overlap) {
         mVerticalOverlapAnchor = overlap;
-    }
-
-    /**
-     * Changes the background of the popup.
-     *
-     * @param background The {@link Drawable} that is set to be background.
-     */
-    public void setBackgroundDrawable(Drawable background) {
-        mPopupWindow.setBackgroundDrawable(background);
-    }
-
-    /**
-     * Sets the elevation of the popup, if elevation is supported.
-     */
-    public void setElevation(float elevation) {
-        ApiCompatibilityUtils.setElevation(mPopupWindow, elevation);
     }
 
     // RectProvider.Observer implementation.
@@ -485,7 +380,7 @@ public class AnchoredPopupWindow implements OnTouchListener, RectProvider.Observ
         mY = getPopupY(anchorRect, mHeight, mVerticalOverlapAnchor, mPositionBelow);
 
         if (mLayoutObserver != null) {
-            mLayoutObserver.onPreLayoutChange(mPositionBelow, mX, mY, mWidth, mHeight, anchorRect);
+            mLayoutObserver.onPreLayoutChange(mPositionBelow);
         }
 
         if (mPopupWindow.isShowing() && mPositionBelow != currentPositionBelow) {

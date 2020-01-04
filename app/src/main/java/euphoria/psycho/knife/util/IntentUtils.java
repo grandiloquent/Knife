@@ -11,7 +11,8 @@ import android.text.TextUtils;
 import java.io.File;
 import java.util.List;
 
-import euphoria.psycho.share.R;
+import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.helpers.FileHelper;
 
 
 public class IntentUtils {
@@ -47,7 +48,7 @@ public class IntentUtils {
 
         Intent intent = new Intent(Intent.ACTION_SEND);
         Uri uri = Uri.fromFile(new File(path));
-        intent.setDataAndType(uri, MimeTypeUtils.getMimeTypeForIntent(path));
+        intent.setDataAndType(uri, FileHelper.getMimeTypeForIntent(path));
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         context.startActivity(Intent.createChooser(intent, context.getResources().getText(R.string.share)));
     }

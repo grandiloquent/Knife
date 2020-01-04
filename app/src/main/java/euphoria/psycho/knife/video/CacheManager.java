@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import euphoria.psycho.share.cache.BlobCache;
 
 public class CacheManager {
     private static final String TAG = "CacheManager";

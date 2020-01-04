@@ -2,12 +2,11 @@ package euphoria.psycho.knife;
 
 import android.provider.ContactsContract.Directory;
 
-import euphoria.common.Crashs;
 import euphoria.psycho.common.base.BaseApp;
 import euphoria.psycho.common.log.FileLogger;
 import euphoria.psycho.common.pool.BytesBufferPool;
 import euphoria.psycho.common.pool.DiscardableReferencePool;
-import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 
 public class App extends BaseApp {
 

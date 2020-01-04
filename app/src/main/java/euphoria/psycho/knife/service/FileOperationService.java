@@ -23,7 +23,6 @@ import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 import euphoria.psycho.common.Log;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.share.util.ManagerUtils;
 
 import static euphoria.psycho.common.C.DEBUG;
 
@@ -272,13 +271,13 @@ public class FileOperationService extends Service implements Job.Listener {
         }
 
         if (notificationManager == null) {
-            notificationManager = ManagerUtils.provideNotificationManager(this);
+            notificationManager = getSystemService(NotificationManager.class);
         }
 
 
         setUpNotificationChannel();
 
-        mPowerManager = ManagerUtils.providePowerManager(this);
+        mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
     }
 
     @Override

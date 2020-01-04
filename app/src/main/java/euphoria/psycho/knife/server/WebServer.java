@@ -32,9 +32,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import euphoria.common.Files;
 import euphoria.common.Strings;
-import euphoria.psycho.share.util.FileUtils;
-import euphoria.psycho.share.util.MimeUtils;
+import euphoria.psycho.common.FileUtils;
+import euphoria.psycho.knife.util.MimeUtils;
 
 
 public class WebServer extends NanoHTTPD {
@@ -61,7 +62,6 @@ public class WebServer extends NanoHTTPD {
     private Response generateDirectoryPage(File dir, int sortBy) {
 
         File[] children = dir.listFiles();
-        FileUtils.sortFiles(children, sortBy, true);
         byte[][] indexBytes = DataProvider.getIndex();
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
@@ -103,7 +103,7 @@ public class WebServer extends NanoHTTPD {
                 os.write(mSimpleDateFormat.format(file.lastModified()).getBytes(UTF8));
                 os.write(bytes[4]);
                 if (file.isFile())
-                    os.write(FileUtils.formatFileSize(file.length()).getBytes(UTF8));
+                    os.write(Files.formatFileSize(file.length()).getBytes(UTF8));
                 os.write(bytes[5]);
 
             } catch (IOException e) {
@@ -210,7 +210,7 @@ public class WebServer extends NanoHTTPD {
 
                     if (fileName != null) {
                         File dstFile = new File(mUploadDirectory, fileName);
-                        dstFile = FileUtils.getUniqueFile(dstFile);
+                        dstFile = Files.getUniqueFile(dstFile);
 
                         // when the file has been read into memory
                         if (diskFileItem.isInMemory()) {

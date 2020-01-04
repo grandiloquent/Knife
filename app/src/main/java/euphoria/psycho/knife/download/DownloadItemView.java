@@ -3,7 +3,6 @@ package euphoria.psycho.knife.download;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
 import android.view.View;
@@ -23,10 +22,11 @@ import euphoria.psycho.common.widget.ListMenuButton.Item;
 import euphoria.psycho.common.widget.MaterialProgressBar;
 import euphoria.psycho.common.widget.selection.SelectableItemView;
 import euphoria.psycho.knife.R;
+import euphoria.psycho.knife.util.ThreadUtils;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailRequest;
-import euphoria.psycho.share.util.ThreadUtils;
-import euphoria.psycho.share.util.Utils;
+import euphoria.psycho.knife.util.Utils;
+
 
 public class DownloadItemView extends SelectableItemView<DownloadInfo> implements ThumbnailRequest, ListMenuButton.Delegate {
     private final ColorStateList mCheckedIconForegroundColorList;

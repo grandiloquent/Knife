@@ -12,9 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,8 +26,8 @@ import euphoria.psycho.common.widget.selection.SelectableListLayout;
 import euphoria.psycho.common.widget.selection.SelectionDelegate;
 import euphoria.psycho.common.widget.selection.SelectionDelegate.SelectionObserver;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.share.util.HttpUtils;
-import euphoria.psycho.share.util.ThreadUtils;
+import euphoria.psycho.knife.util.HttpUtils;
+import euphoria.psycho.knife.util.ThreadUtils;
 
 public class DownloadFragment extends BaseFragment implements OnMenuItemClickListener, SelectionObserver<DownloadInfo> {
 

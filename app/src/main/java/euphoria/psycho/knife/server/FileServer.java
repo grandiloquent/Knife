@@ -18,12 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import androidx.annotation.Nullable;
-import euphoria.psycho.common.FileUtils;
 import euphoria.psycho.knife.R;
-import euphoria.psycho.knife.util.StorageUtils;
-import euphoria.psycho.share.util.NotificationUtils;
-import euphoria.psycho.share.util.SystemUtils;
-import euphoria.psycho.share.util.ZipUtils;
+import euphoria.psycho.knife.helpers.ContextHelper;
+import euphoria.psycho.knife.helpers.FileHelper;
 
 public class FileServer extends Service {
     public static final String DEFAULT_CHANNEL_NAME = "File Server";
@@ -47,7 +44,7 @@ public class FileServer extends Service {
 //            Log.e("TAG/FileServer", "run: " + localIp);
 //
 //        });
-        String ip = SystemUtils.getDeviceIP(this);
+        String ip = ContextHelper.getDeviceIP(this);
         if (ip == null) {
             ip = ServerUtils.getLocalIp();
         }
@@ -77,17 +74,10 @@ public class FileServer extends Service {
     private File createUploadDirectory() {
         File uploadDirectory;
         // mTreeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
-        if (mTreeUri != null) {
-            uploadDirectory = new File(StorageUtils.getSDCardPath(), DEFAULT_UPLOAD_DIRECTORY);
-            if (!uploadDirectory.isDirectory()) {
-                StorageUtils.createDirectory(this, new File(StorageUtils.getSDCardPath()),
-                        DEFAULT_UPLOAD_DIRECTORY, FileUtils.getTreeUri().toString());
-            }
-        } else {
-            uploadDirectory = new File(Environment.getExternalStorageDirectory(), DEFAULT_UPLOAD_DIRECTORY);
-            if (!uploadDirectory.isDirectory()) {
-                uploadDirectory.mkdirs();
-            }
+
+        uploadDirectory = new File(Environment.getExternalStorageDirectory(), DEFAULT_UPLOAD_DIRECTORY);
+        if (!uploadDirectory.isDirectory()) {
+            uploadDirectory.mkdirs();
         }
 
         return uploadDirectory;
@@ -98,7 +88,7 @@ public class FileServer extends Service {
 
         AssetManager assetManager = getAssets();
         try (InputStream is = assetManager.open("static/static.zip")) {
-            ZipUtils.exactInputStream(is, dir);
+            FileHelper.exactInputStream(is, dir);
         } catch (Exception e) {
             e.printStackTrace();
 
@@ -118,9 +108,9 @@ public class FileServer extends Service {
     public void onCreate() {
         super.onCreate();
         mManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationUtils.createNotificationChannel(mManager, DEFAULT_CHANNEL_ID, DEFAULT_CHANNEL_NAME, NotificationManager.IMPORTANCE_NONE);
+        ContextHelper.createNotificationChannel(mManager, DEFAULT_CHANNEL_ID, DEFAULT_CHANNEL_NAME, NotificationManager.IMPORTANCE_NONE);
 
-        Notification notification = NotificationUtils.createNotification(this, DEFAULT_CHANNEL_ID)
+        Notification notification = ContextHelper.createNotification(this, DEFAULT_CHANNEL_ID)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_phonelink_blue_24px)
                 .build();

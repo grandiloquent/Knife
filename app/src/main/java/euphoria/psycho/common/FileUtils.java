@@ -8,6 +8,8 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.text.TextUtils;
 
+import com.google.android.material.internal.ContextUtils;
+
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -23,13 +25,8 @@ import java.util.zip.ZipFile;
 
 import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
-import euphoria.common.Documents;
 import euphoria.common.Files;
 import euphoria.common.Strings;
-import euphoria.psycho.share.util.ContextUtils;
-import euphoria.psycho.share.util.MimeUtils;
-import euphoria.psycho.share.util.ThreadUtils;
-
 // https://android.googlesource.com/platform/packages/apps/UnifiedEmail/+/kitkat-mr1-release/src/org/apache/commons/io
 
 // https://developer.android.com/guide/topics/providers/document-provider
@@ -47,18 +44,6 @@ public class FileUtils {
     private static String sSDCardPath;
     private static Uri sTreeUri;
 
-    /**
-     * Delete the given files or directories by calling {@link Files#recursivelyDeleteFile(File)}.
-     *
-     * @param files The files to delete.
-     */
-    public static void batchDeleteFiles(List<File> files) {
-        ThreadUtils.assertOnBackgroundThread();
-
-        for (File file : files) {
-            if (file.exists()) Files.recursivelyDeleteFile(file);
-        }
-    }
 
     private static File buildFile(File parent, String name, String ext) {
         if (TextUtils.isEmpty(ext)) {
@@ -106,36 +91,6 @@ public class FileUtils {
         } catch (Exception ignored) {
 
         }
-    }
-
-    public static boolean deleteFile(File file) {
-        if (euphoria.psycho.knife.util.FileUtils.hasSDCardPath() && !file.getPath().startsWith(Environment.getExternalStorageDirectory().getAbsolutePath())) {
-            if (sTreeUri == null) {
-                sTreeUri = Uri.parse(ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null));
-            }
-            DocumentFile documentFile = getDocumentFile(file, false, ContextUtils.getApplicationContext(), sTreeUri);
-            if (documentFile != null) return documentFile.delete();
-            return false;
-
-        } else {
-            return file.delete();
-        }
-    }
-
-    public static boolean deleteFile(Context context, File file) {
-
-        boolean result = file.delete();
-        if (!result) {
-            if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
-                try {
-                    return DocumentsContract.deleteDocument(context.getContentResolver(), Documents.getDocumentUriFromTreeUri(file));
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        }
-        return result;
     }
 
 
@@ -299,15 +254,6 @@ public class FileUtils {
 //        return Environment.getExternalStorageDirectory().getPath();
     }
 
-    public static Uri getTreeUri() {
-        if (sTreeUri == null) {
-            String treeUri = ContextUtils.getAppSharedPreferences().getString(C.KEY_TREE_URI, null);
-            if (treeUri != null)
-                sTreeUri = Uri.parse(treeUri);
-        }
-        return sTreeUri;
-    }
-
 
     public static int indexOfExtension(String filename) {
         if (filename == null) {
@@ -325,110 +271,6 @@ public class FileUtils {
         int lastUnixPos = filename.lastIndexOf(UNIX_SEPARATOR);
         int lastWindowsPos = filename.lastIndexOf(WINDOWS_SEPARATOR);
         return Math.max(lastUnixPos, lastWindowsPos);
-    }
-
-
-    public static boolean moveFile(Context context, File src, File destinationDirectory) {
-
-        String[] srcPieces = src.getAbsolutePath().split("/");
-        String[] dstPieces = destinationDirectory.getAbsolutePath().split("/");
-        boolean r = false;
-        if (srcPieces[1].equals(dstPieces[1])) {
-            r = src.renameTo(new File(destinationDirectory, src.getName()));
-
-
-            if (!r && VERSION.SDK_INT >= VERSION_CODES.N) {
-                try {
-                    Uri resultURI = DocumentsContract.moveDocument(context.getContentResolver(),
-                            Documents.getDocumentUriFromTreeUri(src),
-                            Documents.getDocumentUriFromTreeUri(src.getParentFile()),
-                            Documents.getDocumentUriFromTreeUri(destinationDirectory));
-
-                    r = resultURI != null;
-                } catch (Exception e) {
-                    // java.lang.IllegalStateException: Failed to move to /mnt/media_rw/19E7-1704/19E7-1704
-                }
-            }
-        }
-
-        if (!r && VERSION.SDK_INT >= VERSION_CODES.N) {
-            if (!src.getAbsolutePath().startsWith(Environment.getExternalStorageDirectory().getAbsolutePath())) {
-                Uri srcDocumentUri = Documents.getDocumentUriFromTreeUri(src);
-
-
-                try {
-                    r = DocumentsContract.copyDocument(context.getContentResolver(),
-                            srcDocumentUri,
-                            Documents.getDocumentUriFromTreeUri(destinationDirectory)) != null;
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                if (r) {
-                    try {
-                        DocumentsContract.deleteDocument(context.getContentResolver(),
-                                srcDocumentUri);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } else {
-                try {
-                    Uri newDocument = DocumentsContract.createDocument(
-                            context.getContentResolver(),
-                            Documents.getDocumentUriFromTreeUri(destinationDirectory),
-                            MimeUtils.guessMimeTypeFromExtension(Strings.substringAfterLast(src.getName(), ".")),
-                            src.getName());
-                    if (newDocument != null) {
-                        OutputStream outputStream = context.getContentResolver().openOutputStream(newDocument);
-                        FileInputStream inputStream = new FileInputStream(src);
-                        euphoria.psycho.share.util.FileUtils.copy(inputStream, outputStream);
-                        closeSilently(inputStream);
-                        closeSilently(outputStream);
-                        src.delete();
-                        r = true;
-                    }
-                } catch (Exception e) {
-
-                }
-            }
-
-        }
-
-
-        return r;
-    }
-
-    public static boolean renameFile(Context context, File src, File dst) {
-
-
-        boolean result = src.renameTo(dst);
-
-        if (!result && VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-
-
-            Uri srcDocumentUri = Documents.getDocumentUriFromTreeUri(src);
-
-//            Log.e("TAG/", "renameFile: " +
-//                    "\n" + srcDocumentUri +
-//                    "\n" + dst);
-            if (src.getParent().equals(dst.getParent())) {
-                try {
-
-
-                    result = DocumentsContract.renameDocument(
-                            context.getContentResolver(),
-                            srcDocumentUri,
-                            dst.getName()) != null;
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-            } else if (VERSION.SDK_INT >= VERSION_CODES.N) {
-
-            }
-
-        }
-        return result;
     }
 
 
