@@ -55,9 +55,8 @@ char *GetFileName(char *fullPath);
 
 char *GetInvalidFileName(char *fileName, char substitute);
 
-int Delete(const char *fullPath);
-
-int DeleteDirectory(const char *name);
+//int Delete(const char *fullPath);
+//
 
 int IsDirectory(const char *fullPath);
 

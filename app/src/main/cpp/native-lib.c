@@ -8,6 +8,7 @@
 #include "file.h"
 #include "str.h"
 #include "epub.h"
+#include "FileUtils.h"
 
 
 
@@ -97,7 +98,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 JNIEXPORT jlong JNICALL
 Java_euphoria_psycho_knife_DocumentUtils_calculateDirectory(JNIEnv *env, jclass type,
-                                                             jstring dir_) {
+                                                            jstring dir_) {
     const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
     int dirfd = open(dir, O_DIRECTORY | O_CLOEXEC, O_RDONLY);
     if (dirfd < 0) {
@@ -136,8 +137,8 @@ Java_euphoria_psycho_knife_DocumentUtils_moveFilesByExtension(JNIEnv *env, jclas
                                                               jstring destDirName_) {
     const char *dirPath = (*env)->GetStringUTFChars(env, dirPath_, 0);
     const char *destDirName = (*env)->GetStringUTFChars(env, destDirName_, 0);
-    int result = move_files(dirPath, destDirName);
-    LOGE("moveFilesByExtension:%s. %s %d\n", dirPath, destDirName, result);
+    move_files(dirPath, destDirName);
+
 
     (*env)->ReleaseStringUTFChars(env, dirPath_, dirPath);
     (*env)->ReleaseStringUTFChars(env, destDirName_, destDirName);
@@ -183,7 +184,6 @@ JNIEXPORT void JNICALL
 Java_euphoria_psycho_knife_DocumentUtils_padFileNames(JNIEnv *env, jclass type,
                                                       jstring dir_, jint paddingLeftLength) {
     const char *dir = (*env)->GetStringUTFChars(env, dir_, 0);
-    LOGE("%s\n", dir);
     rename_files(dir, (size_t) paddingLeftLength);
     (*env)->ReleaseStringUTFChars(env, dir_, dir);
 }
@@ -223,7 +223,7 @@ JNIEXPORT jint JNICALL
 Java_euphoria_psycho_knife_DocumentUtils_deleteFileSystem(JNIEnv *env, jclass clazz,
                                                           jstring full_path_) {
     const char *full_path = (*env)->GetStringUTFChars(env, full_path_, 0);
-    int result = Delete(full_path);
+    int result = DeleteFileSystem(full_path);
     (*env)->ReleaseStringUTFChars(env, full_path_, full_path);
 
     return result;

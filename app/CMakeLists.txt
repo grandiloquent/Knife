@@ -8,8 +8,9 @@ cmake_minimum_required(VERSION 3.4.1)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Werror")
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -UNDEBUG -lstdc++fs")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -UNDEBUG")
 
+# -lstdc++fs
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -22,7 +23,9 @@ add_library( # Sets the name of the library.
         # Sets the library as a shared library.
         SHARED
 
+        src/main/cpp/list.c
         src/main/cpp/file.c
+        src/main/cpp/FileUtils.cpp
         # Provides a relative path to your source file(s).
         src/main/cpp/native-lib.c)
 

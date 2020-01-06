@@ -61,6 +61,7 @@ public class ThumbnailUtils {
 
         private Bitmap createImageThumbnail(String filePath, int iconSize) {
             Bitmap thumbnail = BitmapFactory.decodeFile(filePath);
+            if (thumbnail == null) return null;
             return BitmapUtils.resizeAndCropCenter(thumbnail, iconSize, true);
 
         }
