@@ -286,8 +286,7 @@ int move_files(const char *dfd, const char *dir_name) {
             strcat(n, "/");
             strcat(n, tmp);
             //=====>>>
-            int ret = create_directory(n);
-            LOGD("create_directory: %s === %d.\n", n, ret);
+            create_directory(n);
             strcat(n, "/");
             strcat(n, de->d_name);
             rename(p, n);
@@ -389,7 +388,6 @@ int rename_files(const char *dir, size_t pad_len) {
             continue;
         snprintf(target, PATH_MAX, "%s/%s", dir, file_name);
         rename(file, target);
-        LOGD("%s -> %s\n", file, target);
     }
     out:
     closedir(directory);
@@ -398,49 +396,49 @@ int rename_files(const char *dir, size_t pad_len) {
 
 
 ///////////////////////////
-int Delete(const char *fullPath) {
-    struct stat s;
-    if (stat(fullPath, &s) != 0)return -1;
-    if (!S_ISDIR(s.st_mode)) {
-        return unlink(fullPath);
-    } else {
-        return DeleteDirectory(fullPath);
-    }
-}
-
-int DeleteDirectory(const char *name) {
-    struct stat st;
-    DIR *dir = NULL;
-    struct dirent *de;
-    int fail = 0;
-    if (stat(name, &st) < 0) return -1;
-    if (!S_ISDIR(st.st_mode))
-        return unlink(name);
-    dir = opendir(name);
-    if (dir == NULL)
-        return -1;
-    errno = 0;
-    while ((de = readdir(dir)) != NULL) {
-        char dn[PATH_MAX];
-        if (!strcmp(de->d_name, "..") || !strcmp(de->d_name, "."))
-            continue;
-        sprintf(dn, "%s/%s", name, de->d_name);
-        if (DeleteDirectory(dn) < 0) {
-            fail = 1;
-            break;
-        }
-        errno = 0;
-    }
-    if (fail || errno < 0) {
-        int save = errno;
-        closedir(dir);
-        errno = save;
-        return -1;
-    }
-    if (closedir(dir) < 0)
-        return -1;
-    return rmdir(name);
-}
+//int Delete(const char *fullPath) {
+//    struct stat s;
+//    if (stat(fullPath, &s) != 0)return -1;
+//    if (!S_ISDIR(s.st_mode)) {
+//        return unlink(fullPath);
+//    } else {
+//        return DeleteDirectory(fullPath);
+//    }
+//}
+//
+//int DeleteDirectory(const char *name) {
+//    struct stat st;
+//    DIR *dir = NULL;
+//    struct dirent *de;
+//    int fail = 0;
+//    if (stat(name, &st) < 0) return -1;
+//    if (!S_ISDIR(st.st_mode))
+//        return unlink(name);
+//    dir = opendir(name);
+//    if (dir == NULL)
+//        return -1;
+//    errno = 0;
+//    while ((de = readdir(dir)) != NULL) {
+//        char dn[PATH_MAX];
+//        if (!strcmp(de->d_name, "..") || !strcmp(de->d_name, "."))
+//            continue;
+//        sprintf(dn, "%s/%s", name, de->d_name);
+//        if (DeleteDirectory(dn) < 0) {
+//            fail = 1;
+//            break;
+//        }
+//        errno = 0;
+//    }
+//    if (fail || errno < 0) {
+//        int save = errno;
+//        closedir(dir);
+//        errno = save;
+//        return -1;
+//    }
+//    if (closedir(dir) < 0)
+//        return -1;
+//    return rmdir(name);
+//}
 
 char *GetDirectoryName(char *fullPath) {
     return SubstringBeforeLast(fullPath, '/');
