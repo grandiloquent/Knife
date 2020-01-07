@@ -9,7 +9,7 @@
 #include "str.h"
 #include "epub.h"
 #include "FileUtils.h"
-
+//#include "JNIHelper.h"
 
 
 /*

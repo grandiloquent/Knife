@@ -18,4 +18,6 @@ int DirectoryExists(const char *path);
 }
 #endif
 
+bool ListFiles(const char *path, bool(callback)(bool isDirectory, std::string &fullPath));
+
 #endif //KNIFE_FILEUTILS_H

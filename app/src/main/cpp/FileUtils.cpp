@@ -26,6 +26,43 @@ int DeleteFileSystem(const char *path) {
 
 }
 
+/*
+
+ ListFiles(".",[](bool isDirectory,std::string &fullPath)->bool{
+		std::cout<<fullPath<<std::endl;
+		return false;
+	});
+
+ * */
+bool ListFiles(const char *path, bool(callback)(bool isDirectory, std::string &fullPath)) {
+
+    DIR *dir = opendir(path);
+    if (dir == nullptr) {
+        return false;
+    }
+    struct dirent *de = {};
+    bool result = false;
+    while ((de = readdir(dir)) != nullptr) {
+        if (result)break;
+        if (strcmp(de->d_name, ".") == 0 ||
+            strcmp(de->d_name, "..") == 0)
+            continue;
+        std::string fileName = path;
+        fileName += "/";
+        fileName += de->d_name;
+        if (DirectoryExists(fileName.c_str())) {
+            result = callback(true, fileName);
+            if (!result)
+                ListFiles(fileName.c_str(), callback);
+        } else {
+            result = callback(false, fileName);
+        }
+
+    }
+    closedir(dir);
+    return true;
+}
+
 int DeleteDirectory(const char *path) {
 
     // 0 Success

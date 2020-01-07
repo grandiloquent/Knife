@@ -26,6 +26,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/list.c
         src/main/cpp/file.c
         src/main/cpp/FileUtils.cpp
+        src/main/cpp/StringUtils.cpp
         # Provides a relative path to your source file(s).
         src/main/cpp/native-lib.c)
 
