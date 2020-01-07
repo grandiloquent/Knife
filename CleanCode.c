@@ -176,6 +176,7 @@ int RemoveEmptyLines(const char *path) {
     for (size_t i = 0; i < count; i++) {
         if (!IsNullOrWhiteSpace(lines[i])) {
             fputs(lines[i], out);
+            fputc('\n', out);
         }
     }
     fclose(out);
