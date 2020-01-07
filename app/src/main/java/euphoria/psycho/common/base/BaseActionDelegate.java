@@ -1,5 +1,1 @@
-package euphoria.psycho.common.base;
-
-public interface BaseActionDelegate<T> {
-
-}
+package euphoria.psycho.common.base;public interface BaseActionDelegate<T> {}
