@@ -85,10 +85,10 @@
         <item
             android:id="@+id/action_refresh"
             android:title="刷新" />
-<!--        <item-->
-<!--            android:id="@+id/action_move_images"-->
+        <!--        <item-->
+        <!--            android:id="@+id/action_move_images"-->
 
-<!--            android:title="序列化文件名" />-->
+        <!--            android:title="序列化文件名" />-->
 
         <item
             android:id="@+id/action_move_files"
@@ -100,6 +100,9 @@
         <item
             android:id="@+id/action_copy_directory_structure"
             android:title="复制目录结构" />
+        <item
+            android:id="@+id/action_combine_files"
+            android:title="合并文本文件" />
 
     </group>
 

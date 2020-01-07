@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.4.1)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Werror")
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -UNDEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -Wall -UNDEBUG")
 # -lstdc++fs
 
 # Creates and names a library, sets it as either STATIC
@@ -24,8 +24,10 @@ add_library( # Sets the name of the library.
 
         src/main/cpp/file.c
         src/main/cpp/HttpServer.cpp
+        src/main/cpp/Files.cpp
         src/main/cpp/FileUtils.cpp
         src/main/cpp/StringUtils.cpp
+        src/main/cpp/Bridge.cpp
         # Provides a relative path to your source file(s).
         src/main/cpp/native-lib.c)
 
@@ -64,7 +66,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
         native-lib
-
+        libhttplib
         libminzip
         # Links the target library to the log library
         # included in the NDK.
