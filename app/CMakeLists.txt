@@ -23,6 +23,7 @@ add_library( # Sets the name of the library.
         SHARED
 
         src/main/cpp/file.c
+        src/main/cpp/HttpServer.cpp
         src/main/cpp/FileUtils.cpp
         src/main/cpp/StringUtils.cpp
         # Provides a relative path to your source file(s).
@@ -35,6 +36,14 @@ add_library(
         SHARED
         src/main/cpp/zip/zip.c)
 
+add_library(
+        libhttplib
+        SHARED
+        src/main/cpp/httplib.h)
+
+set_target_properties(libhttplib PROPERTIES LINKER_LANGUAGE CXX)
+
+##　target_compile_definitions(lib_exe1 PRIVATE -DForExe1)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
