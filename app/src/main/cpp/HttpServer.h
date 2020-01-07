@@ -20,7 +20,7 @@ private:
     std::string GetFileContents(const char *path);
 
     Server _server;
-    bool _isStopped;
+    //bool _isStopped;
     const char *_host;
     const char *_directory;
     int _port;

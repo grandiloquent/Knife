@@ -41,7 +41,7 @@ add_library(
 add_library(
         libhttplib
         SHARED
-        src/main/cpp/httplib.h)
+        src/main/cpp/httplib.cc)
 
 set_target_properties(libhttplib PROPERTIES LINKER_LANGUAGE CXX)
 

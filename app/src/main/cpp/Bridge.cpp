@@ -16,7 +16,7 @@ inline bool EndsWith(std::string const &value, std::string const &ending) {
 }
 
 int CombineFiles(const char *path) {
-    std::string dir = "C:/Users/psycho/Desktop/apache/epub";
+    std::string dir = path;
     auto files = ListFiles(dir.c_str());
     auto textFiles = filter(files, [](auto &file) {
         return EndsWith(file.second, ".txt");
@@ -29,7 +29,7 @@ int CombineFiles(const char *path) {
         return 1;
     }
     std::for_each(textFiles.begin(), textFiles.end(), [&](auto &f) {
-        file << ReadAllText(f.second.c_str()) << "\n\n\n===∑∑∑∑∑∑∑∑∑===\n\n\n";
+        file << ReadAllText(f.second.c_str()) << "\n\n\n=========\n\n\n";
     });
     file.close();
 
