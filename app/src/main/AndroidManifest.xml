@@ -143,5 +143,6 @@
 
         </activity>
         <activity android:name=".MarkdownActivity" />
+        <activity android:name="euphoria.video.PlayerActivity" />
     </application>
 </manifest>
