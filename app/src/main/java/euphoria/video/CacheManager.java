@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 package euphoria.video;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,6 +32,7 @@ public class CacheManager {
     private static final HashMap<String, BlobCache> sCacheMap =
             new HashMap<String, BlobCache>();
     private static boolean sOldCheckDone = false;
+
     // Return null when we cannot instantiate a BlobCache, e.g.:
     // there is no SD card found.
     // This can only be called from data thread.
@@ -55,6 +58,7 @@ public class CacheManager {
             return cache;
         }
     }
+
     // Removes the old files if the data is wiped.
     private static void removeOldFilesIfNecessary(Context context) {
         SharedPreferences pref = PreferenceManager
@@ -69,6 +73,6 @@ public class CacheManager {
         pref.edit().putInt(KEY_CACHE_UP_TO_DATE, 1).apply();
         File cacheDir = context.getExternalCacheDir();
         String prefix = cacheDir.getAbsolutePath() + "/";
-        BlobCache.deleteFiles(prefix + "bookmark");
+        BlobCache.deleteFiles(prefix + "video_bookmark");
     }
 }
