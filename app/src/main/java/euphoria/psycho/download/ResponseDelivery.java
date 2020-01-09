@@ -1,1 +1,1 @@
-package euphoria.psycho.download;public class ResponseDelivery {}
+package euphoria.psycho.download;public class ResponseDelivery {}

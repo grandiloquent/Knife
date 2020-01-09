@@ -14,20 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package euphoria.video;
-
 import android.content.res.Resources;
 import android.os.Build;
 import android.view.View;
-
-
 /**
  * A fragment that can enables and disables the immersive mode (i.e. hides the navigation bar and
  * the status bar).
  */
 public class ImmersiveModeFragment extends FragmentEx {
-
     /**
      * Hide Android's bottom navigation bar.
      */
@@ -36,57 +31,46 @@ public class ImmersiveModeFragment extends FragmentEx {
             changeNavigationBarVisibility(false);
         }
     }
-
     protected void showNavigationBar() {
         changeNavigationBarVisibility(true);
     }
-
-
     /**
      * Change the navigation bar's visibility status.
      */
     private void changeNavigationBarVisibility(boolean setBarToVisible) {
         try {
             int newUiOptions = getActivity().getWindow().getDecorView().getSystemUiVisibility();
-
             // navigation bar hiding:  backwards compatible to ICS.
             if (Build.VERSION.SDK_INT >= 14) {
                 newUiOptions = setBarToVisible
                         ? newUiOptions & ~View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         : newUiOptions | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
             }
-
             // status bar hiding:  backwards compatible to Jellybean
             if (Build.VERSION.SDK_INT >= 16) {
                 newUiOptions = setBarToVisible
                         ? newUiOptions & ~View.SYSTEM_UI_FLAG_FULLSCREEN & ~View.SYSTEM_UI_FLAG_LAYOUT_STABLE & ~View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION & ~View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         : newUiOptions | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
             }
-
             // immersive mode:  backward compatible to KitKat
             if (Build.VERSION.SDK_INT >= 19) {
                 newUiOptions = setBarToVisible
                         ? newUiOptions & ~View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         : newUiOptions | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
             }
-
             getActivity().getWindow().getDecorView().setSystemUiVisibility(newUiOptions);
         } catch (Throwable tr) {
         }
     }
-
     private boolean isImmersiveModeEnabled() {
         return true;
     }
-
     /**
      * @return The navigation bar's height in pixels.  0 is the device does not have any nav bar.
      */
     protected int getNavBarHeightInPixels() {
         Resources resources = getResources();
         int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
-
         return (resourceId > 0) ? resources.getDimensionPixelSize(resourceId) : 0;
     }
-
 }

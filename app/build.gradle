@@ -62,7 +62,7 @@ dependencies {
     implementation 'com.googlecode.mp4parser:isoparser:1.1.22'
     implementation 'com.google.android.material:material:1.2.0-alpha03'
     implementation "org.jsoup:jsoup:1.12.1"
-    implementation "com.google.android.exoplayer:exoplayer:2.9.2"
+    implementation "com.google.android.exoplayer:exoplayer:2.9.6"
     implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.19'
 
 }

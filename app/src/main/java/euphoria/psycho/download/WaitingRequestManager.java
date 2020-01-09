@@ -1,1 +1,1 @@
-package euphoria.psycho.download;public class WaitingRequestManager {    public WaitingRequestManager(CacheDispatcher cacheDispatcher) {    }}
+package euphoria.psycho.download;public class WaitingRequestManager {    public WaitingRequestManager(CacheDispatcher cacheDispatcher) {    }}

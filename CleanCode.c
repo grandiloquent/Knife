@@ -5,6 +5,14 @@
 #include <sys/stat.h>
 #include <ctype.h>
 
+char *TrimRight(char *buf) {
+    size_t len = strlen(buf);
+    while (len > 0 && isspace(buf[len - 1]))
+        len--;
+    buf[len] = '\0';
+    return buf;
+}
+
 int IsNullOrWhiteSpace(const char *s) {
     if (!s)return 1;
 
@@ -175,7 +183,7 @@ int RemoveEmptyLines(const char *path) {
 
     for (size_t i = 0; i < count; i++) {
         if (!IsNullOrWhiteSpace(lines[i])) {
-            fputs(lines[i], out);
+            fputs(TrimRight(lines[i]), out);
             fputc('\n', out);
         }
     }

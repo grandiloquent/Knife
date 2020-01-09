@@ -2,14 +2,18 @@ package euphoria.video;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -19,30 +23,84 @@ import android.widget.TextView;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection.Factory;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.Collator;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
+import euphoria.common.Logger;
 import euphoria.psycho.knife.R;
 
-public class PlayerFragment extends ImmersiveModeFragment {
+import static euphoria.common.Files.getDirectoryName;
+
+public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragmentDelegate {
+    public static final String EXTRA_DIRECTION = "extra_direction";
+    public static final String EXTRA_SORT = "extra_sort";
+    public static final String EXTRA_VIDEO_PATH = "extra_video_path";
     private PlayerDelegate mPlayerDelegate;
     PlayerView mPlayerView;
     PlayerViewGestureHandler mPlayerViewGestureHandler;
     ProgressBar mLoadingVideoView;
     SimpleExoPlayer mPlayer;
+    ConcatenatingMediaSource mConcatenatingMediaSource;
+    List<String> mFiles;
+    int mWindow;
+
+    private Stream<Path> collectFiles(String path, int sort, boolean isAscending) throws IOException {
+        Pattern extension = Pattern.compile("\\.(?:3gp|mkv|mp4|ts|webm)$", Pattern.CASE_INSENSITIVE);
+        return Files.list(Paths.get(path))
+                .filter(p ->
+                        Files.isRegularFile(p)
+                                && extension.matcher(p.getFileName().toString()).find())
+                .sorted(new VideoComparator(sort));
+    }
+
+    private void collectPlaylist(String path, int sort, boolean isAscending) throws IOException {
+        Stream<Path> files = collectFiles(path, sort, isAscending);
+        FileDataSourceFactory factory = new FileDataSourceFactory();
+        if (mConcatenatingMediaSource == null) {
+            mConcatenatingMediaSource = new ConcatenatingMediaSource();
+        }
+        mFiles = files.map(p -> p.toAbsolutePath().toString())
+                .collect(Collectors.toList());
+        files.forEach(p -> {
+            MediaSource mediaSource = new ExtractorMediaSource.Factory(factory).createMediaSource(Uri.fromFile(p.toFile()));
+            mConcatenatingMediaSource.addMediaSource(mediaSource);
+        });
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        pause();
+    }
 
     private SimpleExoPlayer createExoPlayer() {
         DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
@@ -53,29 +111,52 @@ public class PlayerFragment extends ImmersiveModeFragment {
         return ExoPlayerFactory.newSimpleInstance(getContext(), defaultRenderersFactory, trackSelector, new DefaultLoadControl(), null, bandwidthMeter);
     }
 
-    public int getCurrentVideoPosition() {
-        return (int) mPlayer.getCurrentPosition();
-    }
-
     private void initializeViews(View view) {
 //        Toolbar toolbar = view.findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
         mPlayerView = view.findViewById(R.id.player_view);
         mPlayerViewGestureHandler.initView(view);
         mPlayerView.setOnTouchListener(mPlayerViewGestureHandler);
         mPlayerView.requestFocus();
-
-
         setupPlayer();
         mPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
         mLoadingVideoView = view.findViewById(R.id.loadingVideoView);
     }
 
-    public void pause() {
-        mPlayer.setPlayWhenReady(false);
+    private void playVideo() {
+        if (mConcatenatingMediaSource == null) {
+            Intent start = Objects.requireNonNull(getActivity()).getIntent();
+            String videoPath = start.getStringExtra(EXTRA_VIDEO_PATH);
+            int sort = start.getIntExtra(EXTRA_SORT, -1);
+            boolean isAscending = start.getBooleanExtra(EXTRA_DIRECTION, false);
+            try {
+                collectPlaylist(getDirectoryName(videoPath), sort, isAscending);
+            } catch (IOException e) {
+                Logger.e(this, "collectPlaylist failed. %s\n", e.getMessage());
+            }
+
+            anchorPlayIndex(videoPath);
+        }
+
+        mPlayer.prepare(Objects.requireNonNull(mConcatenatingMediaSource));
+        mPlayer.seekTo(mWindow, C.TIME_UNSET);
+    }
+
+    private void preventDeviceSleeping(boolean flag) {
+        // prevent the device from sleeping while playing
+        Activity activity = getActivity();
+        if (activity != null) {
+            Window window = activity.getWindow();
+            if (window != null) {
+                if (flag) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                }
+            }
+        }
     }
 
     private synchronized void setupPlayer() {
@@ -86,13 +167,41 @@ public class PlayerFragment extends ImmersiveModeFragment {
             mPlayer.addListener(new EventListener() {
                 @Override
                 public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                    if (playbackState == Player.STATE_READY && playWhenReady) {
+                        preventDeviceSleeping(true);
+                    } else {
+                        preventDeviceSleeping(false);
+                    }
+                }
 
+                @Override
+                public void onLoadingChanged(boolean isLoading) {
+                    if (isLoading) {
+                        mLoadingVideoView.setVisibility(View.VISIBLE);
+                    } else {
+                        mLoadingVideoView.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException error) {
+                    Logger.e(PlayerFragment.this, "onPlayerError. %s.\n", error.getMessage());
                 }
             });
             mPlayer.setPlayWhenReady(true);
             mPlayer.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
             mPlayerView.setPlayer(mPlayer);
         }
+    }
+
+
+    private void anchorPlayIndex(String path) {
+        mWindow = mFiles.indexOf(path);
+    }
+
+    @Override
+    public int getCurrentVideoPosition() {
+        return (int) mPlayer.getCurrentPosition();
     }
 
     @Override
@@ -107,11 +216,11 @@ public class PlayerFragment extends ImmersiveModeFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         hideNavigationBar();
         mPlayerViewGestureHandler = new PlayerViewGestureHandler();
-
         View view = inflater.inflate(R.layout.fragment_player, container, false);
         setHasOptionsMenu(true);
         initializeViews(view);
-        return super.onCreateView(inflater, container, savedInstanceState);
+        playVideo();
+        return view;
     }
 
     @Override
@@ -123,8 +232,16 @@ public class PlayerFragment extends ImmersiveModeFragment {
         mPlayerView.setPlayer(null);
     }
 
-    public interface PlayerDelegate {
+    public void pause() {
+        mPlayer.setPlayWhenReady(false);
+    }
 
+    @Override
+    public void videoPlaybackStopped() {
+        mPlayer.stop();
+    }
+
+    public interface PlayerDelegate {
     }
 
     private static class VideoBrightness {
@@ -133,13 +250,11 @@ public class PlayerFragment extends ImmersiveModeFragment {
         private float mInitialBrightness;
         private Activity mActivity;
 
-
         public VideoBrightness(final Activity activity) {
             mActivity = activity;
             loadBrightnessFromPreference();
             mInitialBrightness = mBrightness;
             setVideoBrightness(0);
-
         }
 
         private void adjustVideoBrightness() {
@@ -156,7 +271,6 @@ public class PlayerFragment extends ImmersiveModeFragment {
             final float brightnessPref = PreferenceManager.getDefaultSharedPreferences(mActivity)
                     .getFloat(BRIGHTNESS_LEVEL_PREF, 1f);
             setBrightness(brightnessPref);
-
         }
 
         public void onGestureDone() {
@@ -192,8 +306,51 @@ public class PlayerFragment extends ImmersiveModeFragment {
         }
     }
 
-    private class PlayerViewGestureHandler extends PlayerViewGestureDetector {
+    private static class VideoComparator implements Comparator<Path> {
+        public static final int SORT_BY_DATE_MODIFIED = 2;
+        public static final int SORT_BY_NAME = 0;
+        public static final int SORT_BY_SIZE = 1;
+        public static final int SORT_BY_UNSPECIFIED = -1;
+        private final int mSort;
 
+        private VideoComparator(int sort) {
+            mSort = sort;
+        }
+
+        @Override
+        public int compare(Path o1, Path o2) {
+            switch (mSort) {
+                case SORT_BY_SIZE:
+                    long result = o1.toFile().length() - o2.toFile().length();
+                    if (result < 0) {
+                        return -1;
+                    } else if (result > 0) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                case SORT_BY_NAME:
+                    Collator collator = Collator.getInstance(Locale.CHINA);
+                    return collator.compare(o1.getFileName(),
+                            o2.getFileName());
+                case SORT_BY_DATE_MODIFIED:
+                    result =
+                            o1.toFile().lastModified()
+                                    - o2.toFile().lastModified();
+                    if (result < 0) {
+                        return -1;
+                    } else if (result > 0) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                default:
+                    return 0;
+            }
+        }
+    }
+
+    private class PlayerViewGestureHandler extends PlayerViewGestureDetector {
         private static final int MAX_VIDEO_STEP_TIME = 60 * 1000;
         VideoBrightness mVideoBrightness;
         RelativeLayout mIndicatorView;
@@ -229,7 +386,6 @@ public class PlayerFragment extends ImmersiveModeFragment {
             mIndicatorView = view.findViewById(R.id.indicatorView);
             mIndicatorImageView = view.findViewById(R.id.indicatorImageView);
             mIndicatorTextView = view.findViewById(R.id.indicatorTextView);
-
             mPlayerView.setControllerVisibilityListener(visibility -> mIsControllerVisible = (visibility == View.VISIBLE));
         }
 
@@ -250,12 +406,9 @@ public class PlayerFragment extends ImmersiveModeFragment {
 
         @Override
         public void adjustBrightness(double adjustPercent) {
-
             mVideoBrightness.setVideoBrightness(adjustPercent);
-
             mIndicatorImageView.setImageResource(R.drawable.ic_brightness);
             mIndicatorTextView.setText(mVideoBrightness.getBrightnessString());
-
             showIndicator();
         }
 
@@ -270,9 +423,7 @@ public class PlayerFragment extends ImmersiveModeFragment {
             if (mStartVideoTime < 0) {
                 mStartVideoTime = mPlayer.getCurrentPosition();
             }
-
             double positiveAdjustPercent = Math.max(adjustPercent, -adjustPercent);
-
             long targetTime = mStartVideoTime + (long) (MAX_VIDEO_STEP_TIME * adjustPercent * (positiveAdjustPercent / 0.1));
             if (targetTime > totalTime) {
                 targetTime = totalTime;
@@ -301,23 +452,18 @@ public class PlayerFragment extends ImmersiveModeFragment {
             }
             AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
             final int STREAM = AudioManager.STREAM_MUSIC;
-
             int maxVolume = audioManager.getStreamMaxVolume(STREAM);
             if (maxVolume == 0) return;
             if (mStartVolumePercent < 0) {
-
                 int curVolume = audioManager.getStreamVolume(STREAM);
-
                 mStartVolumePercent = curVolume * 1.0f / maxVolume;
             }
-
             double targetPercent = mStartVolumePercent + adjustPercent;
             if (targetPercent > 1.0f) {
                 targetPercent = 1.0f;
             } else if (targetPercent < 0) {
                 targetPercent = 0;
             }
-
             int index = (int) (maxVolume * targetPercent);
             if (index > maxVolume) {
                 index = maxVolume;
@@ -327,7 +473,6 @@ public class PlayerFragment extends ImmersiveModeFragment {
             audioManager.setStreamVolume(STREAM, index, 0);
             mIndicatorImageView.setImageResource(R.drawable.ic_volume);
             mIndicatorTextView.setText(index * 100 / maxVolume + "%");
-
             showIndicator();
         }
 
@@ -342,7 +487,6 @@ public class PlayerFragment extends ImmersiveModeFragment {
 
         @Override
         public void onCommentsGesture() {
-
         }
 
         @Override
@@ -371,7 +515,6 @@ public class PlayerFragment extends ImmersiveModeFragment {
 
         @Override
         public void onVideoDescriptionGesture() {
-
         }
     }
 }

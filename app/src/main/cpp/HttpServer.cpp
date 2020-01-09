@@ -1,22 +1,15 @@
-
 //
-
 #include "HttpServer.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
-
 #include <dirent.h>
 #include <sys/stat.h>
-
-
 bool HttpServer::StartServer(const char *host, int port, const char *directory) {
-
     std::cout<<"[D]: "<<"_server.listen"<<std::endl;
     _host = host;
     _port = port;
     _directory = directory;
-
     _server.Get("/", [&](const Request &request, Response &response) {
         response.set_content(GetFileContents(_directory), "text/html");
     });
@@ -32,20 +25,14 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
     return result;
 }
 std::string HttpServer::GetFileContents(const char *path) {
-
-
     DIR *dir;
     dir=opendir(path);
     if(dir==NULL) {
         return nullptr;
     }
-
     std::vector<std::pair<bool,std::string>> files;
-
     struct dirent *de;
-
     struct stat st;
-
     while((de=readdir(dir))) {
         if(strcmp(de->d_name,".")==0
            ||strcmp(de->d_name,"..")==0)continue;
@@ -60,7 +47,6 @@ std::string HttpServer::GetFileContents(const char *path) {
             files.push_back(std::make_pair(false,fullPath));
         }
     }
-
     std::sort(files.begin(),files.end(),[](auto &a,auto &b) {
         if(a.first==b.first) {
             return a.second<b.second;
@@ -75,17 +61,13 @@ std::string HttpServer::GetFileContents(const char *path) {
           <<value.second
           <<"</a>";
     });
-
     closedir(dir);
     return ss.str();
-
-
 }
 bool HttpServer::StopServer() {
     _server.stop();
     return true;
 }
-
 HttpServer &GetEmbedServer() {
     static HttpServer httpServer;
     return httpServer;

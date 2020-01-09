@@ -1,5 +1,4 @@
 #include "Files.h"
-
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sstream>
@@ -7,39 +6,33 @@
 #include <fstream>
 #include <iterator>
 #include <algorithm>
-
 template<typename Cont, typename Pred>
 Cont filter(const Cont &container, Pred predicate) {
     Cont result;
     std::copy_if(container.begin(), container.end(), std::back_inserter(result), predicate);
     return result;
 }
-
 inline bool EndsWith(std::string const &value, std::string const &ending) {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
-
 std::string toString(const std::pair<bool, std::string> &data) {
     std::ostringstream str;
     str << data.first << ", " << data.second << "\n";
     return str.str();
 }
-
 std::vector<std::pair<bool, std::string>> ListFiles(const char *path) {
     std::vector<std::pair<bool, std::string>> files;
     DIR *dir;
     // http://man7.org/linux/man-pages/man3/opendir.3.html
     dir = opendir(path);
     if (!dir)return files;
-
     bool suffix = false;
     if (path[strlen(path) - 1] == '/') {
         suffix = true;
     }
     struct stat s;
     struct dirent *de;
-
     // http://man7.org/linux/man-pages/man3/readdir.3.html
     while ((de = readdir(dir))) {
         if (strcmp(de->d_name, ".") == 0
@@ -57,11 +50,9 @@ std::vector<std::pair<bool, std::string>> ListFiles(const char *path) {
             files.push_back(std::make_pair(false, p));
         }
     }
-
     closedir(dir);
     return files;
 }
-
 std::vector<std::string> ReadAllLines(const char *path) {
     std::ifstream ifs{path};
     if (ifs.fail()) {
@@ -73,35 +64,27 @@ std::vector<std::string> ReadAllLines(const char *path) {
         buf.push_back(line);
     }
     ifs.close();
-
     return buf;
 }
-
 std::vector<char> ReadAllBytes(const std::string &path) {
     std::ifstream file(path, std::ios::binary);
-
     if (file.fail()) {
         return {};
     }
-
     std::streampos begin, end;
     begin = file.tellg();
     file.seekg(0, std::ios::end);
     end = file.tellg();
-
     std::vector<char> result((size_t) (end - begin));
     file.seekg(0, std::ios::beg);
     file.read(&result[0], end - begin);
     file.close();
-
     return result;
 }
-
 std::string ReadAllText(const std::string &path) {
     const std::vector<char> &binaryContent = ReadAllBytes(path);
     return std::string(binaryContent.begin(), binaryContent.end());
 }
-
 bool WriteAllLines(const char *path, std::vector<std::string> &contents) {
     std::ofstream file{path};
     if (file.fail()) {
@@ -113,7 +96,6 @@ bool WriteAllLines(const char *path, std::vector<std::string> &contents) {
     file.close();
     return true;
 }
-
 /*int main() {
 	std::string path="C:/Users/psycho/Desktop/apache/epub";
 	auto files=ListFiles(path.c_str());

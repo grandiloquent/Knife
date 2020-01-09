@@ -1,4 +1,4 @@
-package euphoria.psycho.knife.video;
+package euphoria.video;
 import android.util.Log;
 import java.io.Closeable;
 import java.io.File;

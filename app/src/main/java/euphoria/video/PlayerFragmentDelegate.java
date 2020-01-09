@@ -1,10 +1,6 @@
 package euphoria.video;
-
 public interface PlayerFragmentDelegate {
-
     void pause();
-
-    void getCurrentPosition();
-
+    int getCurrentVideoPosition();
     void videoPlaybackStopped();
 }

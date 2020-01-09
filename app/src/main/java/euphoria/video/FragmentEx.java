@@ -14,45 +14,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package euphoria.video;
-
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-
 /**
  * An extension of {@link Fragment} in which a fragment instance is retained across Activity
  * re-creation (e.g. after device rotation EditText content is not lost).
  */
 public class FragmentEx extends Fragment {
-
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		setRetainInstance(true);
 	}
-
-
 	protected AppCompatActivity getAppCompatActivity() {
 		return (AppCompatActivity) getActivity();
 	}
-
-
 	/**
 	 * Close the parent activity.
 	 */
 	protected void closeActivity() {
 		AppCompatActivity activity = getAppCompatActivity();
-
 		if (activity != null) {
 			activity.finish();
 		}
 	}
-
-
 	/**
 	 * @return Instance of {@link ActionBar}.
 	 */
@@ -63,8 +52,6 @@ public class FragmentEx extends Fragment {
 		AppCompatActivity activity = getAppCompatActivity();
 		return (activity != null ? activity.getSupportActionBar() : null);
 	}
-
-
 	/**
 	 * Set a {@link Toolbar} to act as the {@link ActionBar}.
 	 *
@@ -72,10 +59,8 @@ public class FragmentEx extends Fragment {
 	 */
 	protected void setSupportActionBar(Toolbar toolbar) {
 		AppCompatActivity activity = getAppCompatActivity();
-
 		if (activity != null) {
 			activity.setSupportActionBar(toolbar);
 		}
 	}
-
 }

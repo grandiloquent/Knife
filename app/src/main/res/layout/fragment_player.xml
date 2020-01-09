@@ -16,7 +16,7 @@
         android:id="@+id/loadingVideoView"
         style="@style/LoadingProgressBar"
         android:layout_gravity="center"
-        android:padding="17dp" />
+        android:padding="17dp"/>
     <!-- Volume / Brightness Indicator -->
     <RelativeLayout
         android:id="@+id/indicatorView"
