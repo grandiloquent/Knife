@@ -1,6 +1,7 @@
 package euphoria.video;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +12,9 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -28,22 +32,27 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -56,6 +65,7 @@ import java.util.stream.Stream;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import euphoria.common.Logger;
+import euphoria.common.Strings;
 import euphoria.psycho.knife.R;
 
 import static euphoria.common.Files.getDirectoryName;
@@ -71,9 +81,34 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
     SimpleExoPlayer mPlayer;
     ConcatenatingMediaSource mConcatenatingMediaSource;
     List<String> mFiles;
+    Bookmarker mBookmarker;
     int mWindow;
 
+    private void actionDelete() {
+        String currentPath = getCurrentPath();
+        new AlertDialog.Builder(getContext())
+                .setMessage(String.format("确定删除要 %s 吗?", Strings.substringAfterLast(currentPath, "/")))
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    dialog.dismiss();
+                    pause();
+                    new File(currentPath).delete();
+
+                })
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void anchorPlayIndex(String path) {
+        mWindow = mFiles.indexOf(path);
+    }
+
     private Stream<Path> collectFiles(String path, int sort, boolean isAscending) throws IOException {
+
+
+       /* Log.e("TAG/" + PlayerFragment.this.getClass().getSimpleName(), "Debug: collectFiles, "
+                + " path = " + path + "\n" + " sort = " + sort + "\n" + " isAscending = " + isAscending + "\n");
+                */
+
         Pattern extension = Pattern.compile("\\.(?:3gp|mkv|mp4|ts|webm)$", Pattern.CASE_INSENSITIVE);
         return Files.list(Paths.get(path))
                 .filter(p ->
@@ -88,18 +123,14 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         if (mConcatenatingMediaSource == null) {
             mConcatenatingMediaSource = new ConcatenatingMediaSource();
         }
-        mFiles = files.map(p -> p.toAbsolutePath().toString())
-                .collect(Collectors.toList());
+        mFiles = new ArrayList<>();
+
         files.forEach(p -> {
+            mFiles.add(p.toAbsolutePath().toString());
             MediaSource mediaSource = new ExtractorMediaSource.Factory(factory).createMediaSource(Uri.fromFile(p.toFile()));
             mConcatenatingMediaSource.addMediaSource(mediaSource);
         });
-    }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        pause();
     }
 
     private SimpleExoPlayer createExoPlayer() {
@@ -109,6 +140,11 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         Context context = getContext();
         DefaultRenderersFactory defaultRenderersFactory = new DefaultRenderersFactory(context);
         return ExoPlayerFactory.newSimpleInstance(getContext(), defaultRenderersFactory, trackSelector, new DefaultLoadControl(), null, bandwidthMeter);
+    }
+
+    private String getCurrentPath() {
+        int index = mPlayer.getCurrentWindowIndex();
+        return mFiles.get(index);
     }
 
     private void initializeViews(View view) {
@@ -141,6 +177,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         }
 
         mPlayer.prepare(Objects.requireNonNull(mConcatenatingMediaSource));
+
         mPlayer.seekTo(mWindow, C.TIME_UNSET);
     }
 
@@ -159,21 +196,22 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         }
     }
 
+    private void setTitle() {
+
+        getSupportActionBar().setTitle(Strings.substringAfterLast(getCurrentPath(), "/"));
+    }
+
+    private void seekToLasted() {
+        Integer position = mBookmarker.getBookmark(mFiles.get(mPlayer.getCurrentWindowIndex()));
+        if (position != null) mPlayer.seekTo(mPlayer.getCurrentWindowIndex(), position);
+    }
+
     private synchronized void setupPlayer() {
         if (mPlayerView.getPlayer() == null) {
             if (mPlayer == null) {
                 mPlayer = createExoPlayer();
             }
             mPlayer.addListener(new EventListener() {
-                @Override
-                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                    if (playbackState == Player.STATE_READY && playWhenReady) {
-                        preventDeviceSleeping(true);
-                    } else {
-                        preventDeviceSleeping(false);
-                    }
-                }
-
                 @Override
                 public void onLoadingChanged(boolean isLoading) {
                     if (isLoading) {
@@ -187,16 +225,28 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
                 public void onPlayerError(ExoPlaybackException error) {
                     Logger.e(PlayerFragment.this, "onPlayerError. %s.\n", error.getMessage());
                 }
+
+                @Override
+                public void onTimelineChanged(Timeline timeline, @Nullable Object manifest, int reason) {
+
+                    setTitle();
+                    seekToLasted();
+
+                }
+
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                    if (playbackState == Player.STATE_READY && playWhenReady) {
+                        preventDeviceSleeping(true);
+                    } else {
+                        preventDeviceSleeping(false);
+                    }
+                }
             });
             mPlayer.setPlayWhenReady(true);
             mPlayer.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
             mPlayerView.setPlayer(mPlayer);
         }
-    }
-
-
-    private void anchorPlayIndex(String path) {
-        mWindow = mFiles.indexOf(path);
     }
 
     @Override
@@ -211,6 +261,12 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         mPlayerDelegate = (PlayerDelegate) activity;
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.video, menu);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -219,6 +275,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         View view = inflater.inflate(R.layout.fragment_player, container, false);
         setHasOptionsMenu(true);
         initializeViews(view);
+        mBookmarker = new Bookmarker(getContext());
         playVideo();
         return view;
     }
@@ -232,8 +289,28 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         mPlayerView.setPlayer(null);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_delete:
+                actionDelete();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        pause();
+    }
+
     public void pause() {
         mPlayer.setPlayWhenReady(false);
+
+
+        mBookmarker.setBookmark(getCurrentPath(), (int) mPlayer.getCurrentPosition());
+
     }
 
     @Override
@@ -318,7 +395,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements PlayerFragm
         }
 
         @Override
-        public int compare(Path o1, Path o2) {
+        public int compare(Path o2, Path o1) {
             switch (mSort) {
                 case SORT_BY_SIZE:
                     long result = o1.toFile().length() - o2.toFile().length();
