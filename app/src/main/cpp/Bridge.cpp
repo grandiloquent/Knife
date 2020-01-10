@@ -1,16 +1,19 @@
 #include <fstream>
 #include "Bridge.h"
 #include "Files.h"
+
 template<typename Cont, typename Pred>
 Cont filter(const Cont &container, Pred predicate) {
     Cont result;
     std::copy_if(container.begin(), container.end(), std::back_inserter(result), predicate);
     return result;
 }
+
 inline bool EndsWith(std::string const &value, std::string const &ending) {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
+
 int CombineFiles(const char *path) {
     std::string dir = path;
     auto files = ListFiles(dir.c_str());

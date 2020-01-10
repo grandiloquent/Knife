@@ -18,20 +18,10 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".photo.PhotoViewActivity"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
 
-        </activity>
         <activity
             android:name=".MainActivity"
             android:theme="@style/FullscreenWhiteBase">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -143,6 +133,13 @@
 
         </activity>
         <activity android:name=".MarkdownActivity" />
-        <activity android:name="euphoria.video.PlayerActivity" />
+        <activity android:name="euphoria.video.PlayerActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
     </application>
 </manifest>

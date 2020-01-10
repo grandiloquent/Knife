@@ -1,375 +1,400 @@
 package euphoria.video;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Matrix;
+import android.graphics.Matrix.ScaleToFit;
 import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
-import android.net.Uri;
+import android.net.rtp.AudioStream;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.view.Surface;
+import android.view.TextureView;
+import android.view.TextureView.SurfaceTextureListener;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.Player.EventListener;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.ui.PlayerView;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import euphoria.common.Dialogs;
-import euphoria.common.Logger;
-import euphoria.common.Strings;
+import euphoria.common.Files;
 import euphoria.psycho.knife.R;
-
-import static euphoria.common.Files.getDirectoryName;
-import static euphoria.common.Files.read;
+import euphoria.video.TimeBar.OnScrubListener;
+import tv.danmaku.ijk.media.player.IMediaPlayer;
+import tv.danmaku.ijk.media.player.IMediaPlayer.OnCompletionListener;
+import tv.danmaku.ijk.media.player.IMediaPlayer.OnPreparedListener;
+import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 public class PlayerFragment extends ImmersiveModeFragment implements
+        SurfaceTextureListener,
         PlayerFragmentDelegate,
-        Player.EventListener {
+        OnPreparedListener,
+        OnScrubListener,
+        OnCompletionListener,
+        OnClickListener {
     public static final String EXTRA_DIRECTION = "extra_direction";
     public static final String EXTRA_SORT = "extra_sort";
     public static final String EXTRA_VIDEO_PATH = "extra_video_path";
-    private PlayerDelegate mPlayerDelegate;
-    private PlayerView mPlayerView;
+    private static final int HIDE_CONTROLLER_DELAY = 5000;
+    private final Handler mHandler = new Handler();
+    private int mScreenWidth;
+    private int mScreenHeight;
+    private int mScreenHeightDifference;
+    private SurfaceTexture mSurfaceTexture;
+    private IjkMediaPlayer mIjkMediaPlayer;
+    private Handler mProgressHandler;
+    boolean mDragging;
+    boolean mShowing = true;
+    private View mController;
+    private final Runnable mPlayingChecker = new Runnable() {
+        @Override
+        public void run() {
+            if (mIjkMediaPlayer != null && mIjkMediaPlayer.isPlaying()) {
+                hideController();
+            } else {
+                mHandler.postDelayed(mPlayingChecker, 250);
+            }
+        }
+    };
+    private TextView mExoDuration;
+    private View mExoFfwd;
+    private View mExoNext;
+    private View mExoPause;
+    private View mExoPlay;
+    private TextView mExoPosition;
+    private View mExoPrev;
+    private TimeBar mExoProgress;
+    private final Runnable mProgressChecker = new Runnable() {
+        @Override
+        public void run() {
+            long pos = setProgress();
+            mHandler.postDelayed(mProgressChecker, 1000 - (pos % 1000));
+        }
+    };
+    private View mExoRew;
+    private View mIndicatorImageView;
+    private View mIndicatorTextView;
+    private View mIndicatorView;
+    private View mLoadingVideoView;
+    private View mPlayerView;
+    private TextureView mTextureView;
     private PlayerViewGestureHandler mPlayerViewGestureHandler;
-    private ProgressBar mLoadingVideoView;
-    private SimpleExoPlayer mPlayer;
-    private ConcatenatingMediaSource mConcatenatingMediaSource;
-    private List<String> mFiles;
-    private Bookmarker mBookmarker;
-    private int mWindow;
-    private String mVideoDirectory;
-    private int mSort;
-    private boolean mIsSortByAscending;
 
-    /*删除视频文件*/
-    private void actionDelete() {
-        String currentPath = getCurrentPath();
-        String message = String.format("确定删除要 %s 吗?", Strings.substringAfterLast(currentPath, "/"));
-        Dialogs.showConfirmDialog(getContext(),
-                null, message, (dialog, which) -> {
-                    dialog.dismiss();
-                    pause();
-                    boolean performResult = performDelete(currentPath);
-                    if (performResult) {
-                        getActivityChecked().setResult(Activity.RESULT_OK);
-                    }
-                }
-        );
+    private void adjustSize() {
+        int videoHeight = mIjkMediaPlayer.getVideoHeight();
+        int videoWidth = mIjkMediaPlayer.getVideoWidth();
 
-    }
 
-    /*设置对应的播放索引*/
-    private void anchorPlayIndex(String path) {
-        mWindow = mFiles.indexOf(path);
-    }
+        TextureView textureView = mTextureView;
 
-    private Stream<Path> collectFiles() throws IOException {
-       /* Log.e("TAG/" + PlayerFragment.this.getClass().getSimpleName(), "Debug: collectFiles, "
-                + " path = " + path + "\n" + " sort = " + sort + "\n" + " isAscending = " + isAscending + "\n");
-                */
-        Pattern extension = Pattern.compile("\\.(?:3gp|mkv|mp4|ts|webm)$", Pattern.CASE_INSENSITIVE);
-        return Files.list(Paths.get(mVideoDirectory))
-                .filter(p ->
-                        Files.isRegularFile(p)
-                                && extension.matcher(p.getFileName().toString()).find())
-                .sorted(new VideoComparator(mSort));
-    }
+        float textureViewWidth = textureView.getWidth();
+        float textureViewHeight = textureView.getHeight();
 
-    private void collectPlaylist() throws IOException {
-        Stream<Path> files = collectFiles();
-        FileDataSourceFactory factory = new FileDataSourceFactory();
-        if (mConcatenatingMediaSource == null) {
-            mConcatenatingMediaSource = new ConcatenatingMediaSource();
+        float width = textureViewWidth;
+        float height = textureViewHeight;
+
+        float pivotX = textureViewWidth / 2;
+        float pivotY = textureViewHeight / 2;
+
+        float videoAspectRatio = videoWidth / (float) videoHeight;
+
+        float viewAspectRatio = (float) width / height;
+        float aspectDeformation = videoAspectRatio / viewAspectRatio - 1;
+
+        if (aspectDeformation > 0) {
+            height = (int) (width / videoAspectRatio);
         } else {
-            mConcatenatingMediaSource.clear();
+            width = (int) (height * videoAspectRatio);
         }
-        if (mFiles == null) {
-            mFiles = new ArrayList<>();
-        } else {
-            mFiles.clear();
-        }
-        files.forEach(p -> {
-            mFiles.add(p.toAbsolutePath().toString());
-            MediaSource mediaSource = new ExtractorMediaSource.Factory(factory).createMediaSource(Uri.fromFile(p.toFile()));
-            mConcatenatingMediaSource.addMediaSource(mediaSource);
-        });
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(width / textureViewWidth,
+                height / textureViewHeight,
+                pivotX, pivotY);
+        mTextureView.setTransform(matrix);
     }
 
-    private SimpleExoPlayer createExoPlayer() {
-        DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
-        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
-        DefaultTrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
-        Context context = getContext();
-        DefaultRenderersFactory defaultRenderersFactory = new DefaultRenderersFactory(context);
-        return ExoPlayerFactory.newSimpleInstance(getContext(), defaultRenderersFactory, trackSelector, new DefaultLoadControl(), null, bandwidthMeter);
+    private IjkMediaPlayer createPlayer() {
+        IjkMediaPlayer ijkMediaPlayer = new IjkMediaPlayer();
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", 0);
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "opensles", 1);
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "overlay-format", IjkMediaPlayer.SDL_FCC_RV32);
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "framedrop", 1);
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0);
+
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "http-detect-range-support", 0);
+
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_CODEC, "skip_loop_filter", 48);
+        return ijkMediaPlayer;
     }
 
-    private Activity getActivityChecked() {
-        Activity activity = getActivity();
-        if (activity == null) {
-            Logger.e(this, "getActivity() return null.\n");
-            throw new NullPointerException();
-        }
-        return activity;
-    }
+    private void debugPlay() {
+        String videoDirectory = Files.getExternalStoragePath("videos");
+        File[] videoFiles = Files.listVideoFiles(videoDirectory);
 
-    /*获取当前播放的文件路径*/
-    private String getCurrentPath() {
-        int index = mPlayer.getCurrentWindowIndex();
-        return mFiles.get(index);
-    }
-
-    private void initializeViews(View view) {
-//        Toolbar toolbar = view.findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        mPlayerView = view.findViewById(R.id.player_view);
-        mPlayerViewGestureHandler.initView(view);
-        mPlayerView.setOnTouchListener(mPlayerViewGestureHandler);
-        mPlayerView.requestFocus();
         setupPlayer();
-        mPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+
+        try {
+            mIjkMediaPlayer.setDataSource(videoFiles[3].getAbsolutePath());
+            mIjkMediaPlayer.prepareAsync();
+        } catch (IOException e) {
+
+            Log.e("TAG/" + PlayerFragment.this.getClass().getSimpleName(), "Error: debugPlay, " + e.getMessage() + " " + e.getCause());
+
+        }
+    }
+
+    private void findViews(View view) {
+        mController = view.findViewById(R.id.controller);
+        mExoDuration = view.findViewById(R.id.exo_duration);
+        mExoFfwd = view.findViewById(R.id.exo_ffwd);
+        mExoNext = view.findViewById(R.id.exo_next);
+        mExoPause = view.findViewById(R.id.exo_pause);
+        mExoPlay = view.findViewById(R.id.exo_play);
+        mExoPosition = view.findViewById(R.id.exo_position);
+        mExoPrev = view.findViewById(R.id.exo_prev);
+        mExoProgress = view.findViewById(R.id.exo_progress);
+        mExoRew = view.findViewById(R.id.exo_rew);
+        mIndicatorImageView = view.findViewById(R.id.indicatorImageView);
+        mIndicatorTextView = view.findViewById(R.id.indicatorTextView);
+        mIndicatorView = view.findViewById(R.id.indicatorView);
         mLoadingVideoView = view.findViewById(R.id.loadingVideoView);
+        mPlayerView = view.findViewById(R.id.player_view);
+        mTextureView = view.findViewById(R.id.texture_view);
     }
 
-    private boolean performDelete(String videoPath) {
-        File videoFile = new File(videoPath);
-        boolean deleteResult = videoFile.delete();
-        if (!deleteResult) return false;
-        mConcatenatingMediaSource.removeMediaSource(mPlayer.getCurrentPeriodIndex());
-//        if (mFiles.size() == 1) {
-//            mConcatenatingMediaSource = null;
-//            mPlayer.stop(true);
-//            return true;
-//        }
-//        int currentWindowIndex = mPlayer.getCurrentWindowIndex();
-//        int nextWindowIndex = currentWindowIndex + 1;
-//        if (nextWindowIndex + 1 >= mFiles.size()) {
-//            nextWindowIndex = 0;
-//        }
-//        String mNextVideoPath = mFiles.get(nextWindowIndex);
-//        try {
-//            collectPlaylist();
-//        } catch (IOException e) {
-//            return false;
-//        }
-//        anchorPlayIndex(mNextVideoPath);
-//        mPlayer.prepare(mConcatenatingMediaSource);
-//        mPlayer.seekTo(mWindow, C.TIME_UNSET);
-//        mPlayer.setPlayWhenReady(true);
-        return true;
-    }
-
-    private void playVideo() {
-        if (mConcatenatingMediaSource == null) {
-            Intent start = Objects.requireNonNull(getActivity()).getIntent();
-            String videoPath = start.getStringExtra(EXTRA_VIDEO_PATH);
-            int sort = start.getIntExtra(EXTRA_SORT, -1);
-            boolean isAscending = start.getBooleanExtra(EXTRA_DIRECTION, false);
-            mVideoDirectory = getDirectoryName(videoPath);
-            mSort = sort;
-            mIsSortByAscending = isAscending;
-            try {
-                collectPlaylist();
-            } catch (IOException e) {
-                Logger.e(this, "collectPlaylist failed. %s\n", e.getMessage());
-            }
-            anchorPlayIndex(videoPath);
+    private String formatDuration(long duration) {
+        long h = duration / 3600;
+        long m = (duration - h * 3600) / 60;
+        long s = duration - (h * 3600 + m * 60);
+        String durationValue;
+        if (h == 0) {
+            durationValue = String.format(Locale.getDefault(), "%1$02d:%2$02d", m, s);
+        } else {
+            durationValue = String.format(Locale.getDefault(), "%1$d:%2$02d:%3$02d", h, m, s);
         }
-        mPlayer.prepare(Objects.requireNonNull(mConcatenatingMediaSource));
-        mPlayer.seekTo(mWindow, C.TIME_UNSET);
+        return durationValue;
     }
 
-    private void preventDeviceSleeping(boolean flag) {
-        // prevent the device from sleeping while playing
-        Activity activity = getActivity();
-        if (activity != null) {
-            Window window = activity.getWindow();
-            if (window != null) {
-                if (flag) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                }
-            }
+    private void hideController() {
+
+
+        Log.e("TAG/", "Debug: hideController, \n"
+                + " mScreenHeightDifference = " + mScreenHeightDifference + "\n"
+
+        );
+        mHandler.removeCallbacks(null);
+        hideNavigationBar();
+        mController.setVisibility(View.GONE);
+        mShowing = false;
+
+    }
+
+    private void play() {
+        if (mIjkMediaPlayer != null && mIjkMediaPlayer.isPlayable()) {
+            mIjkMediaPlayer.start();
+            mExoPlay.setVisibility(View.GONE);
+            mExoPause.setVisibility(View.VISIBLE);
+            mHandler.removeCallbacks(mProgressChecker);
+            mHandler.post(mProgressChecker);
         }
     }
 
-    private void seekToLasted() {
-        Integer position = mBookmarker.getBookmark(mFiles.get(mPlayer.getCurrentWindowIndex()));
-        if (position != null) mPlayer.seekTo(mPlayer.getCurrentWindowIndex(), position);
+    private void rewind() {
     }
 
-    private void setTitle() {
-        getSupportActionBar().setTitle(Strings.substringAfterLast(getCurrentPath(), "/"));
-    }
-
-    private synchronized void setupPlayer() {
-        if (mPlayerView.getPlayer() == null) {
-            if (mPlayer == null) {
-                mPlayer = createExoPlayer();
-            }
-            mPlayer.addListener(this);
-            mPlayer.setPlayWhenReady(true);
-            mPlayer.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
-            mPlayerView.setPlayer(mPlayer);
+    private long setProgress() {
+        if (mIjkMediaPlayer == null || mDragging || !mShowing) {
+            return 0;
         }
+        long position = mIjkMediaPlayer.getCurrentPosition();
+
+        mExoPosition.setText(formatDuration(position / 1000));
+        mExoProgress.setPosition(position);
+        return position / 1000;
+    }
+
+    private void setupPlayer() {
+        IjkMediaPlayer ijkMediaPlayer = createPlayer();
+        ijkMediaPlayer.setSurface(new Surface(mSurfaceTexture));
+        ijkMediaPlayer.setOnPreparedListener(this);
+        ijkMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mIjkMediaPlayer = ijkMediaPlayer;
+    }
+
+    private void showController() {
+
+        showNavigationBar();
+        mController.setVisibility(View.VISIBLE);
+
+        mHandler.removeCallbacks(null);
+        mHandler.post(mProgressChecker);
+        mHandler.postDelayed(mPlayingChecker, HIDE_CONTROLLER_DELAY);
+
+        mShowing = true;
+
     }
 
     @Override
     public int getCurrentVideoPosition() {
-        return (int) mPlayer.getCurrentPosition();
+        return 0;
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        Activity activity = (Activity) context;
-        mPlayerDelegate = (PlayerDelegate) activity;
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.exo_pause:
+                pause();
+                return;
+            case R.id.exo_play:
+                play();
+                return;
+            case R.id.exo_rew:
+                rewind();
+                return;
+        }
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.video, menu);
+    public void onCompletion(IMediaPlayer iMediaPlayer) {
+        mHandler.removeCallbacks(null);
+        mExoDuration.setText(null);
+        mExoPosition.setText(null);
+        mExoProgress.setPosition(0);
     }
 
+    /*Starting at here*/
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        hideNavigationBar();
-        mPlayerViewGestureHandler = new PlayerViewGestureHandler();
+
+        mProgressHandler = new Handler();
+
         View view = inflater.inflate(R.layout.fragment_player, container, false);
-        setHasOptionsMenu(true);
-        initializeViews(view);
-        mBookmarker = new Bookmarker(getContext());
-        playVideo();
+
+        findViews(view);
+
+        mExoRew.setVisibility(View.GONE);
+        mExoFfwd.setVisibility(View.GONE);
+
+        mPlayerViewGestureHandler = new PlayerViewGestureHandler();
+        mPlayerViewGestureHandler.initView(mPlayerView);
+        mPlayerView.setOnTouchListener(mPlayerViewGestureHandler);
+
+        mTextureView.setSurfaceTextureListener(this);
+
         return view;
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mPlayer.stop();
-        mPlayer.release();
-        mPlayer = null;
-        mPlayerView.setPlayer(null);
+    public void onPrepared(IMediaPlayer iMediaPlayer) {
+        adjustSize();
+        iMediaPlayer.start();
+
+        Log.e("TAG/", "Debug: onPrepared, "
+                + " iMediaPlayer.getDuration() = " + iMediaPlayer.getDuration() + "\n"
+        );
+        mExoProgress.setDuration(iMediaPlayer.getDuration());
+        mExoPosition.setText(formatDuration(0));
+        mExoDuration.setText(formatDuration(iMediaPlayer.getDuration() / 1000));
+
+        mHandler.removeCallbacks(null);
+        mHandler.post(mProgressChecker);
+        mHandler.postDelayed(mPlayingChecker, HIDE_CONTROLLER_DELAY);
+
+        mExoPlay.setVisibility(View.GONE);
+        mExoPause.setVisibility(View.VISIBLE);
+
+        //mIndicatorView.setVisibility(View.GONE);
+
     }
 
     @Override
-    public void onLoadingChanged(boolean isLoading) {
-        if (isLoading) {
-            mLoadingVideoView.setVisibility(View.VISIBLE);
-        } else {
-            mLoadingVideoView.setVisibility(View.GONE);
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onScrubMove(TimeBar timeBar, long position) {
+
+    }
+
+    @Override
+    public void onScrubStart(TimeBar timeBar, long position) {
+        mDragging = true;
+    }
+
+    @Override
+    public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
+        mIjkMediaPlayer.seekTo(position);
+        mDragging = false;
+    }
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+
+        if (mScreenWidth == 0) {
+            mScreenHeight = height;
+            mScreenWidth = width;
         }
+        mSurfaceTexture = surface;
+        debugPlay();
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_delete:
-                actionDelete();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+
+        Log.e("TAG/", "Debug: onSurfaceTextureDestroyed, ");
+
+        return false;
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        pause();
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+
+        adjustSize();
+        Log.e("TAG/", "Debug: onSurfaceTextureSizeChanged, "
+                + " width = " + width + "\n" + " height = " + height + "\n"
+
+        );
+
     }
 
     @Override
-    public void onPlayerError(ExoPlaybackException error) {
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
-        Logger.e(PlayerFragment.this, "onPlayerError. %s.\n", error.getMessage());
 
-        Toast.makeText(getContext(),
-                String.format("ExoPlaybackException:\n%s\n\n"
-                                + "RendererException:\n%s\n\n",
-                        error.toString(),
-                        error.getRendererException().toString()),
-                Toast.LENGTH_LONG).show();
     }
 
     @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if (playbackState == Player.STATE_READY && playWhenReady) {
-            preventDeviceSleeping(true);
-        } else {
-            preventDeviceSleeping(false);
-        }
-    }
-
-    @Override
-    public void onTimelineChanged(Timeline timeline, @Nullable Object manifest, int reason) {
-        setTitle();
-        seekToLasted();
-    }
-
     public void pause() {
-        mPlayer.setPlayWhenReady(false);
-        mBookmarker.setBookmark(getCurrentPath(), (int) mPlayer.getCurrentPosition());
+        if (mIjkMediaPlayer != null && mIjkMediaPlayer.isPlaying()) {
+            mIjkMediaPlayer.pause();
+            mExoPause.setVisibility(View.GONE);
+            mExoPlay.setVisibility(View.VISIBLE);
+            mHandler.removeCallbacks(mProgressChecker);
+        }
     }
 
     @Override
     public void videoPlaybackStopped() {
-        mPlayer.stop();
+
     }
 
     interface PlayerDelegate {
@@ -437,50 +462,6 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         }
     }
 
-    private static class VideoComparator implements Comparator<Path> {
-        public static final int SORT_BY_UNSPECIFIED = -1;
-        static final int SORT_BY_DATE_MODIFIED = 2;
-        static final int SORT_BY_NAME = 0;
-        static final int SORT_BY_SIZE = 1;
-        private final int mSort;
-
-        private VideoComparator(int sort) {
-            mSort = sort;
-        }
-
-        @Override
-        public int compare(Path o2, Path o1) {
-            switch (mSort) {
-                case SORT_BY_SIZE:
-                    long result = o1.toFile().length() - o2.toFile().length();
-                    if (result < 0) {
-                        return -1;
-                    } else if (result > 0) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                case SORT_BY_NAME:
-                    Collator collator = Collator.getInstance(Locale.CHINA);
-                    return collator.compare(o1.getFileName(),
-                            o2.getFileName());
-                case SORT_BY_DATE_MODIFIED:
-                    result =
-                            o1.toFile().lastModified()
-                                    - o2.toFile().lastModified();
-                    if (result < 0) {
-                        return -1;
-                    } else if (result > 0) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                default:
-                    return 0;
-            }
-        }
-    }
-
     private class PlayerViewGestureHandler extends PlayerViewGestureDetector {
         private static final int MAX_VIDEO_STEP_TIME = 60 * 1000;
         VideoBrightness mVideoBrightness;
@@ -496,19 +477,6 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             mVideoBrightness = new VideoBrightness(getActivity());
         }
 
-        private String formatDuration(long duration) {
-            long h = duration / 3600;
-            long m = (duration - h * 3600) / 60;
-            long s = duration - (h * 3600 + m * 60);
-            String durationValue;
-            if (h == 0) {
-                durationValue = String.format(Locale.getDefault(), "%1$02d:%2$02d", m, s);
-            } else {
-                durationValue = String.format(Locale.getDefault(), "%1$d:%2$02d:%3$02d", h, m, s);
-            }
-            return durationValue;
-        }
-
         private void hideIndicator() {
             mIndicatorView.setVisibility(View.GONE);
         }
@@ -517,7 +485,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             mIndicatorView = view.findViewById(R.id.indicatorView);
             mIndicatorImageView = view.findViewById(R.id.indicatorImageView);
             mIndicatorTextView = view.findViewById(R.id.indicatorTextView);
-            mPlayerView.setControllerVisibilityListener(visibility -> mIsControllerVisible = (visibility == View.VISIBLE));
+            // mPlayerView.setControllerVisibilityListener(visibility -> mIsControllerVisible = (visibility == View.VISIBLE));
         }
 
         private void showIndicator() {
@@ -525,12 +493,10 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         }
 
         private boolean showOrHideHud() {
-            if (mIsControllerVisible) {
-                mPlayerView.hideController();
-                hideNavigationBar();
+            if (mShowing) {
+                hideController();
             } else {
-                mPlayerView.showController();
-                showNavigationBar();
+                showController();
             }
             return false;
         }
@@ -545,14 +511,14 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
         @Override
         public void adjustVideoPosition(double adjustPercent, boolean forwardDirection) {
-            long totalTime = mPlayer.getDuration();
+            long totalTime = mIjkMediaPlayer.getDuration();
             if (adjustPercent < -1.0f) {
                 adjustPercent = -1.0f;
             } else if (adjustPercent > 1.0f) {
                 adjustPercent = 1.0f;
             }
             if (mStartVideoTime < 0) {
-                mStartVideoTime = mPlayer.getCurrentPosition();
+                mStartVideoTime = mIjkMediaPlayer.getCurrentPosition();
             }
             double positiveAdjustPercent = Math.max(adjustPercent, -adjustPercent);
             long targetTime = mStartVideoTime + (long) (MAX_VIDEO_STEP_TIME * adjustPercent * (positiveAdjustPercent / 0.1));
@@ -571,7 +537,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
                 mIndicatorTextView.setText(targetTimeString);
             }
             showIndicator();
-            mPlayer.seekTo(targetTime);
+            mIjkMediaPlayer.seekTo(targetTime);
         }
 
         @Override
@@ -622,13 +588,13 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
         @Override
         public void onDoubleTap() {
-            if (mPlayer.getPlayWhenReady()) {
-                pause();
-            } else {
-                mPlayer.setPlayWhenReady(true);
-                mPlayer.getPlaybackState();
-            }
-            mPlayerView.hideController();
+//            if (mPlayer.getPlayWhenReady()) {
+//                pause();
+//            } else {
+//                mPlayer.setPlayWhenReady(true);
+//                mPlayer.getPlaybackState();
+//            }
+//            mPlayerView.hideController();
         }
 
         @Override
@@ -641,6 +607,11 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
         @Override
         public boolean onSingleTap() {
+
+
+            Log.e("TAG/", "Debug: onSingleTap, \n");
+
+
             return showOrHideHud();
         }
 
