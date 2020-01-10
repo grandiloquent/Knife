@@ -46,6 +46,7 @@ import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 import euphoria.common.Dialogs;
 import euphoria.common.Dialogs.Listener;
 import euphoria.common.Files;
+import euphoria.common.Files.FileSort;
 import euphoria.common.Strings;
 import euphoria.common.Threads;
 import euphoria.psycho.common.C;
@@ -102,7 +103,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 //        }
 //    };
     private SelectionDelegate mSelectionDelegate;
-    private int mSortBy = C.SORT_BY_UNSPECIFIED;
+    private FileSort mSortBy = FileSort.Name;
     private boolean mSortAscending = false;
     private ListMenuDelegate mListMenuDelegate;
     private DirectoryToolbar mToolbar;
@@ -184,7 +185,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
             if (bundle.containsKey(C.EXTRA_DIRECTORY))
                 directory = bundle.getString(C.EXTRA_DIRECTORY);
             if (bundle.containsKey(C.EXTRA_SORT_BY))
-                mSortBy = bundle.getInt(C.EXTRA_SORT_BY);
+                mSortBy = FileSort.values()[bundle.getInt(C.EXTRA_SORT_BY)];
         }
         if (directory == null)
             directory = preferences.getString(C.KEY_DIRECTORY, null);
@@ -193,8 +194,7 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         } else {
             mDirectory = new File(directory);
         }
-        if (mSortBy == C.SORT_BY_UNSPECIFIED)
-            mSortBy = preferences.getInt(C.KEY_SORT_BY, C.SORT_BY_NAME);
+        mSortBy = FileSort.values()[preferences.getInt(C.KEY_SORT_BY, 0)];
         mSortAscending = preferences.getBoolean(C.KEY_SORT_BY_ASCENDING, false);
     }
 
@@ -249,13 +249,13 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         updateLastVisiblePosition();
         preferences.edit().putInt(C.KEY_SCROLL_Y, mLastVisiblePosition)
                 .putString(C.KEY_DIRECTORY, mDirectory.getAbsolutePath())
-                .putInt(C.KEY_SORT_BY, mSortBy)
+                .putInt(C.KEY_SORT_BY, mSortBy.getValue())
                 .putBoolean(C.KEY_SORT_BY_ASCENDING, mSortAscending).apply();
     }
 
-    public void sortBy(int sortBy) {
+    public void sortBy(FileSort fileSort) {
         mToolbar.hideOverflowMenu();
-        mSortBy = sortBy;
+        mSortBy = fileSort;
         updateRecyclerView(false);
     }
 

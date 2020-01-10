@@ -191,6 +191,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     private void next(boolean isPrev) {
         Log.e("TAG/", "[next]");
+        saveBookmark();
         String videoPath;
         if (!isPrev) {
             videoPath = mPlayList.nextVideoPath();
@@ -590,10 +591,14 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         if (mIjkMediaPlayer != null) {
             if (mIjkMediaPlayer.isPlaying())
                 mIjkMediaPlayer.stop();
-            mBookmarker.setBookmark(mPlayList.currentVideoPath(), mIjkMediaPlayer.getCurrentPosition());
+            saveBookmark();
             mIjkMediaPlayer.release();
             mIjkMediaPlayer = null;
         }
+    }
+
+    private void saveBookmark() {
+        mBookmarker.setBookmark(mPlayList.currentVideoPath(), mIjkMediaPlayer.getCurrentPosition());
     }
 
     interface PlayerDelegate {
