@@ -17,7 +17,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.exoplayer2.util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +59,7 @@ import euphoria.psycho.knife.bottomsheet.BottomSheet;
 import euphoria.psycho.knife.delegate.BottomSheetDelegate;
 import euphoria.psycho.knife.delegate.ListMenuDelegate;
 import euphoria.psycho.knife.delegate.MenuDelegate;
+import euphoria.psycho.knife.helpers.DocumentHelper;
 import euphoria.psycho.knife.helpers.FileHelper;
 import euphoria.psycho.knife.helpers.Helper;
 import euphoria.psycho.knife.util.ContextUtils;
@@ -69,15 +69,7 @@ import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
 import euphoria.psycho.knife.util.VideoUtils;
 import euphoria.psycho.knife.util.VideoUtils.OnTrimVideoListener;
-import euphoria.psycho.knife.video.VideoActivity;
-import euphoria.video.PlayerActivity;
-import euphoria.video.PlayerFragment;
 
-import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_DESCENDING;
-import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_MODIFIED_TIME;
-import static euphoria.psycho.knife.video.FileItemComparator.SORT_BY_SIZE;
-import static euphoria.psycho.knife.video.VideoActivity.KEY_SORT_BY;
-import static euphoria.psycho.knife.video.VideoActivity.KEY_SORT_DIRECTION;
 
 public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,
         DocumentActionDelegate,
@@ -169,13 +161,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.getSearchEditText().setOnKeyListener(this::onSearch);
     }
 
-    private void launchVideo(String path) {
-        Intent launch = new Intent(getContext(), PlayerActivity.class);
-        launch.putExtra(PlayerFragment.EXTRA_VIDEO_PATH, path);
-        launch.putExtra(PlayerFragment.EXTRA_SORT, mSortBy);
-        launch.putExtra(PlayerFragment.EXTRA_DIRECTION, mSortAscending);
-        startActivityForResult(launch, REQUEST_CODE_VIDEO);
-    }
 
     private void loadPreferences() {
         SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
@@ -474,7 +459,12 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 //                }
 //                videoIntent.putExtra(KEY_SORT_DIRECTION, SORT_BY_DESCENDING);
 //                startActivity(videoIntent);
-                launchVideo(documentInfo.getPath());
+                DocumentHelper.launchVideo(
+                        getActivity(),
+                        documentInfo.getPath(),
+                        mSortBy,
+                        mSortAscending,
+                        REQUEST_CODE_VIDEO);
                 break;
             case C.TYPE_DIRECTORY:
                 updateLastVisiblePosition();
@@ -655,8 +645,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                         final File destinationFile = FileUtils.buildUniqueFileWithExtension(
                                 sourceFile.getParentFile(),
                                 String.format("%s_%s_%s", fileName,
-                                        Util.getStringForTime(formatBuilder, formatter, numbers[0]).replaceAll(":", "-"),
-                                        Util.getStringForTime(formatBuilder, formatter, numbers[1]).replaceAll(":", "-")
+                                        Strings.getStringForTime(formatBuilder, formatter, numbers[0]).replaceAll(":", "-"),
+                                        Strings.getStringForTime(formatBuilder, formatter, numbers[1]).replaceAll(":", "-")
                                 ),
                                 ext
                         );

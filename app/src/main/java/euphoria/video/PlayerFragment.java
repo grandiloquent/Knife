@@ -201,7 +201,6 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         if (videoPath == null) {
             return;
         }
-        getSupportActionBar().setTitle(Files.getFileName(mPlayList.currentVideoPath()));
         try {
             mIjkMediaPlayer.reset();
             mIjkMediaPlayer.setSurface(mSurface);
@@ -474,8 +473,13 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         Log.e("TAG/", "[onPrepareOptionsMenu]");
     }
 
+
+    /*播放从这里开始 可以在此处刷新参数
+     * */
     @Override
     public void onPrepared() {
+        getSupportActionBar().setTitle(Files.getFileName(mPlayList.currentVideoPath()));
+
         mHandler.removeCallbacks(mProgressChecker);
         mHandler.removeCallbacks(mPlayingChecker);
 
