@@ -13,7 +13,6 @@
         android:layout_height="match_parent" />
 
     <ProgressBar
-        android:id="@+id/loadingVideoView"
         style="@style/LoadingProgressBar"
         android:layout_gravity="center"
         android:padding="17dp"

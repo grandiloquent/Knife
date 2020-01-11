@@ -8,13 +8,10 @@
         android:title="删除"
         app:showAsAction="always" />
     <item
-        android:id="@+id/action_rename"
         android:icon="@drawable/ic_clear_white_24dp"
         android:title="重命名"
         app:showAsAction="always" />
-    <item
-        android:id="@+id/action_full_screen"
-        android:title="全屏" />
+    <item android:title="全屏" />
 
 
 </menu>

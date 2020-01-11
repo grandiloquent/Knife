@@ -45,7 +45,6 @@
             app:iconTint="@color/dark_mode_tint"
             app:showAsAction="ifRoom" />
         <item
-            android:id="@+id/sort_menu_id"
             android:icon="@drawable/ic_menu_sortby"
             android:title="@string/menu_sort"
             android:visible="false"
@@ -82,9 +81,7 @@
         <item
             android:id="@+id/action_calculate_directory"
             android:title="统计内存容量" />
-        <item
-            android:id="@+id/action_refresh"
-            android:title="刷新" />
+        <item android:title="刷新" />
         <!--        <item-->
         <!--            android:id="@+id/action_move_images"-->
 
