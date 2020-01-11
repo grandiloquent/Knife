@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Matrix;
 import android.graphics.Matrix.ScaleToFit;
@@ -47,8 +48,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import euphoria.common.Dialogs;
 import euphoria.common.Files;
 import euphoria.common.Files.FileSort;
+import euphoria.common.Views;
 import euphoria.psycho.knife.R;
 import euphoria.video.TimeBar.OnScrubListener;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -98,7 +101,6 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             }
         }
     };
-    private View mExoRew;
     private View mPlayerView;
     private TextureView mTextureView;
     private PlayerViewGestureHandler mPlayerViewGestureHandler;
@@ -106,17 +108,24 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     private Bookmarker mBookmarker;
 
     private View mExoMode;
+    private View mExoLandscape;
 
     private void actionDelete() {
-        if (mIjkMediaPlayer != null && mIjkMediaPlayer.isPlaying()) {
-            mIjkMediaPlayer.stop();
-        }
-        mPlayList.deleteCurrent();
-        loadVideo();
+        pause();
+
+        Dialogs.showConfirmDialog(getContext(), getString(R.string.dialog_delete_title),
+                getString(R.string.dialog_message_delete_video_file, mPlayList.currentVideoPath()), (dialog, which) -> {
+                    if (mIjkMediaPlayer != null && mIjkMediaPlayer.isPlaying()) {
+                        mIjkMediaPlayer.stop();
+                    }
+                    mPlayList.deleteCurrent();
+                    loadVideo();
+                    dialog.dismiss();
+                });
     }
 
     private void adjustSize() {
-        Log.e("TAG/", "[adjustSize]");
+
         int videoHeight = mIjkMediaPlayer.getVideoHeight();
         int videoWidth = mIjkMediaPlayer.getVideoWidth();
         TextureView textureView = mTextureView;
@@ -139,6 +148,23 @@ public class PlayerFragment extends ImmersiveModeFragment implements
                 height / textureViewHeight,
                 pivotX, pivotY);
         mTextureView.setTransform(matrix);
+
+//        Log.e("TAG/", "[adjustSize]\n"
+//                + " textureViewWidth = " + textureViewWidth + "\n"
+//                + " textureViewHeight = " + textureViewHeight + "\n"
+//                + " videoHeight = " + videoHeight + "\n"
+//                + " videoWidth = " + videoWidth + "\n"
+//                + " width = " + width + "\n"
+//                + " height = " + height + "\n"
+//                + " pivotX = " + pivotX + "\n"
+//                + " pivotY = " + pivotY + "\n"
+//                + " videoAspectRatio = " + videoAspectRatio + "\n"
+//                + " viewAspectRatio = " + viewAspectRatio + "\n"
+//                + " aspectDeformation = " + aspectDeformation + "\n"
+//                + " matrix = " + matrix + "\n"
+//        );
+//
+//        Views.dumpSize(getContext());
     }
 
     private void debugPlay() {
@@ -158,13 +184,13 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         mExoPosition = view.findViewById(R.id.exo_position);
         mExoPrev = view.findViewById(R.id.exo_prev);
         mExoProgress = view.findViewById(R.id.exo_progress);
-        mExoRew = view.findViewById(R.id.exo_rew);
         mPlayerView = view.findViewById(R.id.player_view);
         mTextureView = view.findViewById(R.id.texture_view);
         mExoMode = view.findViewById(R.id.exo_mode);
 
-    }
+        mExoLandscape = view.findViewById(R.id.exo_landscape);
 
+    }
 
     private void hideController() {
         Log.e("TAG/", "[hideController]");
@@ -178,6 +204,11 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         mShowing = false;
     }
 
+    private void landScape() {
+
+        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+    }
+
     private void loadVideo() {
         setupPlayer();
         try {
@@ -187,6 +218,31 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             mIjkMediaPlayer.prepareAsync();
         } catch (IOException e) {
         }
+    }
+
+    private void mode() {
+        int videoHeight = mIjkMediaPlayer.getVideoHeight();
+        int videoWidth = mIjkMediaPlayer.getVideoWidth();
+        TextureView textureView = mTextureView;
+        float textureViewWidth = textureView.getWidth();
+        float textureViewHeight = textureView.getHeight();
+        float width = textureViewWidth;
+        float height = textureViewHeight;
+        float pivotX = textureViewWidth / 2;
+        float pivotY = textureViewHeight / 2;
+        float videoAspectRatio = videoWidth / (float) videoHeight;
+        float viewAspectRatio = (float) width / height;
+        float aspectDeformation = videoAspectRatio / viewAspectRatio - 1;
+        if (aspectDeformation > 0) {
+            height = (int) (width / videoAspectRatio);
+        } else {
+            width = (int) (height * videoAspectRatio);
+        }
+        Matrix matrix = new Matrix();
+        matrix.postScale(videoWidth / textureViewWidth,
+                videoHeight / textureViewHeight,
+                pivotX, pivotY);
+        mTextureView.setTransform(matrix);
     }
 
     private void next(boolean isPrev) {
@@ -220,6 +276,10 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             mHandler.removeCallbacks(mProgressChecker);
             mHandler.post(mProgressChecker);
         }
+    }
+
+    private void saveBookmark() {
+        mBookmarker.setBookmark(mPlayList.currentVideoPath(), mIjkMediaPlayer.getCurrentPosition());
     }
 
     private long setProgress() {
@@ -308,32 +368,10 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             case R.id.exo_mode:
                 mode();
                 return;
+            case R.id.exo_landscape:
+                landScape();
+                return;
         }
-    }
-
-    private void mode() {
-        int videoHeight = mIjkMediaPlayer.getVideoHeight();
-        int videoWidth = mIjkMediaPlayer.getVideoWidth();
-        TextureView textureView = mTextureView;
-        float textureViewWidth = textureView.getWidth();
-        float textureViewHeight = textureView.getHeight();
-        float width = textureViewWidth;
-        float height = textureViewHeight;
-        float pivotX = textureViewWidth / 2;
-        float pivotY = textureViewHeight / 2;
-        float videoAspectRatio = videoWidth / (float) videoHeight;
-        float viewAspectRatio = (float) width / height;
-        float aspectDeformation = videoAspectRatio / viewAspectRatio - 1;
-        if (aspectDeformation > 0) {
-            height = (int) (width / videoAspectRatio);
-        } else {
-            width = (int) (height * videoAspectRatio);
-        }
-        Matrix matrix = new Matrix();
-        matrix.postScale(videoWidth / textureViewWidth,
-                videoHeight / textureViewHeight,
-                pivotX, pivotY);
-        mTextureView.setTransform(matrix);
     }
 
     @Override
@@ -383,7 +421,6 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
         View view = inflater.inflate(R.layout.fragment_player, container, false);
         findViews(view);
-        mExoRew.setVisibility(View.GONE);
         mPlayerViewGestureHandler = new PlayerViewGestureHandler();
         mPlayerViewGestureHandler.initView(mPlayerView);
         mPlayerView.setOnTouchListener(mPlayerViewGestureHandler);
@@ -393,6 +430,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         mExoPlay.setOnClickListener(this);
         mExoPrev.setOnClickListener(this);
         mExoMode.setOnClickListener(this);
+        mExoLandscape.setOnClickListener(this);
 
         mExoProgress.addListener(mPlayerEventListener);
         mBookmarker = new Bookmarker(getContext());
@@ -472,7 +510,6 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     public void onPrepareOptionsMenu(@NonNull Menu menu) {
         Log.e("TAG/", "[onPrepareOptionsMenu]");
     }
-
 
     /*播放从这里开始 可以在此处刷新参数
      * */
@@ -590,6 +627,11 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     @Override
+    public void stopPlayingCheck() {
+        mHandler.removeCallbacks(mPlayingChecker);
+    }
+
+    @Override
     public void videoPlaybackStopped() {
         Log.e("TAG/", "[videoPlaybackStopped]");
         if (mIjkMediaPlayer != null) {
@@ -599,10 +641,6 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             mIjkMediaPlayer.release();
             mIjkMediaPlayer = null;
         }
-    }
-
-    private void saveBookmark() {
-        mBookmarker.setBookmark(mPlayList.currentVideoPath(), mIjkMediaPlayer.getCurrentPosition());
     }
 
     interface PlayerDelegate {
@@ -631,10 +669,17 @@ public class PlayerFragment extends ImmersiveModeFragment implements
             return ((int) (mBrightness * 100)) + "%";
         }
 
+
         private void loadBrightnessFromPreference() {
+
             final float brightnessPref = PreferenceManager.getDefaultSharedPreferences(mActivity)
                     .getFloat(BRIGHTNESS_LEVEL_PREF, 1f);
             setBrightness(brightnessPref);
+
+//            Log.e("TAG/", "[loadBrightnessFromPreference]\n"
+//                    + " brightnessPref = " + brightnessPref + "\n"
+//            );
+
         }
 
         void onGestureDone() {
@@ -642,12 +687,17 @@ public class PlayerFragment extends ImmersiveModeFragment implements
         }
 
         private void saveBrightnessToPreference() {
-            Context context;
+//            Log.e("TAG/", "[saveBrightnessToPreference]\n"
+//                    + " mBrightness = " + mBrightness + "\n"
+//
+//            );
+
             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(
                     mActivity).edit();
             editor.putFloat(BRIGHTNESS_LEVEL_PREF, mBrightness);
             editor.apply();
         }
+
 
         private void setBrightness(float brightness) {
             if (brightness < 0) {
@@ -705,7 +755,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
                 hideController();
             } else {
                 showController();
-                mHandler.removeCallbacks(mPlayingChecker);
+                stopPlayingCheck();
             }
             return false;
         }
@@ -720,6 +770,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
         @Override
         public void adjustVideoPosition(double adjustPercent, boolean forwardDirection) {
+            stopPlayingCheck();
             long totalTime = mIjkMediaPlayer.getDuration();
             if (adjustPercent < -1.0f) {
                 adjustPercent = -1.0f;

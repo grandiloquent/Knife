@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 int CombineFiles(const char *path);
+int StartServer(const char *host, int port, const char *directory);
 #ifdef __cplusplus
 }
 #endif

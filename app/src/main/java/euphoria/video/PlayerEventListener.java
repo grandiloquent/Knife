@@ -32,6 +32,7 @@ public class PlayerEventListener implements
     @Override
     public void onScrubStart(TimeBar timeBar, long position) {
         mIsDragging = true;
+        mFragmentDelegate.stopPlayingCheck();
     }
 
     @Override
@@ -41,7 +42,7 @@ public class PlayerEventListener implements
 
     @Override
     public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
-        if (mFragmentDelegate != null && mFragmentDelegate.getPlayer() != null)
+        if (mFragmentDelegate.getPlayer() != null)
             mFragmentDelegate.getPlayer().seekTo(position);
         mIsDragging = false;
     }

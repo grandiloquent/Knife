@@ -67,10 +67,6 @@
                 style="@style/ExoMediaButton.Previous" />
 
             <ImageButton
-                android:id="@+id/exo_rew"
-                style="@style/ExoMediaButton.Rewind" />
-
-            <ImageButton
                 android:id="@+id/exo_play"
                 style="@style/ExoMediaButton.Play" />
 
@@ -85,8 +81,11 @@
 
             <ImageButton
                 android:id="@+id/exo_mode"
-                style="@style/ExoMediaButton.FastForward" />
+                style="@style/ExoMediaButton.ScaleMode" />
 
+            <ImageButton
+                android:id="@+id/exo_landscape"
+                style="@style/ExoMediaButton.ScaleMode" />
         </LinearLayout>
 
         <LinearLayout

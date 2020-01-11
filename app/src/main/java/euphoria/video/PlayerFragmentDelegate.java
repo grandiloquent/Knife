@@ -11,6 +11,8 @@ public interface PlayerFragmentDelegate {
 
     void onError(String message);
 
+    void stopPlayingCheck();
+
     void onCompletion();
 
     IjkMediaPlayer getPlayer();

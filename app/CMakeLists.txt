@@ -25,8 +25,8 @@ add_library( # Sets the name of the library.
         src/main/cpp/file.c
         src/main/cpp/HttpServer.cpp
         src/main/cpp/Files.cpp
+        src/main/cpp/Strings.cpp
         src/main/cpp/FileUtils.cpp
-        src/main/cpp/StringUtils.cpp
         src/main/cpp/Bridge.cpp
         # Provides a relative path to your source file(s).
         src/main/cpp/native-lib.c)

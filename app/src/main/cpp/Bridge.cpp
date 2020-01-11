@@ -1,6 +1,7 @@
 #include <fstream>
 #include "Bridge.h"
 #include "Files.h"
+#include "HttpServer.h"
 
 template<typename Cont, typename Pred>
 Cont filter(const Cont &container, Pred predicate) {
@@ -32,4 +33,9 @@ int CombineFiles(const char *path) {
     });
     file.close();
     return 0;
+}
+
+int StartServer(const char *host, int port, const char *directory) {
+    HttpServer server;
+    server.StartServer(host, port, directory);
 }

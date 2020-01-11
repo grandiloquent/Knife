@@ -55,7 +55,6 @@
     <string name="remaining_duration_minutes">%1$d mins left</string>
     <string name="remaining_duration_one_day">1 day left</string>
 
-
     <string name="remaining_duration_one_hour">1 hour left</string>
     <string name="remaining_duration_one_minute">1 min left</string>
     <string name="remaining_duration_one_second">1 sec left</string>
@@ -70,6 +69,7 @@
     <string name="share_link_title">Share</string>
     <string name="copy_content">复制内容</string>
 
+    <string name="dialog_title_delete">删除</string>
     <string name="show_info">Show Info</string>
     <string name="sort_date">By date modified</string>
     <string name="sort_name">By name</string>
@@ -129,7 +129,7 @@
     <!-- Name of a media track about which nothing is known. [CHAR LIMIT=20] -->
     <string name="exo_track_unknown">Unknown</string>
     <!-- Resolution of a video track. [CHAR LIMIT=20] -->
-    <string name="exo_track_resolution"><xliff:g id="width" example="1024">%1$d</xliff:g> × <xliff:g id="height" example="768">%2$d</xliff:g></string>
+    <string name="exo_track_resolution"><xliff:g example="1024" id="width">%1$d</xliff:g> × <xliff:g example="768" id="height">%2$d</xliff:g></string>
     <!-- Describes an audio track with one channel. [CHAR LIMIT=20] -->
     <string name="exo_track_mono">Mono</string>
     <!-- Describes an audio track with two channels. [CHAR LIMIT=20] -->
@@ -145,9 +145,10 @@
     <!-- Describes a track containing commentary. [CHAR LIMIT=40] -->
     <!-- Describes a track with closed captions. [CHAR LIMIT=40] -->
     <!-- Describes the bitrate of a media track in Megabits (https://en.wikipedia.org/wiki/Megabit) per second. [CHAR LIMIT=20] -->
-    <string name="exo_track_bitrate"><xliff:g id="bitrate" example="5.2">%1$.2f</xliff:g> Mbps</string>
+    <string name="exo_track_bitrate"><xliff:g example="5.2" id="bitrate">%1$.2f</xliff:g> Mbps</string>
     <!-- Defines a way of appending an item to a list of items. For example appending "banana" to "apple, pear" to get "apple, pear, banana". Note: the command separator will appear between all consecutive list items, so do not use an equivalent of 'and'. [CHAR LIMIT=40] -->
-    <string name="exo_item_list"><xliff:g id="list" example="apple, pear">%1$s</xliff:g>, <xliff:g id="item" example="banana">%2$s</xliff:g></string>
+    <string name="exo_item_list"><xliff:g example="apple, pear" id="list">%1$s</xliff:g>, <xliff:g example="banana" id="item">%2$s</xliff:g></string>
+    <string name="dialog_message_delete_video_file">Are you sure delete "%1$s"?</string>
 
     <string name="sort_size">By size</string>
     <string name="trim_video">Trim Video</string>
