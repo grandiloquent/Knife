@@ -26,6 +26,7 @@ private:
     const char *_host;
     const char *_directory;
     const char *MimeTypeHTML;
+
     int _port;
 };
 
