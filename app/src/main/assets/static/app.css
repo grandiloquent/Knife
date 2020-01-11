@@ -1,0 +1,47 @@
+body{
+	margin:0;
+}
+a {
+    background-color: initial;
+}
+a {
+    color: #0366d6;
+    text-decoration: none;
+}
+a:active, a:hover {
+    outline-width: 0;
+}
+a:hover {
+    text-decoration: underline;
+}
+a{
+	position: relative;
+    display: block;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e1e4e8;
+}
+a:hover {
+    text-decoration: none;
+    background-color: #f6f8fa;
+}
+.link_directory,.link_file{
+   
+    cursor: default;
+    background-color: #fff;
+	display:flex;
+	flex-direction:row;
+	    align-items: center;
+}
+.link_file{
+	 color: #24292e;
+}
+.link_directory:before,.link_file:before{
+	content:"";
+	
+	height:36px;
+	    min-width: 36px;
+	margin-right:10px;
+	box-sizing:border-box;
+}
+.link_directory:before{background:url("ic_action_folder.png");}
+.link_file:before{background:url("ic_action_insert_drive_file.png");}
