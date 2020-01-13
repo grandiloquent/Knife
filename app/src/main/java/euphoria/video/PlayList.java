@@ -26,6 +26,10 @@ public class PlayList {
     public String currentVideoPath() {
 
         if (mVideoFiles == null || mVideoFiles.length == 0) return null;
+
+
+        Log.e("TAG/", "Debug: currentVideoPath, \n" + mVideoFiles[mCurrentIndex].getAbsolutePath());
+
         return mVideoFiles[mCurrentIndex].getAbsolutePath();
     }
 
@@ -35,7 +39,7 @@ public class PlayList {
         File videoFile = new File(videoPath);
         if (videoFile.isFile()) videoFile.delete();
         String nextVideoPath = nextVideoPath();
-        mVideoFiles =Arrays.stream(mVideoFiles).
+        mVideoFiles = Arrays.stream(mVideoFiles).
                 filter(f -> !f.getAbsolutePath().equals(videoPath))
                 .toArray(File[]::new);
         for (int i = 0; i < mVideoFiles.length; i++) {

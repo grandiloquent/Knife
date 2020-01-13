@@ -106,6 +106,8 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     private PlayerViewGestureHandler mPlayerViewGestureHandler;
     private Surface mSurface;
     private Bookmarker mBookmarker;
+    /*播放完成继续下一首时，延续最近一次操作的方向*/
+    private boolean mIsNext = true;
 
     private View mExoMode;
     private View mExoLandscape;
@@ -168,14 +170,14 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void debugPlay() {
-        Log.e("TAG/", "[debugPlay]");
+        // Log.e("TAG/", "[debugPlay]");
         String videoDirectory = Files.getExternalStoragePath("videos");
         mPlayList.updatePlayList(videoDirectory);
         loadVideo();
     }
 
     private void findViews(View view) {
-        Log.e("TAG/", "[findViews]");
+        // Log.e("TAG/", "[findViews]");
         mController = view.findViewById(R.id.controller);
         mExoDuration = view.findViewById(R.id.exo_duration);
         mExoNext = view.findViewById(R.id.exo_next);
@@ -193,7 +195,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void hideController() {
-        Log.e("TAG/", "[hideController]");
+        // Log.e("TAG/", "[hideController]");
         if (mPlayerEventListener.isDragging()) {
             return;
         }
@@ -246,7 +248,8 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void next(boolean isPrev) {
-        Log.e("TAG/", "[next]");
+        // Log.e("TAG/", "[next]");
+        mIsNext = isPrev;
         saveBookmark();
         String videoPath;
         if (!isPrev) {
@@ -268,7 +271,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void play() {
-        Log.e("TAG/", "[play]");
+        // Log.e("TAG/", "[play]");
         if (mIjkMediaPlayer != null && mIjkMediaPlayer.isPlayable()) {
             mIjkMediaPlayer.start();
             mExoPlay.setVisibility(View.GONE);
@@ -294,7 +297,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void setupPlayer() {
-        Log.e("TAG/", "[setupPlayer]");
+        // Log.e("TAG/", "[setupPlayer]");
         IjkMediaPlayer ijkMediaPlayer = PlayerHelper.createPlayer();
         if (mSurface == null)
             mSurface = new Surface(mSurfaceTexture);
@@ -306,7 +309,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void showController() {
-        Log.e("TAG/", "[showController]");
+        // Log.e("TAG/", "[showController]");
         showNavigationBar();
         mController.setVisibility(View.VISIBLE);
         mHandler.removeCallbacks(mProgressChecker);
@@ -318,7 +321,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public int getCurrentVideoPosition() {
-        Log.e("TAG/", "[getCurrentVideoPosition]");
+        // Log.e("TAG/", "[getCurrentVideoPosition]");
         return 0;
     }
 
@@ -329,29 +332,29 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        Log.e("TAG/", "[onActivityCreated]");
+        // Log.e("TAG/", "[onActivityCreated]");
         super.onActivityCreated(savedInstanceState);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        Log.e("TAG/", "[onActivityResult]");
+        // Log.e("TAG/", "[onActivityResult]");
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
-        Log.e("TAG/", "[onAttach]");
+        // Log.e("TAG/", "[onAttach]");
         super.onAttach(context);
     }
 
     @Override
     public void onAttachFragment(@NonNull Fragment childFragment) {
-        Log.e("TAG/", "[onAttachFragment]");
+        // Log.e("TAG/", "[onAttachFragment]");
     }
 
     @Override
     public void onClick(View v) {
-        Log.e("TAG/", "[onClick]");
+        // Log.e("TAG/", "[onClick]");
         switch (v.getId()) {
             case R.id.exo_pause:
                 pause();
@@ -378,37 +381,37 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     public void onCompletion() {
         mHandler.removeCallbacks(mPlayingChecker);
         mHandler.removeCallbacks(mProgressChecker);
-        next(false);
+        next(mIsNext);
     }
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        Log.e("TAG/", "[onConfigurationChanged]");
+        // Log.e("TAG/", "[onConfigurationChanged]");
         super.onConfigurationChanged(newConfig);
     }
 
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
-        Log.e("TAG/", "[onContextItemSelected]");
+        // Log.e("TAG/", "[onContextItemSelected]");
         return super.onContextItemSelected(item);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.e("TAG/", "[onCreate]");
+        // Log.e("TAG/", "[onCreate]");
         super.onCreate(savedInstanceState);
     }
 
     @Override
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v,
                                     @Nullable ContextMenuInfo menuInfo) {
-        Log.e("TAG/", "[onCreateContextMenu]");
+        // Log.e("TAG/", "[onCreateContextMenu]");
 
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        Log.e("TAG/", "[onCreateOptionsMenu]");
+        // Log.e("TAG/", "[onCreateOptionsMenu]");
         inflater.inflate(R.menu.video, menu);
     }
 
@@ -416,7 +419,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.e("TAG/", "[onCreateView]");
+        // Log.e("TAG/", "[onCreateView]");
 
 
         View view = inflater.inflate(R.layout.fragment_player, container, false);
@@ -444,24 +447,24 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void onDestroy() {
-        Log.e("TAG/", "[onDestroy]");
+        // Log.e("TAG/", "[onDestroy]");
         super.onDestroy();
     }
 
     @Override
     public void onDestroyOptionsMenu() {
-        Log.e("TAG/", "[onDestroyOptionsMenu]");
+        // Log.e("TAG/", "[onDestroyOptionsMenu]");
     }
 
     @Override
     public void onDestroyView() {
-        Log.e("TAG/", "[onDestroyView]");
+        // Log.e("TAG/", "[onDestroyView]");
         super.onDestroyView();
     }
 
     @Override
     public void onDetach() {
-        Log.e("TAG/", "[onDetach]");
+        // Log.e("TAG/", "[onDetach]");
         super.onDetach();
     }
 
@@ -471,18 +474,18 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void onHiddenChanged(boolean hidden) {
-        Log.e("TAG/", "[onHiddenChanged]");
+        // Log.e("TAG/", "[onHiddenChanged]");
     }
 
     @Override
     public void onLowMemory() {
-        Log.e("TAG/", "[onLowMemory]");
+        // Log.e("TAG/", "[onLowMemory]");
         super.onLowMemory();
     }
 
     @Override
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
-        Log.e("TAG/", "[onMultiWindowModeChanged]");
+        // Log.e("TAG/", "[onMultiWindowModeChanged]");
     }
 
     @Override
@@ -497,18 +500,18 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void onPause() {
-        Log.e("TAG/", "[onPause]");
+        // Log.e("TAG/", "[onPause]");
         super.onPause();
     }
 
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
-        Log.e("TAG/", "[onPictureInPictureModeChanged]");
+        // Log.e("TAG/", "[onPictureInPictureModeChanged]");
     }
 
     @Override
     public void onPrepareOptionsMenu(@NonNull Menu menu) {
-        Log.e("TAG/", "[onPrepareOptionsMenu]");
+        // Log.e("TAG/", "[onPrepareOptionsMenu]");
     }
 
     /*播放从这里开始 可以在此处刷新参数
@@ -538,12 +541,12 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void onPrimaryNavigationFragmentChanged(boolean isPrimaryNavigationFragment) {
-        Log.e("TAG/", "[onPrimaryNavigationFragmentChanged]");
+        // Log.e("TAG/", "[onPrimaryNavigationFragmentChanged]");
     }
 
     @Override
     public void onResume() {
-        Log.e("TAG/", "[onResume]");
+        // Log.e("TAG/", "[onResume]");
         super.onResume();
         if (mSurfaceTexture != null) {
             loadVideo();
@@ -552,12 +555,12 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        Log.e("TAG/", "[onSaveInstanceState]");
+        // Log.e("TAG/", "[onSaveInstanceState]");
     }
 
     @Override
     public void onStart() {
-        Log.e("TAG/", "[onStart]");
+        // Log.e("TAG/", "[onStart]");
         super.onStart();
     }
 
@@ -570,7 +573,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     /*Starting play video in here*/
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        Log.e("TAG/", "[onSurfaceTextureAvailable]");
+        // Log.e("TAG/", "[onSurfaceTextureAvailable]");
         if (mScreenWidth == 0) {
             mScreenHeight = height;
             mScreenWidth = width;
@@ -586,13 +589,13 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        Log.e("TAG/", "[onSurfaceTextureDestroyed]");
+        // Log.e("TAG/", "[onSurfaceTextureDestroyed]");
         return false;
     }
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        Log.e("TAG/", "[onSurfaceTextureSizeChanged]");
+        // Log.e("TAG/", "[onSurfaceTextureSizeChanged]");
         adjustSize();
     }
 
@@ -603,18 +606,18 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Log.e("TAG/", "[onViewCreated]");
+        // Log.e("TAG/", "[onViewCreated]");
     }
 
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        Log.e("TAG/", "[onViewStateRestored]");
+        // Log.e("TAG/", "[onViewStateRestored]");
         super.onViewStateRestored(savedInstanceState);
     }
 
     @Override
     public void pause() {
-        Log.e("TAG/", "[pause]");
+        // Log.e("TAG/", "[pause]");
         if (mIjkMediaPlayer == null) return;
         if (mIjkMediaPlayer.isPlaying()) {
             mIjkMediaPlayer.pause();
@@ -633,7 +636,7 @@ public class PlayerFragment extends ImmersiveModeFragment implements
 
     @Override
     public void videoPlaybackStopped() {
-        Log.e("TAG/", "[videoPlaybackStopped]");
+        // Log.e("TAG/", "[videoPlaybackStopped]");
         if (mIjkMediaPlayer != null) {
             if (mIjkMediaPlayer.isPlaying())
                 mIjkMediaPlayer.stop();

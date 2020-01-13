@@ -95,3 +95,6 @@ public class PlayerActivity extends AppCompatActivity implements PlayerDelegate 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
     }
 }
+/*
+
+ */

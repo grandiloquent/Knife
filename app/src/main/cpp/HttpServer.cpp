@@ -9,21 +9,25 @@
 #include <sys/stat.h>
 #include <android/log.h>
 
-void ParseRange(const std::string &s, std::vector<long> &ranges) {
-    std::string header = s;
-    if (header.rfind("bytes=", 0) == 0) {
-        header = header.substr(6);
-    }
-    std::vector<std::string> pieces;
+#define LOG_TAG "TAG/"
+#define LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
+//void ParseRange(const std::string &s, std::vector<long> &ranges) {
+//    std::string header = s;
+//    if (header.rfind("bytes=", 0) == 0) {
+//        header = header.substr(6);
+//    }
+//    std::vector<std::string> pieces;
+//
+//
+//    Split(header, '-', pieces);
+//
+//    for (auto it = pieces.begin(); it != pieces.end(); it++) {
+//
+//        ranges.push_back(std::stol(*it));
+//    }
+//}
 
-    Split(header, '-', pieces);
-
-    for (auto it = pieces.begin(); it != pieces.end(); it++) {
-
-        ranges.push_back(std::stol(*it));
-    }
-}
 bool HttpServer::StartServer(const char *host, int port, const char *directory) {
     std::cout << "[D]: " << "_server.listen" << std::endl;
     _host = host;
@@ -56,11 +60,32 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
                 std::ifstream fs(path, std::ios_base::binary);
                 fs.seekg(0, std::ios_base::end);
                 auto size = fs.tellg();
-                response.set_header("Content-Length", std::to_string(size));
-
                 fs.seekg(0);
-                response.body.resize(static_cast<size_t>(size));
-                fs.read(&response.body[0], size);
+                fs.close();
+                //response.set_header("Content-Length", std::to_string(size));
+
+//                LOGE("%s %llu\n", path.c_str(), size);
+
+                response.set_content_provider(static_cast<size_t>(size),
+                                              [path](uint64_t offset, uint64_t length,
+                                                    DataSink &sink) {
+
+                                                  std::ifstream f(path, std::ios_base::binary);
+                                                  size_t bufSize = 81920;
+                                                  char buffer[bufSize];
+                                                  while(f) {
+                                                      f.read(buffer, sizeof(bufSize));
+
+                                                      sink.write(buffer,
+                                                                 static_cast<size_t>(f.gcount()));
+//                                                      LOGE("%llu %llu %d\n", offset, length,
+//                                                           f.gcount());
+                                                  } ;
+                                                  //fs.close();
+                                              });
+//
+//                response.body.resize(static_cast<size_t>(size));
+//                fs.read(&response.body[0], size);
 
             }
         } else {
