@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -159,6 +160,35 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.getMenu().setGroupVisible(R.id.normal_menu_group, true);
         mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
         mToolbar.getSearchEditText().setOnKeyListener(this::onSearch);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+//        mToolbar.getMenu().findItem(R.id.selection_mode_menu_group).setVisible(preferences.getBoolean("selection_mode_menu_group", false));
+//        mToolbar.getMenu().findItem(R.id.selection_mode_copy_menu_id).setVisible(preferences.getBoolean("selection_mode_copy_menu_id", false));
+//        mToolbar.getMenu().findItem(R.id.selection_mode_cut_menu_id).setVisible(preferences.getBoolean("selection_mode_cut_menu_id", false));
+//        mToolbar.getMenu().findItem(R.id.selection_mode_delete_menu_id).setVisible(preferences.getBoolean("selection_mode_delete_menu_id", false));
+//        mToolbar.getMenu().findItem(R.id.action_select_all).setVisible(preferences.getBoolean("action_select_all", false));
+//        mToolbar.getMenu().findItem(R.id.action_select_same_type).setVisible(preferences.getBoolean("action_select_same_type", false));
+//        mToolbar.getMenu().findItem(R.id.normal_menu_group).setVisible(preferences.getBoolean("normal_menu_group", false));
+//        mToolbar.getMenu().findItem(R.id.search_menu_id).setVisible(preferences.getBoolean("search_menu_id", false));
+//        mToolbar.getMenu().findItem(R.id.bookmark_menu_id).setVisible(preferences.getBoolean("bookmark_menu_id", false));
+//        mToolbar.getMenu().findItem(R.id.sort_menu_id).setVisible(preferences.getBoolean("sort_menu_id", false));
+//        mToolbar.getMenu().findItem(R.id.action_sort_by_date).setVisible(preferences.getBoolean("action_sort_by_date", false));
+//        mToolbar.getMenu().findItem(R.id.action_sort_by_name).setVisible(preferences.getBoolean("action_sort_by_name", false));
+//        mToolbar.getMenu().findItem(R.id.action_sort_by_size).setVisible(preferences.getBoolean("action_sort_by_size", false));
+//        mToolbar.getMenu().findItem(R.id.action_sort_by_ascending).setVisible(preferences.getBoolean("action_sort_by_ascending", false));
+//        mToolbar.getMenu().findItem(R.id.action_sort_by_descending).setVisible(preferences.getBoolean("action_sort_by_descending", false));
+//        mToolbar.getMenu().findItem(R.id.close_menu_id).setVisible(preferences.getBoolean("close_menu_id", false));
+        mToolbar.getMenu().findItem(R.id.action_remove_empty_folders).setVisible(preferences.getBoolean("action_remove_empty_folders", false));
+        mToolbar.getMenu().findItem(R.id.action_calculate_directory).setVisible(preferences.getBoolean("action_calculate_directory", false));
+        // mToolbar.getMenu().findItem(R.id.action_refresh).setVisible(preferences.getBoolean("action_refresh", false));
+        mToolbar.getMenu().findItem(R.id.action_move_files).setVisible(preferences.getBoolean("action_move_files", false));
+        mToolbar.getMenu().findItem(R.id.action_rename_by_regex).setVisible(preferences.getBoolean("action_rename_by_regex", false));
+        mToolbar.getMenu().findItem(R.id.action_copy_directory_structure).setVisible(preferences.getBoolean("action_copy_directory_structure", false));
+        mToolbar.getMenu().findItem(R.id.action_combine_files).setVisible(preferences.getBoolean("action_combine_files", false));
+        //mToolbar.getMenu().findItem(R.id.action_settings).setVisible(preferences.getBoolean("action_settings", false));
+
+        //mToolbar.getMenu().findItem(R.id.{0}).setVisible(preferences.getBoolean("{0}", false));\n
     }
 
 

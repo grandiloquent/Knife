@@ -1,16 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="服务器">
-        <EditTextPreference
+    <PreferenceCategory android:title="选项">
+<!--        <CheckBoxPreference-->
+<!--            android:key="selection_mode_menu_group"-->
+<!--            android:title="@string/selection_mode_menu_group" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="selection_mode_copy_menu_id"-->
+<!--            android:title="@string/selection_mode_copy_menu_id" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="selection_mode_cut_menu_id"-->
+<!--            android:title="@string/selection_mode_cut_menu_id" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="selection_mode_delete_menu_id"-->
+<!--            android:title="@string/selection_mode_delete_menu_id" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_select_all"-->
+<!--            android:title="@string/action_select_all" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_select_same_type"-->
+<!--            android:title="@string/action_select_same_type" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="normal_menu_group"-->
+<!--            android:title="@string/normal_menu_group" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="search_menu_id"-->
+<!--            android:title="@string/search_menu_id" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="bookmark_menu_id"-->
+<!--            android:title="@string/bookmark_menu_id" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="sort_menu_id"-->
+<!--            android:title="@string/sort_menu_id" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_sort_by_date"-->
+<!--            android:title="@string/action_sort_by_date" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_sort_by_name"-->
+<!--            android:title="@string/action_sort_by_name" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_sort_by_size"-->
+<!--            android:title="@string/action_sort_by_size" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_sort_by_ascending"-->
+<!--            android:title="@string/action_sort_by_ascending" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_sort_by_descending"-->
+<!--            android:title="@string/action_sort_by_descending" />-->
+<!--        <CheckBoxPreference-->
+<!--            android:key="close_menu_id"-->
+<!--            android:title="@string/close_menu_id" />-->
+        <CheckBoxPreference
+            android:key="action_remove_empty_folders"
+            android:title="@string/action_remove_empty_folders" />
+        <CheckBoxPreference
+            android:key="action_calculate_directory"
+            android:title="@string/action_calculate_directory" />
+        <CheckBoxPreference
+            android:key="action_refresh"
+            android:title="@string/action_refresh" />
+        <CheckBoxPreference
+            android:key="action_move_images"
+            android:title="@string/action_move_images" />
+        <CheckBoxPreference
+            android:key="action_move_files"
+            android:title="@string/action_move_files" />
+        <CheckBoxPreference
+            android:key="action_rename_by_regex"
+            android:title="@string/action_rename_by_regex" />
+        <CheckBoxPreference
+            android:key="action_copy_directory_structure"
+            android:title="@string/action_copy_directory_structure" />
+        <CheckBoxPreference
+            android:key="action_combine_files"
+            android:title="@string/action_combine_files" />
+<!--        <CheckBoxPreference-->
+<!--            android:key="action_settings"-->
+<!--            android:title="@string/action_settings" />-->
 
-            android:key="ssh_server_address"
-            android:title="地址" />
-        <EditTextPreference
-            android:defaultValue="root"
-            android:key="ssh_username"
-            android:title="用户名" />
-        <EditTextPreference
-            android:key="ssh_password"
-            android:title="密码" />
+
     </PreferenceCategory>
 </PreferenceScreen>

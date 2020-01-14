@@ -1,47 +1,133 @@
-body{
-	margin:0;
+body {
+    margin: 0;
 }
+
 a {
     background-color: initial;
 }
+
 a {
     color: #0366d6;
     text-decoration: none;
 }
+
 a:active, a:hover {
     outline-width: 0;
 }
+
 a:hover {
     text-decoration: underline;
 }
-a{
-	position: relative;
+
+a {
+    position: relative;
     display: block;
     padding: 8px 10px;
     border-bottom: 1px solid #e1e4e8;
 }
+
 a:hover {
     text-decoration: none;
     background-color: #f6f8fa;
 }
-.link_directory,.link_file{
-   
+
+svg {
+    overflow: visible;
+    vertical-align: top;
+}
+
+.link_directory, .link_file {
+
     cursor: default;
     background-color: #fff;
-	display:flex;
-	flex-direction:row;
-	    align-items: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
-.link_file{
-	 color: #24292e;
+
+.link_file {
+    color: #24292e;
 }
-.link_directory:before,.link_file:before{
-	content:"";
-	
-	height:36px;
-	    min-width: 36px;
-	margin-right:10px;
-	box-sizing:border-box;
+
+.link_directory:before, .link_file:before {
+    content: "";
+
+    height: 36px;
+    min-width: 36px;
+    margin-right: 10px;
+    box-sizing: border-box;
 }
-.link_directory:before{background:url("ic_action_folder.png");}
-.link_file:before{background:url("ic_action_insert_drive_file.png");}
+
+.link_directory:before {
+    background: url("ic_action_folder.png");
+}
+
+.link_file:before {
+    background: url("ic_action_insert_drive_file.png");
+}
+
+.toolbar {
+    font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    background-color: #c1c1c1;
+    color: #fff;
+    font-size: 25px;
+    min-height: 56px !important;
+    overflow: hidden;
+}
+
+.toolbar-button {
+    border: 1px solid transparent;
+    border-radius: 2px;
+    box-sizing: border-box;
+    padding: 0;
+    vertical-align: top;
+    width: 32px;
+    color: #ededed;
+    height: 56px;
+    min-width: 56px;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    margin: 0 !important;
+}
+
+.toolbar-ico {
+    -webkit-tap-highlight-color: transparent;
+    transform: translateZ(0);
+    vertical-align: middle;
+    margin: 0 !important;
+    opacity: .6;
+}
+
+.toolbar-ico > svg {
+    display: block;
+    height: 56px;
+    margin: auto;
+}
+
+.toolbar-end {
+    font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: #fff;
+    font-size: 25px;
+    position: relative;
+    width: 100%;
+    align-items: center;
+    border: none;
+    outline: none;
+    overflow: hidden;
+    justify-content: flex-end;
+    display: flex;
+}
+
+.toolbar-title {
+    color: #212121;
+    font-size: 20px;
+    line-height: 56px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+

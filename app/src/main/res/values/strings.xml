@@ -152,4 +152,32 @@
 
     <string name="sort_size">By size</string>
     <string name="trim_video">Trim Video</string>
+
+    <string name="selection_mode_menu_group">Selection Menu Group</string>
+    <string name="selection_mode_copy_menu_id">Copy Selected</string>
+    <string name="selection_mode_cut_menu_id">Cut Selected</string>
+    <string name="selection_mode_delete_menu_id">Delete Selected</string>
+    <string name="action_select_all">Select All</string>
+    <string name="action_select_same_type">Select Same Types</string>
+    <string name="normal_menu_group">Normal Group</string>
+    <string name="search_menu_id">Search Menu</string>
+    <string name="bookmark_menu_id">Bookmark Menu</string>
+    <string name="sort_menu_id">Sort Menu</string>
+    <string name="action_sort_by_date">Sort By Date</string>
+    <string name="action_sort_by_name">Sort By Name</string>
+    <string name="action_sort_by_size">Sort By Size</string>
+    <string name="action_sort_by_ascending">Sort By Ascending</string>
+    <string name="action_sort_by_descending">Sort By Descending</string>
+    <string name="close_menu_id">Show Bottom Menu</string>
+    <string name="action_remove_empty_folders">Remove Empty Folders</string>
+    <string name="action_calculate_directory">Calculate Directory Size</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_move_images">Trim Video</string>
+    <string name="action_move_files">Move File By Type</string>
+    <string name="action_rename_by_regex">Rename File with Regular Expression</string>
+    <string name="action_copy_directory_structure">Copy Directory Structure</string>
+    <string name="action_combine_files">Combine Text Files</string>
+    <string name="action_settings">Settings</string>
+
+
 </resources>

@@ -9,7 +9,7 @@
 #include <fstream>
 
 bool IsDirectory(const char *path);
-
+bool IsFile(const char *fullPath);
 std::vector<std::pair<bool, std::string>> ListFiles(const char *path);
 
 std::vector<std::string> ReadAllLines(const char *path);

@@ -212,11 +212,14 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void loadVideo() {
+        String currentPath = mPlayList.currentVideoPath();
+
+        if (currentPath == null) return;
         setupPlayer();
         try {
             mIjkMediaPlayer.reset();
             mIjkMediaPlayer.setSurface(mSurface);
-            mIjkMediaPlayer.setDataSource(mPlayList.currentVideoPath());
+            mIjkMediaPlayer.setDataSource(currentPath);
             mIjkMediaPlayer.prepareAsync();
         } catch (IOException e) {
         }

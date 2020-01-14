@@ -31,6 +31,11 @@ bool IsDirectory(const char *path) {
     return stat(path, &statBuf) == 0 && S_ISDIR(statBuf.st_mode);
 }
 
+bool IsFile(const char *path) {
+    struct stat statBuf = {0};
+    return stat(path, &statBuf) == 0 && S_ISREG(statBuf.st_mode);
+}
+
 std::vector<std::pair<bool, std::string>> ListFiles(const char *path) {
     std::vector<std::pair<bool, std::string>> files;
     DIR *dir;

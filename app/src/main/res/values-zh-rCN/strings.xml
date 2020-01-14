@@ -38,4 +38,30 @@
 
     <string name="sort_size">按大小</string>
     <string name="trim_video">剪辑视频</string>
+    <string name="selection_mode_menu_group">Trim Video</string>
+    <string name="selection_mode_copy_menu_id">Trim Video</string>
+    <string name="selection_mode_cut_menu_id">Trim Video</string>
+    <string name="selection_mode_delete_menu_id">Trim Video</string>
+    <string name="action_select_all">Trim Video</string>
+    <string name="action_select_same_type">Trim Video</string>
+    <string name="normal_menu_group">Trim Video</string>
+    <string name="search_menu_id">Trim Video</string>
+    <string name="bookmark_menu_id">Trim Video</string>
+    <string name="sort_menu_id">Trim Video</string>
+    <string name="action_sort_by_date">Trim Video</string>
+    <string name="action_sort_by_name">Trim Video</string>
+    <string name="action_sort_by_size">Trim Video</string>
+    <string name="action_sort_by_ascending">Trim Video</string>
+    <string name="action_sort_by_descending">Trim Video</string>
+    <string name="close_menu_id">Trim Video</string>
+    <string name="action_remove_empty_folders">Trim Video</string>
+    <string name="action_calculate_directory">Trim Video</string>
+    <string name="action_refresh">Trim Video</string>
+    <string name="action_move_images">Trim Video</string>
+    <string name="action_move_files">Trim Video</string>
+    <string name="action_rename_by_regex">Trim Video</string>
+    <string name="action_copy_directory_structure">Trim Video</string>
+    <string name="action_combine_files">Trim Video</string>
+    <string name="action_settings">Trim Video</string>
+
 </resources>

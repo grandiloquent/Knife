@@ -47,51 +47,48 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
             if (IsDirectory(path.c_str())) {
                 response.set_content(GetFileContents(request.get_param_value("path").c_str()),
                                      MimeTypeHTML);
-            } else {
-                __android_log_print(ANDROID_LOG_ERROR, "TAG/", "%s\n",
-                                    request.get_header_value("range", 0).c_str());
+                return true;
+            } else if (IsFile(path.c_str())) {
                 if (EndsWith(path, ".mp4")) {
                     response.set_header("Content-Type", "video/mp4");
                 } else {
                     std::string cdv = "attachment; filename=" + SubstringAfterLast(path, '/');
                     response.set_header("Content-disposition", cdv.c_str());
                 }
+                std::shared_ptr<std::ifstream> fs = std::make_shared<std::ifstream>();
+                fs->open(path, std::ios_base::binary);
+                fs->seekg(0, std::ios_base::end);
+                auto end = fs->tellg();
+                fs->seekg(0);
 
-                std::ifstream fs(path, std::ios_base::binary);
-                fs.seekg(0, std::ios_base::end);
-                auto size = fs.tellg();
-                fs.seekg(0);
-                fs.close();
-                //response.set_header("Content-Length", std::to_string(size));
+                LOGE("fileSize(end) = %d\n", static_cast<size_t>(end));
 
-//                LOGE("%s %llu\n", path.c_str(), size);
+                response.set_content_provider(static_cast<size_t>(end),
+                                              [fs](uint64_t offset,
+                                                          uint64_t length,
+                                                          DataSink &sink) {
+                                                  if (fs->fail()) {
+                                                    //  this->HandleError(request, response);
+                                                      return;
+                                                  }
 
-                response.set_content_provider(static_cast<size_t>(size),
-                                              [path](uint64_t offset, uint64_t length,
-                                                    DataSink &sink) {
+                                                  fs->seekg(offset, std::ios_base::beg);
 
-                                                  std::ifstream f(path, std::ios_base::binary);
                                                   size_t bufSize = 81920;
                                                   char buffer[bufSize];
-                                                  while(f) {
-                                                      f.read(buffer, sizeof(bufSize));
 
-                                                      sink.write(buffer,
-                                                                 static_cast<size_t>(f.gcount()));
-//                                                      LOGE("%llu %llu %d\n", offset, length,
-//                                                           f.gcount());
-                                                  } ;
-                                                  //fs.close();
+                                                  fs->read(buffer, bufSize);
+
+                                                  sink.write(buffer,
+                                                             static_cast<size_t>(fs->gcount()));
                                               });
-//
-//                response.body.resize(static_cast<size_t>(size));
-//                fs.read(&response.body[0], size);
+                return true;
 
             }
-        } else {
-            auto buf = ReadAllBytes("404.html");
-            response.set_content(buf.data(), MimeTypeHTML);
         }
+
+        this->HandleError(request, response);
+        return true;
     });
 
     _server.set_error_handler(std::bind(&HttpServer::HandleError, this, std::placeholders::_1,
@@ -105,6 +102,8 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
 }
 
 void HttpServer::HandleError(const Request &request, Response &response) {
+
+    response.status = 404;
     auto buf = ReadAllBytes("404.html");
     if (buf.empty()) {
         response.set_content("", MimeTypeHTML);
