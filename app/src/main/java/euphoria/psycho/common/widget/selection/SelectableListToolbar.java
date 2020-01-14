@@ -1,4 +1,5 @@
 package euphoria.psycho.common.widget.selection;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -22,7 +23,9 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+
 import java.util.List;
+
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
@@ -32,13 +35,13 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import euphoria.psycho.common.ApiCompatibilityUtils;
-import euphoria.psycho.common.annotations.VisibleForTesting;
 import euphoria.psycho.common.widget.KeyboardVisibilityDelegate;
 import euphoria.psycho.common.widget.NumberRollView;
 import euphoria.psycho.common.widget.TintedDrawable;
 import euphoria.psycho.common.widget.selection.SelectionDelegate.SelectionObserver;
 import euphoria.psycho.knife.R;
 import euphoria.psycho.knife.util.ColorUtils;
+
 public class SelectableListToolbar<E>
         extends Toolbar implements SelectionObserver<E>, OnClickListener, OnEditorActionListener {
     /**
@@ -51,11 +54,15 @@ public class SelectableListToolbar<E>
          * @param query The text in the search EditText box.
          */
         void onSearchTextChanged(String query);
+
         /**
          * Called when a search is ended.
          */
         void onEndSearch();
+
+        void onOpenedNormalMenu();
     }
+
     /**
      * No navigation button is displayed.
      **/
@@ -93,7 +100,6 @@ public class SelectableListToolbar<E>
     private int mNavigationButton;
     private int mTitleResId;
     private int mSearchMenuItemId;
-    private int mInfoMenuItemId;
     private int mNormalGroupResId;
     private int mSelectedGroupResId;
     private int mNormalBackgroundColor;
@@ -106,18 +112,15 @@ public class SelectableListToolbar<E>
     private int mModernToolbarActionMenuEndOffsetPx;
     private int mModernToolbarSearchIconOffsetPx;
     private boolean mIsDestroyed;
-    private boolean mShowInfoItem;
-    private boolean mInfoShowing;
-    private boolean mShowInfoIcon;
-    private int mShowInfoStringId;
-    private int mHideInfoStringId;
     private int mExtraMenuItemId;
+
     /**
      * Constructor for inflating from XML.
      */
     public SelectableListToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
+
     /**
      * Destroys and cleans up itself.
      */
@@ -127,6 +130,7 @@ public class SelectableListToolbar<E>
         if (mSelectionDelegate != null) mSelectionDelegate.removeObserver(this);
         KeyboardVisibilityDelegate.getInstance().hideKeyboard(mSearchEditText);
     }
+
     /**
      * Initializes the SelectionToolbar.
      *
@@ -181,9 +185,7 @@ public class SelectableListToolbar<E>
                 getContext(), R.drawable.ic_more_vert_black_24dp, R.color.white_mode_tint);
         mNavigationIconDrawable = TintedDrawable.constructTintedDrawable(
                 getContext(), R.drawable.ic_arrow_back_white_24dp);
-        mShowInfoIcon = true;
-        mShowInfoStringId = R.string.show_info;
-        mHideInfoStringId = R.string.hide_info;
+
         // Used only for the case of DownloadManagerToolbar.
         // Will not be needed after a tint is applied to all toolbar buttons.
         MenuItem extraMenuItem = getMenu().findItem(mExtraMenuItemId);
@@ -193,9 +195,11 @@ public class SelectableListToolbar<E>
             extraMenuItem.setIcon(iconDrawable);
         }
     }
+
     public EditText getSearchEditText() {
         return mSearchEditText;
     }
+
     /**
      * Inflates and initializes the search view.
      *
@@ -224,9 +228,11 @@ public class SelectableListToolbar<E>
                         TextUtils.isEmpty(s) ? View.INVISIBLE : View.VISIBLE);
                 if (mIsSearching) mSearchDelegate.onSearchTextChanged(s.toString());
             }
+
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
+
             @Override
             public void afterTextChanged(Editable s) {
             }
@@ -239,6 +245,7 @@ public class SelectableListToolbar<E>
             }
         });
     }
+
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
@@ -247,6 +254,7 @@ public class SelectableListToolbar<E>
         mNumberRollView.setString(R.plurals.selected_items);
         mNumberRollView.setStringForZero(R.string.select_items);
     }
+
     @Override
     @CallSuper
     public void onSelectionStateChange(List<E> selectedItems) {
@@ -274,6 +282,7 @@ public class SelectableListToolbar<E>
             }
         }
     }
+
     @Override
     public void onClick(View view) {
         if (mIsDestroyed) return;
@@ -293,6 +302,7 @@ public class SelectableListToolbar<E>
                 assert false : "Incorrect navigation button state";
         }
     }
+
     /**
      * Handle a click on the navigation back button. If this toolbar has a search view, the search
      * view will be hidden. Subclasses should override this method if navigation back is also a
@@ -302,6 +312,7 @@ public class SelectableListToolbar<E>
         if (!mHasSearchView || !mIsSearching) return;
         hideSearchView();
     }
+
     /**
      * Update the current navigation button (the top-left icon on LTR)
      *
@@ -342,6 +353,7 @@ public class SelectableListToolbar<E>
         setNavigationIcon(contentDescriptionId == 0 ? null : mNavigationIconDrawable);
         setNavigationContentDescription(contentDescriptionId);
     }
+
     /**
      * Shows the search edit text box and related views.
      */
@@ -364,6 +376,7 @@ public class SelectableListToolbar<E>
 //        callback.setActionModeController(new ActionModeController(getContext(), delegate));
 //        mSearchText.setCustomSelectionActionModeCallback(callback);
 //    }
+
     /**
      * Hides the search edit text box and related views.
      */
@@ -376,6 +389,7 @@ public class SelectableListToolbar<E>
         showNormalView();
         mSearchDelegate.onEndSearch();
     }
+
     /**
      * Called to enable/disable search menu button.
      *
@@ -387,6 +401,7 @@ public class SelectableListToolbar<E>
             updateSearchMenuItem();
         }
     }
+
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -394,6 +409,7 @@ public class SelectableListToolbar<E>
         }
         return false;
     }
+
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
@@ -402,6 +418,7 @@ public class SelectableListToolbar<E>
         if (mIsSearching) hideSearchView();
         if (mDrawerLayout != null) mDrawerLayout.closeDrawer(GravityCompat.START);
     }
+
     /**
      * @return Whether search mode is currently active. Once a search is started, this method will
      * return true until the search is ended regardless of whether the toolbar view changes
@@ -410,9 +427,11 @@ public class SelectableListToolbar<E>
     public boolean isSearching() {
         return mIsSearching;
     }
+
     SelectionDelegate<E> getSelectionDelegate() {
         return mSelectionDelegate;
     }
+
     /**
      * Set up ActionBarDrawerToggle, a.k.a. hamburger button.
      */
@@ -426,8 +445,11 @@ public class SelectableListToolbar<E>
         mDrawerLayout.addDrawerListener(mActionBarDrawerToggle);
         mActionBarDrawerToggle.syncState();
     }
+
     protected void showNormalView() {
+
         getMenu().setGroupVisible(mNormalGroupResId, true);
+        mSearchDelegate.onOpenedNormalMenu();
         getMenu().setGroupVisible(mSelectedGroupResId, false);
         if (mHasSearchView) {
             mSearchView.setVisibility(View.GONE);
@@ -440,6 +462,7 @@ public class SelectableListToolbar<E>
         mNumberRollView.setVisibility(View.GONE);
         mNumberRollView.setNumber(0, false);
     }
+
     protected void showSelectionView(List<E> selectedItems, boolean wasSelectionEnabled) {
         getMenu().setGroupVisible(mNormalGroupResId, false);
         getMenu().setGroupVisible(mSelectedGroupResId, true);
@@ -451,6 +474,7 @@ public class SelectableListToolbar<E>
         switchToNumberRollView(selectedItems, wasSelectionEnabled);
         if (mIsSearching) KeyboardVisibilityDelegate.getInstance().hideKeyboard(mSearchEditText);
     }
+
     private void showSearchViewInternal() {
         getMenu().setGroupVisible(mNormalGroupResId, false);
         getMenu().setGroupVisible(mSelectedGroupResId, false);
@@ -460,6 +484,7 @@ public class SelectableListToolbar<E>
         setBackgroundResource(R.drawable.search_toolbar_modern_bg);
         updateStatusBarColor(mSearchBackgroundColor);
     }
+
     private void updateSearchMenuItem() {
         if (!mHasSearchView) return;
         MenuItem searchMenuItem = getMenu().findItem(mSearchMenuItemId);
@@ -468,20 +493,14 @@ public class SelectableListToolbar<E>
                     mSearchEnabled && !mIsSelectionEnabled && !mIsSearching && !mIsVrEnabled);
         }
     }
+
     protected void switchToNumberRollView(List<E> selectedItems, boolean wasSelectionEnabled) {
         setTitle(null);
         mNumberRollView.setVisibility(View.VISIBLE);
         if (!wasSelectionEnabled) mNumberRollView.setNumber(0, false);
         mNumberRollView.setNumber(selectedItems.size(), true);
     }
-    /**
-     * Set info menu item used to toggle info header.
-     *
-     * @param infoMenuItemId The menu item to show or hide information.
-     */
-    public void setInfoMenuItem(int infoMenuItemId) {
-        mInfoMenuItemId = infoMenuItemId;
-    }
+
     /**
      * Set ID of menu item that is displayed to hold any extra actions.
      * Needs to be called before {@link #initialize}.
@@ -491,51 +510,7 @@ public class SelectableListToolbar<E>
     public void setExtraMenuItem(int extraMenuItemId) {
         mExtraMenuItemId = extraMenuItemId;
     }
-    /**
-     * Sets the parameter that determines whether to show the info icon.
-     * This is useful when the info menu option is being shown in a sub-menu, where only the text is
-     * necessary, versus being shown as an icon in the toolbar.
-     * Needs to be called before {@link #initialize}.
-     *
-     * @param shouldShow Whether to show the icon for the info menu item. Defaults to true.
-     */
-    public void setShowInfoIcon(boolean shouldShow) {
-        mShowInfoIcon = shouldShow;
-    }
-    /**
-     * Set the IDs of the string resources to be shown for the info button text if different from
-     * the default "Show info"/"Hide info" text.
-     * Needs to be called before {@link #initialize}.
-     *
-     * @param showInfoStringId Resource ID of string for the info button text that, when clicked,
-     *                         will show info.
-     * @param hideInfoStringId Resource ID of the string that will hide the info.
-     */
-    public void setInfoButtonText(int showInfoStringId, int hideInfoStringId) {
-        mShowInfoStringId = showInfoStringId;
-        mHideInfoStringId = hideInfoStringId;
-    }
-    /**
-     * Update icon, title, and visibility of info menu item.
-     *
-     * @param showItem    Whether or not info menu item should show.
-     * @param infoShowing Whether or not info header is currently showing.
-     */
-    public void updateInfoMenuItem(boolean showItem, boolean infoShowing) {
-        mShowInfoItem = showItem;
-        mInfoShowing = infoShowing;
-        MenuItem infoMenuItem = getMenu().findItem(mInfoMenuItemId);
-        if (infoMenuItem != null) {
-            if (mShowInfoIcon) {
-                Drawable iconDrawable =
-                        TintedDrawable.constructTintedDrawable(getContext(), R.drawable.btn_info,
-                                infoShowing ? R.color.blue_mode_tint : R.color.dark_mode_tint);
-                infoMenuItem.setIcon(iconDrawable);
-            }
-            infoMenuItem.setTitle(infoShowing ? mHideInfoStringId : mShowInfoStringId);
-            infoMenuItem.setVisible(showItem);
-        }
-    }
+
     @Override
     public void setTitle(CharSequence title) {
         super.setTitle(title);
@@ -543,11 +518,13 @@ public class SelectableListToolbar<E>
         // Set TextView children to focusable so the title can gain focus in accessibility mode.
         makeTextViewChildrenAccessible();
     }
+
     @Override
     public void setBackgroundColor(int color) {
         super.setBackgroundColor(color);
         updateStatusBarColor(color);
     }
+
     private void updateStatusBarColor(int color) {
         if (!mUpdateStatusBarColor) return;
         Context context = getContext();
@@ -557,21 +534,7 @@ public class SelectableListToolbar<E>
         ApiCompatibilityUtils.setStatusBarIconColor(window.getDecorView().getRootView(),
                 !ColorUtils.shouldUseLightForegroundOnBackground(color));
     }
-    @VisibleForTesting
-    public View getSearchViewForTests() {
-        return mSearchView;
-    }
-    @VisibleForTesting
-    public int getNavigationButtonForTests() {
-        return mNavigationButton;
-    }
-    /**
-     * Ends any in-progress animations.
-     */
-    @VisibleForTesting
-    public void endAnimationsForTesting() {
-        mNumberRollView.endAnimationsForTesting();
-    }
+
     private void makeTextViewChildrenAccessible() {
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);

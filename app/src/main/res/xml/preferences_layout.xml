@@ -1,54 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="选项">
-<!--        <CheckBoxPreference-->
-<!--            android:key="selection_mode_menu_group"-->
-<!--            android:title="@string/selection_mode_menu_group" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="selection_mode_copy_menu_id"-->
-<!--            android:title="@string/selection_mode_copy_menu_id" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="selection_mode_cut_menu_id"-->
-<!--            android:title="@string/selection_mode_cut_menu_id" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="selection_mode_delete_menu_id"-->
-<!--            android:title="@string/selection_mode_delete_menu_id" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_select_all"-->
-<!--            android:title="@string/action_select_all" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_select_same_type"-->
-<!--            android:title="@string/action_select_same_type" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="normal_menu_group"-->
-<!--            android:title="@string/normal_menu_group" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="search_menu_id"-->
-<!--            android:title="@string/search_menu_id" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="bookmark_menu_id"-->
-<!--            android:title="@string/bookmark_menu_id" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="sort_menu_id"-->
-<!--            android:title="@string/sort_menu_id" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_sort_by_date"-->
-<!--            android:title="@string/action_sort_by_date" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_sort_by_name"-->
-<!--            android:title="@string/action_sort_by_name" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_sort_by_size"-->
-<!--            android:title="@string/action_sort_by_size" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_sort_by_ascending"-->
-<!--            android:title="@string/action_sort_by_ascending" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_sort_by_descending"-->
-<!--            android:title="@string/action_sort_by_descending" />-->
-<!--        <CheckBoxPreference-->
-<!--            android:key="close_menu_id"-->
-<!--            android:title="@string/close_menu_id" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="selection_mode_menu_group"-->
+        <!--            android:title="@string/selection_mode_menu_group" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="selection_mode_copy_menu_id"-->
+        <!--            android:title="@string/selection_mode_copy_menu_id" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="selection_mode_cut_menu_id"-->
+        <!--            android:title="@string/selection_mode_cut_menu_id" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="selection_mode_delete_menu_id"-->
+        <!--            android:title="@string/selection_mode_delete_menu_id" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_select_all"-->
+        <!--            android:title="@string/action_select_all" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_select_same_type"-->
+        <!--            android:title="@string/action_select_same_type" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="normal_menu_group"-->
+        <!--            android:title="@string/normal_menu_group" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="search_menu_id"-->
+        <!--            android:title="@string/search_menu_id" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="bookmark_menu_id"-->
+        <!--            android:title="@string/bookmark_menu_id" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="sort_menu_id"-->
+        <!--            android:title="@string/sort_menu_id" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_sort_by_date"-->
+        <!--            android:title="@string/action_sort_by_date" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_sort_by_name"-->
+        <!--            android:title="@string/action_sort_by_name" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_sort_by_size"-->
+        <!--            android:title="@string/action_sort_by_size" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_sort_by_ascending"-->
+        <!--            android:title="@string/action_sort_by_ascending" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_sort_by_descending"-->
+        <!--            android:title="@string/action_sort_by_descending" />-->
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="close_menu_id"-->
+        <!--            android:title="@string/close_menu_id" />-->
         <CheckBoxPreference
             android:key="action_remove_empty_folders"
             android:title="@string/action_remove_empty_folders" />
@@ -73,10 +73,13 @@
         <CheckBoxPreference
             android:key="action_combine_files"
             android:title="@string/action_combine_files" />
-<!--        <CheckBoxPreference-->
-<!--            android:key="action_settings"-->
-<!--            android:title="@string/action_settings" />-->
-
-
+        <!--        <CheckBoxPreference-->
+        <!--            android:key="action_settings"-->
+        <!--            android:title="@string/action_settings" />-->
+    </PreferenceCategory>
+    <PreferenceCategory android:title="文件">
+        <CheckBoxPreference
+            android:key="file_override"
+            android:title="当路径重叠时，覆盖已存在的文件" />
     </PreferenceCategory>
 </PreferenceScreen>

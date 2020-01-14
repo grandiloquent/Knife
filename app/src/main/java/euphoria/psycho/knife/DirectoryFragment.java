@@ -4,30 +4,26 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
@@ -36,7 +32,6 @@ import java.util.regex.Pattern;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -70,7 +65,6 @@ import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
 import euphoria.psycho.knife.util.VideoUtils;
 import euphoria.psycho.knife.util.VideoUtils.OnTrimVideoListener;
-
 
 public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,
         DocumentActionDelegate,
@@ -161,39 +155,25 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.initializeSearchView(this, R.string.directory_search, R.id.search_menu_id);
         mToolbar.getSearchEditText().setOnKeyListener(this::onSearch);
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        checkOptionMenuItems();
 
-//        mToolbar.getMenu().findItem(R.id.selection_mode_menu_group).setVisible(preferences.getBoolean("selection_mode_menu_group", false));
-//        mToolbar.getMenu().findItem(R.id.selection_mode_copy_menu_id).setVisible(preferences.getBoolean("selection_mode_copy_menu_id", false));
-//        mToolbar.getMenu().findItem(R.id.selection_mode_cut_menu_id).setVisible(preferences.getBoolean("selection_mode_cut_menu_id", false));
-//        mToolbar.getMenu().findItem(R.id.selection_mode_delete_menu_id).setVisible(preferences.getBoolean("selection_mode_delete_menu_id", false));
-//        mToolbar.getMenu().findItem(R.id.action_select_all).setVisible(preferences.getBoolean("action_select_all", false));
-//        mToolbar.getMenu().findItem(R.id.action_select_same_type).setVisible(preferences.getBoolean("action_select_same_type", false));
-//        mToolbar.getMenu().findItem(R.id.normal_menu_group).setVisible(preferences.getBoolean("normal_menu_group", false));
-//        mToolbar.getMenu().findItem(R.id.search_menu_id).setVisible(preferences.getBoolean("search_menu_id", false));
-//        mToolbar.getMenu().findItem(R.id.bookmark_menu_id).setVisible(preferences.getBoolean("bookmark_menu_id", false));
-//        mToolbar.getMenu().findItem(R.id.sort_menu_id).setVisible(preferences.getBoolean("sort_menu_id", false));
-//        mToolbar.getMenu().findItem(R.id.action_sort_by_date).setVisible(preferences.getBoolean("action_sort_by_date", false));
-//        mToolbar.getMenu().findItem(R.id.action_sort_by_name).setVisible(preferences.getBoolean("action_sort_by_name", false));
-//        mToolbar.getMenu().findItem(R.id.action_sort_by_size).setVisible(preferences.getBoolean("action_sort_by_size", false));
-//        mToolbar.getMenu().findItem(R.id.action_sort_by_ascending).setVisible(preferences.getBoolean("action_sort_by_ascending", false));
-//        mToolbar.getMenu().findItem(R.id.action_sort_by_descending).setVisible(preferences.getBoolean("action_sort_by_descending", false));
-//        mToolbar.getMenu().findItem(R.id.close_menu_id).setVisible(preferences.getBoolean("close_menu_id", false));
-        mToolbar.getMenu().findItem(R.id.action_remove_empty_folders).setVisible(preferences.getBoolean("action_remove_empty_folders", false));
-        mToolbar.getMenu().findItem(R.id.action_calculate_directory).setVisible(preferences.getBoolean("action_calculate_directory", false));
-        // mToolbar.getMenu().findItem(R.id.action_refresh).setVisible(preferences.getBoolean("action_refresh", false));
-        mToolbar.getMenu().findItem(R.id.action_move_files).setVisible(preferences.getBoolean("action_move_files", false));
-        mToolbar.getMenu().findItem(R.id.action_rename_by_regex).setVisible(preferences.getBoolean("action_rename_by_regex", false));
-        mToolbar.getMenu().findItem(R.id.action_copy_directory_structure).setVisible(preferences.getBoolean("action_copy_directory_structure", false));
-        mToolbar.getMenu().findItem(R.id.action_combine_files).setVisible(preferences.getBoolean("action_combine_files", false));
-        //mToolbar.getMenu().findItem(R.id.action_settings).setVisible(preferences.getBoolean("action_settings", false));
-
-        //mToolbar.getMenu().findItem(R.id.{0}).setVisible(preferences.getBoolean("{0}", false));\n
     }
 
+    private void checkOptionMenuItems() {
+        Settings settings = Settings.instance();
+
+        Menu menu = mToolbar.getMenu();
+        menu.findItem(R.id.action_remove_empty_folders).setVisible(settings.isActionRemoveEmptyFolders());
+        menu.findItem(R.id.action_calculate_directory).setVisible(settings.isActionCalculateDirectory());
+        menu.findItem(R.id.action_move_files).setVisible(settings.isActionMoveFiles());
+        menu.findItem(R.id.action_rename_by_regex).setVisible(settings.isActionRenameByRegex());
+        menu.findItem(R.id.action_copy_directory_structure).setVisible(settings.isActionCopyDirectoryStructure());
+        menu.findItem(R.id.action_combine_files).setVisible(settings.isActionCombineFiles());
+
+    }
 
     private void loadPreferences() {
-        SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
+        Settings settings = Settings.instance();
         String directory = null;
         Bundle bundle = getArguments();
         if (bundle != null) {
@@ -203,14 +183,10 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 mSortBy = FileSort.values()[bundle.getInt(C.EXTRA_SORT_BY)];
         }
         if (directory == null)
-            directory = preferences.getString(C.KEY_DIRECTORY, null);
-        if (directory == null) {
-            mDirectory = Environment.getExternalStorageDirectory();
-        } else {
-            mDirectory = new File(directory);
-        }
-        mSortBy = FileSort.values()[preferences.getInt(C.KEY_SORT_BY, 0)];
-        mSortAscending = preferences.getBoolean(C.KEY_SORT_BY_ASCENDING, false);
+            directory = settings.getRecentDirectory();
+        mDirectory = new File(directory);
+        mSortBy = FileSort.values()[settings.getSortBy()];
+        mSortAscending = settings.isSortByAscending();
     }
 
     private boolean onBackPressed() {
@@ -260,12 +236,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
      * 保存排序方式和当前目录
      * */
     private void savePreferences() {
-        SharedPreferences preferences = ContextUtils.getAppSharedPreferences();
         updateLastVisiblePosition();
-        preferences.edit().putInt(C.KEY_SCROLL_Y, mLastVisiblePosition)
-                .putString(C.KEY_DIRECTORY, mDirectory.getAbsolutePath())
-                .putInt(C.KEY_SORT_BY, mSortBy.getValue())
-                .putBoolean(C.KEY_SORT_BY_ASCENDING, mSortAscending).apply();
+        Settings.instance().setRecentDirectory(mDirectory.getAbsolutePath());
+        Settings.instance().setSortBy(mSortBy.getValue());
+        Settings.instance().setIsSortByAscending(mSortAscending);
+        Settings.instance().setScrollY(mLastVisiblePosition);
     }
 
     public void sortBy(FileSort fileSort) {
@@ -285,23 +260,22 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     }
 
     public void updateRecyclerView(boolean isScrollTo) {
-        ThreadUtils.postOnBackgroundThread(() -> {
-            List<DocumentInfo> infos = null;
-            try {
-                infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
-                        mSortAscending,
-                        null);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            List<DocumentInfo> finalInfos = infos;
-            ThreadUtils.postOnUiThread(() -> {
-                mAdapter.switchDataSet(finalInfos);
-                mToolbar.setTitle(mDirectory.getName());
-                if (isScrollTo)
-                    mLayoutManager.scrollToPosition(mLastVisiblePosition);
-            });
-        });
+        try {
+            List<DocumentInfo> documentInfos = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
+                            mSortAscending,
+                            null);
+                } catch (IOException e) {
+                    return null;
+                }
+            }).get();
+            mAdapter.switchDataSet(documentInfos);
+            mToolbar.setTitle(mDirectory.getName());
+            if (isScrollTo)
+                mLayoutManager.scrollToPosition(mLastVisiblePosition);
+        } catch (ExecutionException | InterruptedException e) {
+        }
     }
 
     public void updateRecyclerView(File dir) {
@@ -550,6 +524,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         updateRecyclerView(false);
     }
 
+    @Override
+    public void onOpenedNormalMenu() {
+        checkOptionMenuItems();
+    }
+
     /*
      * Activity
      * onPause
@@ -587,12 +566,12 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
 
     @Override
     public void onSelectionStateChange(List<DocumentInfo> selectedItems) {
+
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mContainer = view.findViewById(R.id.container);
         mContainer = view.findViewById(R.id.container);
         mContainer.initializeEmptyView(
                 VectorDrawableCompat.create(
@@ -622,24 +601,31 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
      * */
     @Override
     public void rename(DocumentInfo documentInfo) {
-        DocumentUtils.buildRenameDialog(getContext(),
-                documentInfo.getFileName(),
-                charSequence -> {
-                    // 如果输入的新文件名为空 终止
-                    if (Strings.isNullOrWhiteSpace(charSequence)) return;
-                    String fileName = Files.getValidFileName(charSequence.toString().trim(), ' ');
-                    Path targetDirectory = Paths.get(mDirectory.getAbsolutePath());
-                    Path targetFile = targetDirectory.resolve(fileName);
-                    // 如果存在相同的文件名 终止
-                    if (!java.nio.file.Files.exists(targetFile)) {
-                        try {
-                            java.nio.file.Files.move(Paths.get(documentInfo.getPath()), targetFile);
-                            updateRecyclerView(false);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+        Dialogs.showEditDialog(getContext(), new Listener() {
+            @Override
+            public void setupEditText(EditText editText) {
+                editText.setText(documentInfo.getFileName());
+                int dotIndex = documentInfo.getFileName().lastIndexOf('.');
+                if (dotIndex != -1) {
+                    editText.setSelection(0, dotIndex);
+                } else {
+                    editText.setSelection(0, editText.getText().length());
+                }
+            }
+
+            @Override
+            public void onPositive(DialogInterface dialog, CharSequence text) {
+                if (Strings.isNullOrWhiteSpace(text)) return;
+                String fileName = Files.getValidFileName(text.toString().trim(), ' ');
+                File targetFile = new File(mDirectory, fileName);
+                if (targetFile.exists()) {
+                    if (!Settings.instance().isFileOverride()) return;
+                    if (!targetFile.delete()) return;
+                }
+                new File(documentInfo.getPath()).renameTo(targetFile);
+                updateRecyclerView(false);
+            }
+        });
     }
 
     /*
@@ -648,7 +634,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
      * */
     @Override
     public void trimVideo(DocumentInfo documentInfo) {
-
         Dialogs.showEditDialog(getContext(), new Listener() {
             @Override
             public void setupEditText(EditText editText) {
@@ -710,8 +695,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 dialog.dismiss();
             }
         });
-
-
     }
 
     /*解压ZIP压缩文件*/
