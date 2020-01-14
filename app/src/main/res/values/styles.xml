@@ -1,125 +1,26 @@
 <resources>
-    <drawable name="exo_controls_play">@drawable/exo_icon_play</drawable>
-    <drawable name="exo_controls_pause">@drawable/exo_icon_pause</drawable>
-    <drawable name="exo_controls_next">@drawable/exo_icon_next</drawable>
-    <drawable name="exo_controls_previous">@drawable/exo_icon_previous</drawable>
-    <drawable name="exo_controls_fastforward">@drawable/exo_icon_fastforward</drawable>
-    <drawable name="exo_controls_rewind">@drawable/exo_icon_rewind</drawable>
-    <drawable name="exo_notification_play">@drawable/exo_icon_play</drawable>
-    <drawable name="exo_notification_pause">@drawable/exo_icon_pause</drawable>
-    <drawable name="exo_notification_next">@drawable/exo_icon_next</drawable>
-    <drawable name="exo_notification_previous">@drawable/exo_icon_previous</drawable>
-    <drawable name="exo_notification_fastforward">@drawable/exo_icon_fastforward</drawable>
-    <drawable name="exo_notification_rewind">@drawable/exo_icon_rewind</drawable>
-    <drawable name="exo_notification_stop">@drawable/exo_icon_stop</drawable>
-
-    <style name="LoadingProgressBar" parent="AppTheme">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:padding">5dp</item>
-        <item name="android:background">@drawable/loading_rectangle</item>
-    </style>
-    <!-- Volume / Brightness indicator -->
-    <style name="VideoPlayerIndicator" parent="LoadingProgressBar" />
-
-    <style name="ExoMediaButton">
-        <item name="android:background">?android:attr/selectableItemBackground</item>
-        <item name="android:layout_width">@dimen/exo_media_button_width</item>
-        <item name="android:layout_height">@dimen/exo_media_button_height</item>
-    </style>
-
-    <style name="ExoMediaButton.Previous">
-        <item name="android:src">@drawable/exo_controls_previous</item>
-        <item name="android:contentDescription">@string/exo_controls_previous_description</item>
-    </style>
-
-    <style name="ExoMediaButton.Next">
-        <item name="android:src">@drawable/exo_controls_next</item>
-        <item name="android:contentDescription">@string/exo_controls_next_description</item>
-    </style>
-
-    <style name="ExoMediaButton.FastForward">
-        <item name="android:src">@drawable/exo_controls_fastforward</item>
-        <item name="android:contentDescription">@string/exo_controls_fastforward_description</item>
-    </style>
-
-
-    <style name="ExoMediaButton.Play">
-        <item name="android:src">@drawable/exo_controls_play</item>
-        <item name="android:contentDescription">@string/exo_controls_play_description</item>
-    </style>
-
-    <style name="ExoMediaButton.Pause">
-        <item name="android:src">@drawable/exo_controls_pause</item>
-        <item name="android:contentDescription">@string/exo_controls_pause_description</item>
-    </style>
-
-    <style name="ExoMediaButton.ScaleMode">
-        <item name="android:src">@drawable/ic_action_crop</item>
-    </style>
-
-    <style name="NotificationAction">
-        <item name="android:layout_width">@dimen/notification_action_width</item>
-        <item name="android:layout_height">@dimen/notification_action_height</item>
-        <item name="android:gravity">center|right</item>
-        <item name="android:scaleType">fitCenter</item>
-        <item name="android:padding">@dimen/notification_action_padding</item>
-        <item name="android:background">?android:selectableItemBackground</item>
-    </style>
-
-    <style name="NotificationAction.Next" parent="@style/NotificationAction">
-        <item name="android:src">@drawable/btn_playback_next</item>
-    </style>
-
-    <style name="NotificationAction.Play" parent="@style/NotificationAction">
-        <item name="android:src">@drawable/btn_playback_play</item>
-    </style>
-
-    <style name="NotificationAction.Previous" parent="@style/NotificationAction">
-        <item name="android:src">@drawable/btn_playback_previous</item>
-        <item name="android:visibility">gone</item>
-    </style>
-
-    <style name="NotificationText">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:fadingEdge">horizontal</item>
-        <item name="android:singleLine">true</item>
-    </style>
-
-    <style name="ListMenuItemStyle">
-        <item name="android:paddingLeft">?android:listPreferredItemPaddingLeft</item>
-        <item name="android:paddingRight">?android:listPreferredItemPaddingRight</item>
-    </style>
-
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
-
     <style name="BlackBody">
         <item name="android:textSize">@dimen/text_size_medium</item>
         <item name="android:textColor">@color/default_text_color_secondary_list</item>
     </style>
-
     <style name="BlackDisabledText1">
         <item name="android:textSize">@dimen/text_size_large</item>
         <item name="android:textColor">@color/disabled_text_color</item>
     </style>
-
     <style name="BlackHeadline">
         <item name="android:textSize">@dimen/headline_size</item>
         <item name="android:textColor">@color/default_text_color_list</item>
     </style>
-
     <style name="BlackTitle1">
         <item name="android:textSize">@dimen/text_size_large</item>
         <item name="android:textColor">@color/default_text_color_list</item>
     </style>
-
     <style name="DownloadDescriptionStyle">
         <item name="android:textAppearance">@style/BlackBody</item>
         <item name="android:ellipsize">start</item>
@@ -131,7 +32,6 @@
         <item name="android:layout_alignParentLeft">true</item>
         <item name="android:layout_alignParentBottom">true</item>
     </style>
-
     <style name="DownloadHomeStatusText">
         <item name="android:textAppearance">@style/BlackBody</item>
         <item name="android:ellipsize">start</item>
@@ -141,11 +41,9 @@
         <item name="android:minHeight">18.0dip</item>
         <item name="android:singleLine">true</item>
     </style>
-
     <style name="DownloadIconView" parent="@style/ListItemStartIcon">
         <item name="android:background">@color/light_active_color</item>
     </style>
-
     <style name="DownloadTitleStyle">
         <item name="android:textAppearance">@style/BlackTitle1</item>
         <item name="android:paddingRight">16.0dip</item>
@@ -155,7 +53,30 @@
         <item name="android:layout_alignParentLeft">true</item>
         <item name="android:layout_alignParentTop">true</item>
     </style>
-
+    <style name="ExoMediaButton">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:layout_width">@dimen/exo_media_button_width</item>
+        <item name="android:layout_height">@dimen/exo_media_button_height</item>
+    </style>
+    <style name="ExoMediaButton.Next">
+        <item name="android:src">@drawable/exo_controls_next</item>
+        <item name="android:contentDescription">@string/exo_controls_next_description</item>
+    </style>
+    <style name="ExoMediaButton.Pause">
+        <item name="android:src">@drawable/exo_controls_pause</item>
+        <item name="android:contentDescription">@string/exo_controls_pause_description</item>
+    </style>
+    <style name="ExoMediaButton.Play">
+        <item name="android:src">@drawable/exo_controls_play</item>
+        <item name="android:contentDescription">@string/exo_controls_play_description</item>
+    </style>
+    <style name="ExoMediaButton.Previous">
+        <item name="android:src">@drawable/exo_controls_previous</item>
+        <item name="android:contentDescription">@string/exo_controls_previous_description</item>
+    </style>
+    <style name="ExoMediaButton.ScaleMode">
+        <item name="android:src">@drawable/ic_action_crop</item>
+    </style>
     <style name="FullscreenWhiteBase" parent="@style/Theme.MaterialComponents.DayNight">
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:textColorLink">@color/light_active_color</item>
@@ -164,7 +85,6 @@
         <item name="colorPrimaryDark">@android:color/black</item>
         <item name="windowNoTitle">true</item>
     </style>
-
     <style name="ListItemContainer">
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
@@ -173,7 +93,6 @@
         <item name="android:layout_marginLeft">@dimen/list_item_default_margin</item>
         <item name="android:minHeight">@dimen/list_item_min_height</item>
     </style>
-
     <style name="ListItemStartIcon">
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:layout_width">@dimen/list_item_start_icon_width</item>
@@ -182,48 +101,57 @@
         <item name="android:scaleType">center</item>
         <item name="android:contentDescription">@null</item>
     </style>
-
+    <style name="ListMenuItemStyle">
+        <item name="android:paddingLeft">?android:listPreferredItemPaddingLeft</item>
+        <item name="android:paddingRight">?android:listPreferredItemPaddingRight</item>
+    </style>
+    <style name="LoadingProgressBar" parent="AppTheme">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:background">@drawable/loading_rectangle</item>
+    </style>
     <style name="ModernToolbar" parent="@style/Widget.AppCompat.Toolbar">
         <item name="android:background">@color/modern_primary_color</item>
         <item name="titleTextAppearance">@style/BlackHeadline</item>
         <item name="windowActionBarOverlay">true</item>
     </style>
-
+    <style name="NotificationAction">
+        <item name="android:layout_width">@dimen/notification_action_width</item>
+        <item name="android:layout_height">@dimen/notification_action_height</item>
+        <item name="android:gravity">center|right</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">@dimen/notification_action_padding</item>
+        <item name="android:background">?android:selectableItemBackground</item>
+    </style>
+    <style name="NotificationAction.Next" parent="@style/NotificationAction">
+        <item name="android:src">@drawable/btn_playback_next</item>
+    </style>
+    <style name="NotificationAction.Play" parent="@style/NotificationAction">
+        <item name="android:src">@drawable/btn_playback_play</item>
+    </style>
+    <style name="NotificationAction.Previous" parent="@style/NotificationAction">
+        <item name="android:src">@drawable/btn_playback_previous</item>
+        <item name="android:visibility">gone</item>
+    </style>
+    <style name="NotificationText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:fadingEdge">horizontal</item>
+        <item name="android:singleLine">true</item>
+    </style>
     <style name="OverflowMenuAnim">
         <item name="android:windowEnterAnimation">@anim/menu_enter</item>
         <item name="android:windowExitAnimation">@anim/menu_exit</item>
     </style>
-
-    <declare-styleable name="DefaultTimeBar">
-        <attr name="bar_height" />
-        <attr name="touch_target_height" />
-        <attr name="ad_marker_width" />
-        <attr name="scrubber_enabled_size" />
-        <attr name="scrubber_disabled_size" />
-        <attr name="scrubber_dragged_size" />
-        <attr name="scrubber_drawable" />
-        <attr name="played_color" />
-        <attr name="scrubber_color" />
-        <attr name="buffered_color" />
-        <attr name="unplayed_color" />
-        <attr name="ad_marker_color" />
-        <attr name="played_ad_marker_color" />
-    </declare-styleable>
-
     <style name="OverflowMenuAnimBottom">
         <item name="android:windowEnterAnimation">@anim/menu_enter_from_bottom</item>
         <item name="android:windowExitAnimation">@anim/menu_exit_from_bottom</item>
     </style>
-
+    <style name="VideoPlayerIndicator" parent="LoadingProgressBar" />
     <style name="WhiteHeadline">
         <item name="android:textSize">@dimen/headline_size</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
-
-    <dimen name="exo_media_button_width">71dp</dimen>
-    <dimen name="exo_media_button_height">52dp</dimen>
-
-    <color name="exo_error_message_background_color">#AA000000</color>
-    <color name="exo_edit_mode_background_color">#FFF4F3F0</color>
-
 </resources>

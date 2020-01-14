@@ -13,7 +13,8 @@
     <dimen name="notification_big_icon_width">64.0dip</dimen>
     <dimen name="notification_info_container_padding_bottom">4.0dip</dimen>
     <dimen name="notification_info_container_padding_left">8.0dip</dimen>
-
+    <dimen name="exo_media_button_height">52dp</dimen>
+    <dimen name="exo_media_button_width">71dp</dimen>
     <dimen name="list_item_start_icon_corner_radius">18.0dip</dimen>
     <dimen name="list_item_start_icon_right_margin">20.0dip</dimen>
     <dimen name="list_item_start_icon_width">36.0dip</dimen>

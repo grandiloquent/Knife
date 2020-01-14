@@ -39,6 +39,9 @@
             android:title="@string/bookmark_menu_id"
             app:iconTint="@color/dark_mode_tint"
             app:showAsAction="ifRoom" />
+
+        <!--        Refactor Remove Unused Resources 时-->
+        <!-- 不要移除此项的 id 否则映射的图标会出现错误-->
         <item
             android:id="@+id/sort_menu_id"
             android:icon="@drawable/ic_menu_sortby"

@@ -1,0 +1,6 @@
+<resources>
+  <drawable name="exo_controls_next">@drawable/exo_icon_next</drawable>
+  <drawable name="exo_controls_pause">@drawable/exo_icon_pause</drawable>
+  <drawable name="exo_controls_play">@drawable/exo_icon_play</drawable>
+  <drawable name="exo_controls_previous">@drawable/exo_icon_previous</drawable>
+</resources>
