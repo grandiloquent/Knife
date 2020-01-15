@@ -19,6 +19,10 @@ public:
 private:
     void HandleError(const Request &request, Response &response);
 
+    void HandleUpload(const Request &request, Response &response);
+
+    void HandleDownload(const std::string &path, const Request &request, Response &response);
+
     std::string GetFileContents(const char *path);
 
     Server _server;

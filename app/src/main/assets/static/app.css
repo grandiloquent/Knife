@@ -49,21 +49,30 @@ svg {
     color: #24292e;
 }
 
-.link_directory:before, .link_file:before {
-    content: "";
-
+.link_cover {
     height: 36px;
     min-width: 36px;
     margin-right: 10px;
     box-sizing: border-box;
 }
 
-.link_directory:before {
-    background: url("ic_action_folder.png");
+.link_directory .link_cover {
+    background: url("/static/ic_action_folder.png");
 }
 
-.link_file:before {
-    background: url("ic_action_insert_drive_file.png");
+.link_file .link_cover {
+    background: url("/static/ic_action_insert_drive_file.png");
+}
+
+.link_name {
+    word-break: break-all;
+}
+
+.link_size{
+    font-size: .75rem;
+       min-width: 60px;
+       text-align: center;
+       color: #c7c7c7;
 }
 
 .toolbar {
@@ -129,5 +138,7 @@ svg {
     line-height: 56px;
     overflow: hidden;
     white-space: nowrap;
+    min-width: 150px;
+
 }
 

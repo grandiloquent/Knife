@@ -55,33 +55,7 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
                     std::string cdv = "attachment; filename=" + SubstringAfterLast(path, '/');
                     response.set_header("Content-disposition", cdv.c_str());
                 }
-                std::shared_ptr<std::ifstream> fs = std::make_shared<std::ifstream>();
-                fs->open(path, std::ios_base::binary);
-                fs->seekg(0, std::ios_base::end);
-                auto end = fs->tellg();
-                fs->seekg(0);
-
-                LOGE("fileSize(end) = %d\n", static_cast<size_t>(end));
-
-                response.set_content_provider(static_cast<size_t>(end),
-                                              [fs](uint64_t offset,
-                                                          uint64_t length,
-                                                          DataSink &sink) {
-                                                  if (fs->fail()) {
-                                                    //  this->HandleError(request, response);
-                                                      return;
-                                                  }
-
-                                                  fs->seekg(offset, std::ios_base::beg);
-
-                                                  size_t bufSize = 81920;
-                                                  char buffer[bufSize];
-
-                                                  fs->read(buffer, bufSize);
-
-                                                  sink.write(buffer,
-                                                             static_cast<size_t>(fs->gcount()));
-                                              });
+                HandleDownload(path, request, response);
                 return true;
 
             }
@@ -90,6 +64,10 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
         this->HandleError(request, response);
         return true;
     });
+    std::function<void(const Request &, Response &)> uploadHandler = std::bind(
+            &HttpServer::HandleUpload, this, std::placeholders::_1,
+            std::placeholders::_2);
+    _server.Post("/upload", uploadHandler);
 
     _server.set_error_handler(std::bind(&HttpServer::HandleError, this, std::placeholders::_1,
                                         std::placeholders::_2));
@@ -99,6 +77,32 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
         return result;
     }
     return result;
+}
+
+void HttpServer::HandleUpload(const Request &request, Response &response) {
+    if (request.files.empty()) {
+        HandleError(request, response);
+        return;
+    }
+    for (auto itr = request.files.begin(); itr != request.files.end(); ++itr) {
+        LOGE("key = %s file.name = %s file.filename = %s\n", itr->first.c_str(),
+             itr->second.name.c_str(),
+             itr->second.filename.c_str());
+        {
+            std::string target = this->_directory;
+            target.append("/FileServer/").append(itr->second.filename);
+            if (IsFile(target.c_str())) {
+                continue;
+            }
+            LOGE("%s\n", target.c_str());
+            std::ofstream o(target);
+            o << itr->second.content;
+        }
+
+    }
+
+
+    response.set_content("Ok", MimeTypeHTML);
 }
 
 void HttpServer::HandleError(const Request &request, Response &response) {
@@ -125,7 +129,7 @@ std::string HttpServer::GetFileContents(const char *path) {
     });
     std::stringstream ss;
     ss
-            << "<html lang=\"zh\" dir=\"ltr\"><head><meta name=\"format-detection\" content=\"telephone=no\"><meta name=\"google\" value=\"notranslate\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, minimal-ui\"><meta name=\"mobile-web-app-capable\" content=\"yes\"><meta name=\"apple-mobile-web-app-capable\" content=\"yes\"><link rel=\"stylesheet\" href=\"/static/app.css\"></head><body>";
+            << "<html lang=\"zh\" dir=\"ltr\"><head><meta name=\"format-detection\" content=\"telephone=no\"/><meta name=\"google\" value=\"notranslate\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, minimal-ui\"/><meta name=\"mobile-web-app-capable\" content=\"yes\"/><meta name=\"apple-mobile-web-app-capable\" content=\"yes\"/><link rel=\"stylesheet\" href=\"static/app.css\"/><body><header><div class=\"toolbar\"><div class=\"toolbar-button\"><div class=\"toolbar-ico\"><svg width=\"24px\" height=\"24px\" viewBox=\"0 0 24 24\" fill=\"#000000\"><g><rect fill=\"none\" width=\"24\" height=\"24\"></rect><path d=\"M3,18h18v-2H3V18z M3,13h18v-2H3V13z M3,6v2h18V6H3z\"></path></g></svg></div></div><div class=\"toolbar-title\">我的网络硬盘</div><div class=\"toolbar-end\"><div class=\"toolbar-button\" id=\"uploadButton\"><div class=\"toolbar-ico\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z\"/></svg></div></div><div class=\"toolbar-button\"><div class=\"toolbar-ico\"><svg x=\"0px\" y=\"0px\" width=\"24px\" height=\"24px\" viewBox=\"0 0 24 24\" fill=\"#000000\"><path d=\"M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z\"></path><path d=\"M0 0h24v24H0z\" fill=\"none\"></path></svg></div></div><div class=\"toolbar-button\"><div class=\"toolbar-ico\"><svg x=\"0px\" y=\"0px\" width=\"24px\" height=\"24px\" viewBox=\"0 0 24 24\" focusable=\"false\" fill=\"#000000\"><path d=\"M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z\"></path></svg></div></div></div></div></header>";
 
     std::for_each(std::begin(files), std::end(files), [&](auto &value) {
         ss << "<a class=\"";
@@ -136,11 +140,14 @@ std::string HttpServer::GetFileContents(const char *path) {
         }
         ss << "\" href=\"/browser?path="
            << EncodeUrl(value.second)
-           << "\">"
+           << "\"><div class=\"link_cover\"></div>"
+           << "<div class=\"link_name\">"
            << SubstringAfterLast(value.second, '/')
+           << "</div>"
+           << "<div class=\"link_size\"></div>"
            << "</a>";
     });
-    ss << "</body></html>";
+    ss << "<script src=\"static/app.js\"></script></body></html>";
 
     return ss.str();
 }
@@ -148,6 +155,41 @@ std::string HttpServer::GetFileContents(const char *path) {
 bool HttpServer::StopServer() {
     _server.stop();
     return true;
+}
+
+void HttpServer::HandleDownload(const std::string &path,
+                                const Request &request, Response
+                                &response) {
+    std::shared_ptr<std::ifstream> fs = std::make_shared<std::ifstream>();
+    fs->open(path, std::ios_base::binary);
+    fs->seekg(0, std::ios_base::end);
+    auto end = fs->tellg();
+    fs->seekg(0);
+
+    LOGE("fileSize(end) = %d\n", static_cast<size_t>(end));
+
+    response.set_content_provider(static_cast<size_t>(end),
+                                  [fs, this, &request, &response](
+                                          uint64_t offset,
+                                          uint64_t
+                                          length,
+                                          DataSink &sink
+                                  ) {
+                                      if (fs->fail()) {
+                                          this->HandleError(request, response);
+                                          return;
+                                      }
+
+                                      fs->seekg(offset, std::ios_base::beg
+                                      );
+
+                                      size_t bufSize = 81920;
+                                      char buffer[bufSize];
+
+                                      fs->read(buffer, bufSize);
+
+                                      sink.write(buffer, static_cast<size_t>(fs->gcount()));
+                                  });
 }
 
 HttpServer &GetEmbedServer() {
