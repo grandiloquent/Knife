@@ -2,6 +2,7 @@
 #include "Bridge.h"
 #include "Files.h"
 #include "HttpServer.h"
+#include <thread>
 
 template<typename Cont, typename Pred>
 Cont filter(const Cont &container, Pred predicate) {
@@ -36,6 +37,14 @@ int CombineFiles(const char *path) {
 }
 
 int StartServer(const char *host, int port, const char *directory) {
+//    std::thread th{[=]() {
+//        HttpServer server;
+//        server.StartServer(host, port, directory);
+//    }};
+//
+//    th.join();
+
     HttpServer server;
     server.StartServer(host, port, directory);
+
 }

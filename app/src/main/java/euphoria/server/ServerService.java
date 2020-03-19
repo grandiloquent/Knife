@@ -1,24 +1,20 @@
 package euphoria.server;
 
-import android.app.Activity;
-import android.os.Bundle;
+import android.app.Service;
+import android.content.Intent;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Process;
+import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
 import androidx.annotation.Nullable;
 import euphoria.common.Files;
 import euphoria.common.Https;
-import euphoria.common.Threads;
 import euphoria.psycho.knife.DocumentUtils;
 
-public class ServerActivity extends Activity {
+public class ServerService extends Service {
     private void checkStaticFiles() {
 
 
@@ -49,39 +45,25 @@ public class ServerActivity extends Activity {
                 Files.createDirectoryIfNotExists(Files.getExternalStoragePath("FileServer"));
                 Files.copyAssetFile(this, "static/" + f, fileName);
             } catch (IOException e) {
-                Log.e("TAG/" + ServerActivity.this.getClass().getSimpleName(), "Error: checkStaticFiles, " + e.getMessage() + " " + e.getCause());
-            }
+              }
         });
 
 
     }
 
-    Handler mHandler = new Handler();
-
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate() {
+        super.onCreate();
         checkStaticFiles();
         String host = Https.getDeviceIP(this);
 
+        DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath());
 
-        Log.e("TAG/", "Debug: onCreate, \n" + host);
-
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath());
-
-            }
-        });
     }
 
+    @Nullable
     @Override
-    protected void onResume() {
-        super.onResume();
-
-
+    public IBinder onBind(Intent intent) {
+        return null;
     }
-
-
 }

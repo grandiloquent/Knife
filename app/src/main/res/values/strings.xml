@@ -35,6 +35,7 @@
     <string name="channel_name_directory">Files</string>
     <string name="close_menu_id">Show Bottom Menu</string>
     <string name="copy_content">复制内容</string>
+    <string name="copy_comments">Copy Pdf Comments</string>
     <string name="copy_file_name">Copy FileName</string>
     <string name="delete">Delete</string>
     <string name="dialog_delete_message">Are you sure delete %1$s ?</string>

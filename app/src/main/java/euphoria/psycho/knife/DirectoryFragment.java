@@ -5,6 +5,8 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.RectF;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -15,10 +17,24 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfArray;
+import com.itextpdf.text.pdf.PdfDictionary;
+import com.itextpdf.text.pdf.PdfName;
+import com.itextpdf.text.pdf.PdfObject;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.parser.FilteredTextRenderListener;
+import com.itextpdf.text.pdf.parser.LocationTextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.PdfTextExtractor;
+import com.itextpdf.text.pdf.parser.RegionTextRenderFilter;
+import com.itextpdf.text.pdf.parser.RenderFilter;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +81,8 @@ import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProvider;
 import euphoria.psycho.knife.util.ThumbnailUtils.ThumbnailProviderImpl;
 import euphoria.psycho.knife.util.VideoUtils;
 import euphoria.psycho.knife.util.VideoUtils.OnTrimVideoListener;
+
+import static euphoria.psycho.knife.util.ContextUtils.getApplicationContext;
 
 public class DirectoryFragment extends Fragment implements SelectionDelegate.SelectionObserver<DocumentInfo>,
         DocumentActionDelegate,
@@ -135,6 +153,110 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         return mToolbar;
     }
 
+    public static void show(FragmentManager manager) {
+        show(manager, null);
+    }
+
+    public static void show(FragmentManager manager, String startDirectory) {
+        FragmentTransaction transaction = manager.beginTransaction();
+        DirectoryFragment fragment = new DirectoryFragment();
+        if (startDirectory != null) {
+            Bundle bundle = new Bundle();
+            bundle.putString(C.EXTRA_DIRECTORY, startDirectory);
+            fragment.setArguments(bundle);
+        }
+        //transaction.setCustomAnimations(R.animator.dir_frozen, R.animator.dir_up);
+        transaction.replace(R.id.container, fragment);
+        transaction.commitNowAllowingStateLoss();
+    }
+
+    public void sortBy(FileSort fileSort) {
+        mToolbar.hideOverflowMenu();
+        mSortBy = fileSort;
+        updateRecyclerView(false);
+    }
+
+    public void sortByAscending(boolean isAscending) {
+        mToolbar.hideOverflowMenu();
+        mSortAscending = isAscending;
+        updateRecyclerView(false);
+    }
+
+    public void updateRecyclerView(boolean isScrollTo) {
+        try {
+            List<DocumentInfo> documentInfos = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
+                            mSortAscending,
+                            null);
+                } catch (IOException e) {
+                    return null;
+                }
+            }).get();
+            mAdapter.switchDataSet(documentInfos);
+            mToolbar.setTitle(mDirectory.getName());
+            if (isScrollTo)
+                mLayoutManager.scrollToPosition(mLastVisiblePosition);
+        } catch (ExecutionException | InterruptedException e) {
+        }
+    }
+
+    public void updateRecyclerView(File dir) {
+        ThreadUtils.postOnBackgroundThread(() -> {
+            mDirectory = dir;
+            List<DocumentInfo> infos = null;
+            try {
+                infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
+                        mSortAscending,
+                        null);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            List<DocumentInfo> finalInfos = infos;
+            ThreadUtils.postOnUiThread(() -> {
+                mAdapter.switchDataSet(finalInfos);
+                mToolbar.setTitle(mDirectory.getName());
+            });
+        });
+    }
+
+    private static long[] parseTimespan(CharSequence text) {
+        Pattern pattern = Pattern.compile("(\\d+:){1,}\\d+");
+        Matcher matcher = pattern.matcher(text);
+        String[] numbers = new String[2];
+        long[] results = new long[2];
+        int count = 0;
+        while (matcher.find()) {
+            numbers[count] = matcher.group();
+            count++;
+            if (count > 1) {
+                break;
+            }
+        }
+        if (count == 1) {
+            results[1] = Strings.parseDuration(numbers[0]);
+        } else if (count == 2) {
+            results[0] = Strings.parseDuration(numbers[0]);
+            results[1] = Strings.parseDuration(numbers[1]);
+        } else {
+            return null;
+        }
+        return results;
+    }
+
+    private void checkOptionMenuItems() {
+        Settings settings = Settings.instance();
+
+        Menu menu = mToolbar.getMenu();
+        menu.findItem(R.id.action_remove_empty_folders).setVisible(settings.isActionRemoveEmptyFolders());
+        menu.findItem(R.id.action_calculate_directory).setVisible(settings.isActionCalculateDirectory());
+        menu.findItem(R.id.action_move_files).setVisible(settings.isActionMoveFiles());
+        menu.findItem(R.id.action_rename_by_regex).setVisible(settings.isActionRenameByRegex());
+        menu.findItem(R.id.action_copy_directory_structure).setVisible(settings.isActionCopyDirectoryStructure());
+        menu.findItem(R.id.action_combine_files).setVisible(settings.isActionCombineFiles());
+
+    }
+
     private void initializeBottomSheet() {
         if (mBottomSheet == null) {
             mBottomSheet = new BottomSheet(getActivity());
@@ -156,19 +278,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         mToolbar.getSearchEditText().setOnKeyListener(this::onSearch);
 
         checkOptionMenuItems();
-
-    }
-
-    private void checkOptionMenuItems() {
-        Settings settings = Settings.instance();
-
-        Menu menu = mToolbar.getMenu();
-        menu.findItem(R.id.action_remove_empty_folders).setVisible(settings.isActionRemoveEmptyFolders());
-        menu.findItem(R.id.action_calculate_directory).setVisible(settings.isActionCalculateDirectory());
-        menu.findItem(R.id.action_move_files).setVisible(settings.isActionMoveFiles());
-        menu.findItem(R.id.action_rename_by_regex).setVisible(settings.isActionRenameByRegex());
-        menu.findItem(R.id.action_copy_directory_structure).setVisible(settings.isActionCopyDirectoryStructure());
-        menu.findItem(R.id.action_combine_files).setVisible(settings.isActionCombineFiles());
 
     }
 
@@ -243,99 +352,8 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
         Settings.instance().setScrollY(mLastVisiblePosition);
     }
 
-    public void sortBy(FileSort fileSort) {
-        mToolbar.hideOverflowMenu();
-        mSortBy = fileSort;
-        updateRecyclerView(false);
-    }
-
-    public void sortByAscending(boolean isAscending) {
-        mToolbar.hideOverflowMenu();
-        mSortAscending = isAscending;
-        updateRecyclerView(false);
-    }
-
     private void updateLastVisiblePosition() {
         mLastVisiblePosition = mLayoutManager.findLastVisibleItemPosition();
-    }
-
-    public void updateRecyclerView(boolean isScrollTo) {
-        try {
-            List<DocumentInfo> documentInfos = CompletableFuture.supplyAsync(() -> {
-                try {
-                    return FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
-                            mSortAscending,
-                            null);
-                } catch (IOException e) {
-                    return null;
-                }
-            }).get();
-            mAdapter.switchDataSet(documentInfos);
-            mToolbar.setTitle(mDirectory.getName());
-            if (isScrollTo)
-                mLayoutManager.scrollToPosition(mLastVisiblePosition);
-        } catch (ExecutionException | InterruptedException e) {
-        }
-    }
-
-    public void updateRecyclerView(File dir) {
-        ThreadUtils.postOnBackgroundThread(() -> {
-            mDirectory = dir;
-            List<DocumentInfo> infos = null;
-            try {
-                infos = FileHelper.listDocuments(mDirectory.getAbsolutePath(), mSortBy,
-                        mSortAscending,
-                        null);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            List<DocumentInfo> finalInfos = infos;
-            ThreadUtils.postOnUiThread(() -> {
-                mAdapter.switchDataSet(finalInfos);
-                mToolbar.setTitle(mDirectory.getName());
-            });
-        });
-    }
-
-    private static long[] parseTimespan(CharSequence text) {
-        Pattern pattern = Pattern.compile("(\\d+:){1,}\\d+");
-        Matcher matcher = pattern.matcher(text);
-        String[] numbers = new String[2];
-        long[] results = new long[2];
-        int count = 0;
-        while (matcher.find()) {
-            numbers[count] = matcher.group();
-            count++;
-            if (count > 1) {
-                break;
-            }
-        }
-        if (count == 1) {
-            results[1] = Strings.parseDuration(numbers[0]);
-        } else if (count == 2) {
-            results[0] = Strings.parseDuration(numbers[0]);
-            results[1] = Strings.parseDuration(numbers[1]);
-        } else {
-            return null;
-        }
-        return results;
-    }
-
-    public static void show(FragmentManager manager) {
-        show(manager, null);
-    }
-
-    public static void show(FragmentManager manager, String startDirectory) {
-        FragmentTransaction transaction = manager.beginTransaction();
-        DirectoryFragment fragment = new DirectoryFragment();
-        if (startDirectory != null) {
-            Bundle bundle = new Bundle();
-            bundle.putString(C.EXTRA_DIRECTORY, startDirectory);
-            fragment.setArguments(bundle);
-        }
-        //transaction.setCustomAnimations(R.animator.dir_frozen, R.animator.dir_up);
-        transaction.replace(R.id.container, fragment);
-        transaction.commitNowAllowingStateLoss();
     }
 
     /*添加压缩文件*/
@@ -353,6 +371,52 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 });
             }
         });
+    }
+
+
+    @Override
+    public void copyComments(DocumentInfo item) {
+
+
+        try {
+
+            List buffer = new ArrayList();
+            PdfReader reader = new PdfReader(item.getPath());
+
+
+            for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+                PdfDictionary page = reader.getPageN(i);
+                PdfArray annots = page.getAsArray(PdfName.ANNOTS);
+
+                if (annots != null)
+                    for (PdfObject annot : annots) {
+                        PdfDictionary annotationDic = (PdfDictionary) PdfReader.getPdfObject(annot);
+                        PdfName subType = (PdfName) annotationDic.get(PdfName.SUBTYPE);
+                        if (subType.equals(PdfName.HIGHLIGHT)) {
+                            PdfArray coordinates = annotationDic.getAsArray(PdfName.RECT);
+
+                            Rectangle rect = new Rectangle(coordinates.getAsNumber(0).floatValue(),
+                                    coordinates.getAsNumber(1).floatValue(),
+                                    coordinates.getAsNumber(2).floatValue(),
+                                    coordinates.getAsNumber(3).floatValue());
+
+
+                            RenderFilter[] filter = {new RegionTextRenderFilter(rect)};
+
+                            FilteredTextRenderListener strategy = new FilteredTextRenderListener(new LocationTextExtractionStrategy(), filter);
+                            String s = PdfTextExtractor.getTextFromPage(reader, i, strategy);
+                            buffer.add(s);
+
+                        }
+                    }
+            }
+
+
+            Contexts.setText(Strings.join("\n\n", buffer));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /*
@@ -603,17 +667,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     public void rename(DocumentInfo documentInfo) {
         Dialogs.showEditDialog(getContext(), new Listener() {
             @Override
-            public void setupEditText(EditText editText) {
-                editText.setText(documentInfo.getFileName());
-                int dotIndex = documentInfo.getFileName().lastIndexOf('.');
-                if (dotIndex != -1) {
-                    editText.setSelection(0, dotIndex);
-                } else {
-                    editText.setSelection(0, editText.getText().length());
-                }
-            }
-
-            @Override
             public void onPositive(DialogInterface dialog, CharSequence text) {
                 if (Strings.isNullOrWhiteSpace(text)) return;
                 String fileName = Files.getValidFileName(text.toString().trim(), ' ');
@@ -625,6 +678,17 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                 new File(documentInfo.getPath()).renameTo(targetFile);
                 updateRecyclerView(false);
             }
+
+            @Override
+            public void setupEditText(EditText editText) {
+                editText.setText(documentInfo.getFileName());
+                int dotIndex = documentInfo.getFileName().lastIndexOf('.');
+                if (dotIndex != -1) {
+                    editText.setSelection(0, dotIndex);
+                } else {
+                    editText.setSelection(0, editText.getText().length());
+                }
+            }
         });
     }
 
@@ -635,11 +699,6 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
     @Override
     public void trimVideo(DocumentInfo documentInfo) {
         Dialogs.showEditDialog(getContext(), new Listener() {
-            @Override
-            public void setupEditText(EditText editText) {
-                editText.setText("0:00 ");
-            }
-
             @Override
             public void onPositive(DialogInterface dialog, CharSequence text) {
 //                        VideoClip videoClip = new VideoClip();
@@ -693,6 +752,11 @@ public class DirectoryFragment extends Fragment implements SelectionDelegate.Sel
                     Toast.makeText(getContext(), "0:0", Toast.LENGTH_LONG).show();
                 }
                 dialog.dismiss();
+            }
+
+            @Override
+            public void setupEditText(EditText editText) {
+                editText.setText("0:00 ");
             }
         });
     }

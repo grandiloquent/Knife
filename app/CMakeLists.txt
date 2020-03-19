@@ -6,6 +6,15 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 
+###############################################################################
+# INSTALL DIRECTORIES
+###############################################################################
+
+set(distribution_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../distribution)
+add_library(libjpeg STATIC IMPORTED)
+set_target_properties(libjpeg PROPERTIES IMPORTED_LOCATION
+        ${distribution_DIR}/libjpeg-turbo/lib/${ANDROID_ABI}/libjpeg.a)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Werror")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -Wall -UNDEBUG")
@@ -31,7 +40,10 @@ add_library( # Sets the name of the library.
         # Provides a relative path to your source file(s).
         src/main/cpp/native-lib.c)
 
-include_directories(src/main/cpp/zip)
+add_subdirectory(src/main/cpp/images)
+
+include_directories(
+        src/main/cpp/zip)
 
 add_library(
         libminzip
@@ -64,10 +76,15 @@ find_library( # Sets the name of the path variable.
 # can link multiple libraries, such as libraries you define in this
 # build script, prebuilt third-party libraries, or system libraries.
 
+target_include_directories(libimages PRIVATE
+        ${distribution_DIR}/libjpeg-turbo/include)
+
 target_link_libraries( # Specifies the target library.
         native-lib
         libhttplib
         libminzip
+        libjpeg
+        libimages
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})

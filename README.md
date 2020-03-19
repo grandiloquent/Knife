@@ -26,3 +26,16 @@
 - https://github.com/apache/commons-fileupload
 - https://github.com/yhirose/cpp-httplib
 - https://github.com/ram-on/SkyTube
+
+## 编译 libjpeg-turbo
+
+https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
+
+1. `C:\msys64\msys2_shell.cmd -mingw64`
+2. `cd C:/Codes/Android/Knife/app/src/main/cpp/libjpeg-turbo`
+3. `NDK_PATH=C:/Users/psycho/AppData/Local/Android/Sdk/ndk-bundle`
+4. `TOOLCHAIN=clang`
+5. `ANDROID_VERSION=16`
+6. `C:/Users/psycho/AppData/Local/Android/Sdk/cmake/3.6.4111459/bin/cmake.exe -G"Unix Makefiles" -DANDROID_ABI=armeabi-v7a -DANDROID_ARM_MODE=arm -DANDROID_PLATFORM=android-${ANDROID_VERSION} -DANDROID_TOOLCHAIN=${TOOLCHAIN} -DCMAKE_ASM_FLAGS="--target=arm-linux-androideabi${ANDROID_VERSION}" -DCMAKE_TOOLCHAIN_FILE=${NDK_PATH}/build/cmake/android.toolchain.cmake`
+7. `make`
+
