@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Process;
 import android.util.Log;
 import android.widget.Toast;
@@ -55,8 +56,9 @@ public class ServerActivity extends Activity {
 
 
     }
+    private Handler mHandler;
+    private HandlerThread mHandlerThread;
 
-    Handler mHandler = new Handler();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,16 +66,13 @@ public class ServerActivity extends Activity {
         checkStaticFiles();
         String host = Https.getDeviceIP(this);
 
+        mHandlerThread = new HandlerThread("HandlerThread");
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
 
         Log.e("TAG/", "Debug: onCreate, \n" + host);
 
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath());
-
-            }
-        });
+        mHandler.post(() -> DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath()));
     }
 
     @Override

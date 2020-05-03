@@ -52,9 +52,10 @@ bool HttpServer::StartServer(const char *host, int port, const char *directory) 
                 if (EndsWith(path, ".mp4")) {
                     response.set_header("Content-Type", "video/mp4");
                 } else {
-                    std::string cdv = "attachment; filename=" + SubstringAfterLast(path, '/');
+                    std::string cdv = "attachment; filename=\"" + SubstringAfterLast(path, '/')+"\"";
                     response.set_header("Content-disposition", cdv.c_str());
                 }
+                 LOGE("%s\n", path.c_str());
                 HandleDownload(path, request, response);
                 return true;
 
