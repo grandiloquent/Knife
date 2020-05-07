@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.Process;
 import android.util.Log;
 
 import java.io.IOException;
@@ -55,10 +56,12 @@ public class ServerService extends Service {
     public void onCreate() {
         super.onCreate();
         checkStaticFiles();
-        String host = Https.getDeviceIP(this);
-
-        DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath());
-
+        String host = Https.getDeviceIP(getApplicationContext());
+        Thread thread=new Thread(() -> {
+            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath());
+        });
+        thread.start();
     }
 
     @Nullable

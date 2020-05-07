@@ -7,6 +7,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Toast;
 
 import java.io.File;
@@ -18,6 +20,7 @@ import euphoria.common.Files;
 import euphoria.common.Https;
 import euphoria.common.Threads;
 import euphoria.psycho.knife.DocumentUtils;
+import euphoria.psycho.knife.R;
 
 public class ServerActivity extends Activity {
     private void checkStaticFiles() {
@@ -56,23 +59,28 @@ public class ServerActivity extends Activity {
 
 
     }
-    private Handler mHandler;
-    private HandlerThread mHandlerThread;
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkStaticFiles();
-        String host = Https.getDeviceIP(this);
+        setContentView(R.layout.activity_file_server);
+        findViewById(R.id.start_button).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkStaticFiles();
+                String host = Https.getDeviceIP(v.getContext());
 
-        mHandlerThread = new HandlerThread("HandlerThread");
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
 
-        Log.e("TAG/", "Debug: onCreate, \n" + host);
 
-        mHandler.post(() -> DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath()));
+
+                Thread thread=new Thread(() -> {
+                    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                    DocumentUtils.startServer(host, 1235, Environment.getExternalStorageDirectory().getAbsolutePath());
+                });
+                thread.start();
+            }
+        });
+
     }
 
     @Override
