@@ -1,7 +1,7 @@
 //
 //  httplib.h
 //
-//  Copyright (c) 2019 Yuji Hirose. All rights reserved.
+//  Copyright (c) 2020 Yuji Hirose. All rights reserved.
 //  MIT License
 //
 
@@ -41,7 +41,7 @@
 #endif
 
 #ifndef CPPHTTPLIB_PAYLOAD_MAX_LENGTH
-#define CPPHTTPLIB_PAYLOAD_MAX_LENGTH (std::numeric_limits<size_t>::max)()
+#define CPPHTTPLIB_PAYLOAD_MAX_LENGTH ((std::numeric_limits<size_t>::max)())
 #endif
 
 #ifndef CPPHTTPLIB_RECV_BUFSIZ
@@ -49,12 +49,10 @@
 #endif
 
 #ifndef CPPHTTPLIB_THREAD_POOL_COUNT
-// if hardware_concurrency() outputs 0 we still wants to use threads for this.
-// -1 because we have one thread already in the main function.
 #define CPPHTTPLIB_THREAD_POOL_COUNT                                           \
-  (std::thread::hardware_concurrency()                                         \
-       ? std::thread::hardware_concurrency() - 1                               \
-       : 2)
+  ((std::max)(8u, std::thread::hardware_concurrency() > 0                      \
+                      ? std::thread::hardware_concurrency() - 1                \
+                      : 0))
 #endif
 
 /*
@@ -138,6 +136,7 @@ using socket_t = int;
 #include <array>
 #include <atomic>
 #include <cassert>
+#include <climits>
 #include <condition_variable>
 #include <errno.h>
 #include <fcntl.h>
@@ -160,6 +159,7 @@ using socket_t = int;
 #include <openssl/x509v3.h>
 
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 // #if OPENSSL_VERSION_NUMBER < 0x1010100fL
@@ -177,7 +177,6 @@ inline const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *asn1) {
 #ifdef CPPHTTPLIB_ZLIB_SUPPORT
 #include <zlib.h>
 #endif
-
 /*
  * Declaration
  */
@@ -224,7 +223,7 @@ public:
 
   std::function<void(const char *data, size_t data_len)> write;
   std::function<void()> done;
-  // TODO: std::function<bool()> is_alive;
+  std::function<bool()> is_writable;
 };
 
 using ContentProvider =
@@ -242,18 +241,18 @@ public:
   using MultipartReader = std::function<bool(MultipartContentHeader header,
                                              ContentReceiver receiver)>;
 
-  ContentReader(Reader reader, MultipartReader muitlpart_reader)
-      : reader_(reader), muitlpart_reader_(muitlpart_reader) {}
+  ContentReader(Reader reader, MultipartReader multipart_reader)
+      : reader_(reader), multipart_reader_(multipart_reader) {}
 
   bool operator()(MultipartContentHeader header,
                   ContentReceiver receiver) const {
-    return muitlpart_reader_(header, receiver);
+    return multipart_reader_(header, receiver);
   }
 
   bool operator()(ContentReceiver receiver) const { return reader_(receiver); }
 
   Reader reader_;
-  MultipartReader muitlpart_reader_;
+  MultipartReader multipart_reader_;
 };
 
 using Range = std::pair<ssize_t, ssize_t>;
@@ -265,6 +264,9 @@ struct Request {
   Headers headers;
   std::string body;
 
+  std::string remote_addr;
+  int remote_port = -1;
+
   // for server
   std::string version;
   std::string target;
@@ -275,6 +277,7 @@ struct Request {
 
   // for client
   size_t redirect_count = CPPHTTPLIB_REDIRECT_MAX_COUNT;
+  size_t authorization_count = 1;
   ResponseHandler response_handler;
   ContentReceiver content_receiver;
   Progress progress;
@@ -315,9 +318,9 @@ struct Response {
   void set_header(const char *key, const char *val);
   void set_header(const char *key, const std::string &val);
 
-  void set_redirect(const char *url);
+  void set_redirect(const char *url, int status = 302);
   void set_content(const char *s, size_t n, const char *content_type);
-  void set_content(const std::string &s, const char *content_type);
+  void set_content(std::string s, const char *content_type);
 
   void set_content_provider(
       size_t length,
@@ -349,22 +352,29 @@ struct Response {
 class Stream {
 public:
   virtual ~Stream() = default;
-  virtual int read(char *ptr, size_t size) = 0;
-  virtual int write(const char *ptr, size_t size1) = 0;
-  virtual int write(const char *ptr) = 0;
-  virtual int write(const std::string &s) = 0;
-  virtual std::string get_remote_addr() const = 0;
+
+  virtual bool is_readable() const = 0;
+  virtual bool is_writable() const = 0;
+
+  virtual ssize_t read(char *ptr, size_t size) = 0;
+  virtual ssize_t write(const char *ptr, size_t size) = 0;
+  virtual void get_remote_ip_and_port(std::string &ip, int &port) const = 0;
 
   template <typename... Args>
-  int write_format(const char *fmt, const Args &... args);
+  ssize_t write_format(const char *fmt, const Args &... args);
+  ssize_t write(const char *ptr);
+  ssize_t write(const std::string &s);
 };
 
 class TaskQueue {
 public:
   TaskQueue() = default;
   virtual ~TaskQueue() = default;
+
   virtual void enqueue(std::function<void()> fn) = 0;
   virtual void shutdown() = 0;
+
+  virtual void on_idle(){};
 };
 
 class ThreadPool : public TaskQueue {
@@ -444,6 +454,8 @@ public:
   using Handler = std::function<void(const Request &, Response &)>;
   using HandlerWithContentReader = std::function<void(
       const Request &, Response &, const ContentReader &content_reader)>;
+  using Expect100ContinueHandler =
+      std::function<int(const Request &, Response &)>;
 
   Server();
 
@@ -459,15 +471,21 @@ public:
   Server &Patch(const char *pattern, Handler handler);
   Server &Patch(const char *pattern, HandlerWithContentReader handler);
   Server &Delete(const char *pattern, Handler handler);
+  Server &Delete(const char *pattern, HandlerWithContentReader handler);
   Server &Options(const char *pattern, Handler handler);
 
-  bool set_base_dir(const char *dir, const char *mount_point = nullptr);
+  [[deprecated]] bool set_base_dir(const char *dir,
+                                   const char *mount_point = nullptr);
+  bool set_mount_point(const char *mount_point, const char *dir);
+  bool remove_mount_point(const char *mount_point);
   void set_file_extension_and_mimetype_mapping(const char *ext,
                                                const char *mime);
   void set_file_request_handler(Handler handler);
 
   void set_error_handler(Handler handler);
   void set_logger(Logger logger);
+
+  void set_expect_100_continue_handler(Expect100ContinueHandler handler);
 
   void set_keep_alive_max_count(size_t count);
   void set_read_timeout(time_t sec, time_t usec);
@@ -496,7 +514,7 @@ protected:
 
 private:
   using Handlers = std::vector<std::pair<std::regex, Handler>>;
-  using HandersForContentReader =
+  using HandlersForContentReader =
       std::vector<std::pair<std::regex, HandlerWithContentReader>>;
 
   socket_t create_server_socket(const char *host, int port,
@@ -504,12 +522,12 @@ private:
   int bind_internal(const char *host, int port, int socket_flags);
   bool listen_internal();
 
-  bool routing(Request &req, Response &res, Stream &strm, bool last_connection);
-  bool handle_file_request(Request &req, Response &res);
+  bool routing(Request &req, Response &res, Stream &strm);
+  bool handle_file_request(Request &req, Response &res, bool head = false);
   bool dispatch_request(Request &req, Response &res, Handlers &handlers);
   bool dispatch_request_for_content_reader(Request &req, Response &res,
                                            ContentReader content_reader,
-                                           HandersForContentReader &handlers);
+                                           HandlersForContentReader &handlers);
 
   bool parse_request_line(const char *s, Request &req);
   bool write_response(Stream &strm, bool last_connection, const Request &req,
@@ -517,14 +535,14 @@ private:
   bool write_content_with_provider(Stream &strm, const Request &req,
                                    Response &res, const std::string &boundary,
                                    const std::string &content_type);
-  bool read_content(Stream &strm, bool last_connection, Request &req,
-                    Response &res);
-  bool read_content_with_content_receiver(
-      Stream &strm, bool last_connection, Request &req, Response &res,
-      ContentReceiver receiver, MultipartContentHeader multipart_header,
-      ContentReceiver multipart_receiver);
-  bool read_content_core(Stream &strm, bool last_connection, Request &req,
-                         Response &res, ContentReceiver receiver,
+  bool read_content(Stream &strm, Request &req, Response &res);
+  bool
+  read_content_with_content_receiver(Stream &strm, Request &req, Response &res,
+                                     ContentReceiver receiver,
+                                     MultipartContentHeader multipart_header,
+                                     ContentReceiver multipart_receiver);
+  bool read_content_core(Stream &strm, Request &req, Response &res,
+                         ContentReceiver receiver,
                          MultipartContentHeader mulitpart_header,
                          ContentReceiver multipart_receiver);
 
@@ -537,15 +555,17 @@ private:
   Handler file_request_handler_;
   Handlers get_handlers_;
   Handlers post_handlers_;
-  HandersForContentReader post_handlers_for_content_reader_;
+  HandlersForContentReader post_handlers_for_content_reader_;
   Handlers put_handlers_;
-  HandersForContentReader put_handlers_for_content_reader_;
+  HandlersForContentReader put_handlers_for_content_reader_;
   Handlers patch_handlers_;
-  HandersForContentReader patch_handlers_for_content_reader_;
+  HandlersForContentReader patch_handlers_for_content_reader_;
   Handlers delete_handlers_;
+  HandlersForContentReader delete_handlers_for_content_reader_;
   Handlers options_handlers_;
   Handler error_handler_;
   Logger logger_;
+  Expect100ContinueHandler expect_100_continue_handler_;
 };
 
 class Client {
@@ -593,6 +613,8 @@ public:
 
   std::shared_ptr<Response> Head(const char *path, const Headers &headers);
 
+  std::shared_ptr<Response> Post(const char *path);
+
   std::shared_ptr<Response> Post(const char *path, const std::string &body,
                                  const char *content_type);
 
@@ -619,6 +641,8 @@ public:
 
   std::shared_ptr<Response> Post(const char *path, const Headers &headers,
                                  const MultipartFormDataItems &items);
+
+  std::shared_ptr<Response> Put(const char *path);
 
   std::shared_ptr<Response> Put(const char *path, const std::string &body,
                                 const char *content_type);
@@ -677,6 +701,8 @@ public:
   bool send(const std::vector<Request> &requests,
             std::vector<Response> &responses);
 
+  void stop();
+
   void set_timeout_sec(time_t timeout_sec);
 
   void set_read_timeout(time_t sec, time_t usec);
@@ -708,6 +734,8 @@ public:
 protected:
   bool process_request(Stream &strm, const Request &req, Response &res,
                        bool last_connection, bool &connection_close);
+
+  std::atomic<socket_t> sock_;
 
   const std::string host_;
   const int port_;
@@ -820,7 +848,7 @@ inline void Post(std::vector<Request> &requests, const char *path,
   req.method = "POST";
   req.path = path;
   req.headers = headers;
-  req.headers.emplace("Content-Type", content_type);
+  if (content_type) { req.headers.emplace("Content-Type", content_type); }
   req.body = body;
   requests.emplace_back(std::move(req));
 }
@@ -830,6 +858,21 @@ inline void Post(std::vector<Request> &requests, const char *path,
   Post(requests, path, Headers(), body, content_type);
 }
 
+inline void Post(std::vector<Request> &requests, const char *path,
+                 size_t content_length, ContentProvider content_provider,
+                 const char *content_type) {
+  Request req;
+  req.method = "POST";
+  req.headers = Headers();
+  req.path = path;
+  req.content_length = content_length;
+  req.content_provider = content_provider;
+
+  if (content_type) { req.headers.emplace("Content-Type", content_type); }
+
+  requests.emplace_back(std::move(req));
+}
+
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
 class SSLServer : public Server {
 public:
@@ -837,12 +880,15 @@ public:
             const char *client_ca_cert_file_path = nullptr,
             const char *client_ca_cert_dir_path = nullptr);
 
-  virtual ~SSLServer();
+  SSLServer(X509 *cert, EVP_PKEY *private_key,
+            X509_STORE *client_ca_cert_store = nullptr);
 
-  virtual bool is_valid() const;
+  ~SSLServer() override;
+
+  bool is_valid() const override;
 
 private:
-  virtual bool process_and_close_socket(socket_t sock);
+  bool process_and_close_socket(socket_t sock) override;
 
   SSL_CTX *ctx_;
   std::mutex ctx_mutex_;
@@ -850,30 +896,35 @@ private:
 
 class SSLClient : public Client {
 public:
-  SSLClient(const std::string &host, int port = 443,
-            const std::string &client_cert_path = std::string(),
-            const std::string &client_key_path = std::string());
+  explicit SSLClient(const std::string &host, int port = 443,
+                     const std::string &client_cert_path = std::string(),
+                     const std::string &client_key_path = std::string());
 
-  virtual ~SSLClient();
+  SSLClient(const std::string &host, int port, X509 *client_cert,
+            EVP_PKEY *client_key);
 
-  virtual bool is_valid() const;
+  ~SSLClient() override;
+
+  bool is_valid() const override;
 
   void set_ca_cert_path(const char *ca_ceert_file_path,
                         const char *ca_cert_dir_path = nullptr);
+
+  void set_ca_cert_store(X509_STORE *ca_cert_store);
 
   void enable_server_certificate_verification(bool enabled);
 
   long get_openssl_verify_result() const;
 
-  SSL_CTX *ssl_context() const noexcept;
+  SSL_CTX *ssl_context() const;
 
 private:
-  virtual bool process_and_close_socket(
+  bool process_and_close_socket(
       socket_t sock, size_t request_count,
       std::function<bool(Stream &strm, bool last_connection,
                          bool &connection_close)>
-          callback);
-  virtual bool is_ssl() const;
+          callback) override;
+  bool is_ssl() const override;
 
   bool verify_host(X509 *server_cert) const;
   bool verify_host_with_subject_alt_name(X509 *server_cert) const;
@@ -886,6 +937,7 @@ private:
 
   std::string ca_cert_file_path_;
   std::string ca_cert_dir_path_;
+  X509_STORE *ca_cert_store_ = nullptr;
   bool server_certificate_verification_ = false;
   long verify_result_ = 0;
 };
