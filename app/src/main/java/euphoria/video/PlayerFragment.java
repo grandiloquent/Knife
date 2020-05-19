@@ -285,7 +285,9 @@ public class PlayerFragment extends ImmersiveModeFragment implements
     }
 
     private void saveBookmark() {
-        mBookmarker.setBookmark(mPlayList.currentVideoPath(), mIjkMediaPlayer.getCurrentPosition());
+        if (mIjkMediaPlayer.getDuration() - mIjkMediaPlayer.getCurrentPosition() > 5000) {
+            mBookmarker.setBookmark(mPlayList.currentVideoPath(), mIjkMediaPlayer.getCurrentPosition());
+        }
     }
 
     private long setProgress() {

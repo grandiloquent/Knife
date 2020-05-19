@@ -67,8 +67,7 @@
                 <data android:mimeType="application/x-mpegurl" />
             </intent-filter>
         </activity>
-        <activity android:name="euphoria.server.ServerActivity">
-        </activity>
+        <activity android:name="euphoria.server.ServerActivity"></activity>
         <activity
             android:name=".download.DownloadActivity"
             android:theme="@style/FullscreenWhiteBase" />
@@ -123,6 +122,20 @@
             <!--            </intent-filter>-->
         </activity>
         <activity android:name=".SettingsActivity" />
+        <activity android:name=".HtmlActivity">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.VIEW" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="text/html" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/xhtml+xml" />
+                <data android:mimeType="application/vnd.wap.xhtml+xml" />
+                <data android:mimeType="multipart/related" />
+            </intent-filter>
+        </activity>
 
         <service android:name="euphoria.server.ServerService" />
     </application>
